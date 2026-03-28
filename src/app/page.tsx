@@ -3,11 +3,10 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Bot, ChevronRight, Loader2, Mail, Triangle } from 'lucide-react';
+import { Bot, Loader2, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { placeholderImages } from '@/lib/placeholder-images';

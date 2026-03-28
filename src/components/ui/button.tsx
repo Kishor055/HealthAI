@@ -44,9 +44,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        suppressHydrationWarning
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        suppressHydrationWarning
         {...props}
       />
     )
