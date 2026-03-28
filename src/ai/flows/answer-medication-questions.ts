@@ -34,7 +34,7 @@ const prompt = ai.definePrompt({
 
   You will be given a list of the user\'s current medications and a question about their medications.
 
-  Use the medication list to answer the question as accurately and concisely as possible.  Avoid diagnosis and only provide medication guidance.
+  Use the medication list to answer the question as accurately and concisely as possible. Avoid diagnosis and only provide medication guidance.
 
   Medication List: {{{medicationList}}}
   Question: {{{question}}}

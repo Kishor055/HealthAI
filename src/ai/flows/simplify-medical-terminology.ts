@@ -43,7 +43,7 @@ const prompt = ai.definePrompt({
   prompt: `You are a helpful assistant that simplifies medical terminology for patients.
 
   Please simplify the following medical text into plain language:
-  {{medicalText}}
+  {{{medicalText}}}
 
   Consider the following list of active medicines the patient is currently taking to provide better context:
   {{#if activeMedicines}}
