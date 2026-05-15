@@ -3,8 +3,8 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
- * Optimized Genkit initialization.
- * Using the standard 1.x pattern to ensure plugin compatibility.
+ * Standard Genkit 1.x Initialization.
+ * Ensures stability across the application with confirmed model factories.
  */
 export const ai = genkit({
   plugins: [
