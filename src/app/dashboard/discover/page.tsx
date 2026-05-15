@@ -119,7 +119,7 @@ export default function DiscoverPage() {
   if (!apiKey || apiKey.includes('---')) {
     return (
       <div className="p-8 max-w-2xl mx-auto">
-        <Alert variant="destructive" className="border-2">
+        <Alert variant="destructive" className="border-2" suppressHydrationWarning>
           <AlertCircle className="h-5 w-5" />
           <AlertTitle className="text-lg font-bold">Invalid API Key</AlertTitle>
           <AlertDescription className="mt-2 text-sm">
@@ -190,7 +190,7 @@ export default function DiscoverPage() {
               exit={{ opacity: 0, y: 20 }}
               className="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 z-50"
             >
-              <Alert variant="destructive" className="shadow-2xl border-2 bg-background/95 backdrop-blur-md">
+              <Alert variant="destructive" className="shadow-2xl border-2 bg-background/95 backdrop-blur-md" suppressHydrationWarning>
                 <AlertCircle className="h-5 w-5" />
                 <AlertTitle className="font-bold">{errorState.title}</AlertTitle>
                 <AlertDescription className="mt-2 text-xs leading-relaxed">
