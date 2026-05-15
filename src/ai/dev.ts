@@ -6,3 +6,4 @@ import '@/ai/flows/simplify-medical-terminology.ts';
 import '@/ai/flows/answer-medication-questions.ts';
 import '@/ai/flows/generate-safety-notes.ts';
 import '@/ai/flows/analyze-prescription-flow.ts';
+import '@/ai/flows/parse-prescription-text-flow.ts';
