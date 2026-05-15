@@ -36,7 +36,7 @@ export function Reminders() {
     if (!user || !firestore) return;
     setProcessingId(med.id);
     
-    // Log the intake to Firestore using non-blocking pattern
+    // Log the intake to Firestore using non-blocking pattern for immediate UI response
     addDocumentNonBlocking(collection(firestore, "users", user.uid, "medicationIntakes"), {
       userId: user.uid,
       medicineId: med.id,
@@ -90,6 +90,7 @@ export function Reminders() {
                     variant="ghost" 
                     className="h-8 w-8 p-0 text-muted-foreground"
                     disabled={processingId === med.id}
+                    suppressHydrationWarning
                   >
                     <SkipForward className="h-4 w-4" />
                     <span className="sr-only">Skip</span>
@@ -100,6 +101,7 @@ export function Reminders() {
                     className="h-8 bg-accent hover:bg-accent/90 text-accent-foreground font-bold px-3"
                     onClick={() => handleTakeMedication(med)}
                     disabled={processingId === med.id}
+                    suppressHydrationWarning
                   >
                     {processingId === med.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
