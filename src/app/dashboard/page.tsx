@@ -1,23 +1,73 @@
+"use client";
+
 import { WelcomeHeader } from "@/components/dashboard/welcome-header";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { Reminders } from "@/components/dashboard/reminders";
 import { Alerts } from "@/components/dashboard/alerts";
+import { SosButton } from "@/components/dashboard/sos-button";
+import { QuickActions } from "@/components/dashboard/quick-actions";
+import { ReminderAlarm } from "@/components/dashboard/reminder-alarm";
 
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <div className="flex flex-col sm:gap-4 sm:py-4">
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <WelcomeHeader />
+    <div className="flex min-h-screen w-full flex-col bg-muted/30 pb-20 md:pb-0">
+      <ReminderAlarm />
+      <div className="flex flex-col gap-6 p-4 sm:p-8">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <WelcomeHeader />
+          <QuickActions />
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
             <KpiCards />
-            <Reminders />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold font-headline flex items-center gap-2">
+                  <span className="w-2 h-6 bg-primary rounded-full" />
+                  Upcoming Reminders
+                </h2>
+                <Reminders />
+              </div>
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold font-headline flex items-center gap-2">
+                  <span className="w-2 h-6 bg-destructive rounded-full" />
+                  Health Alerts
+                </h2>
+                <Alerts />
+              </div>
+            </div>
           </div>
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-1">
-            <Alerts />
+          
+          <div className="space-y-8">
+             {/* Dynamic Patient Info or Analytics could go here */}
+             <div className="bg-card rounded-2xl p-6 border shadow-sm">
+                <h3 className="font-bold text-lg mb-4">Adherence Progress</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Lisinopril</span>
+                      <span className="font-semibold">100%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-accent" style={{ width: '100%' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Metformin</span>
+                      <span className="font-semibold">85%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: '85%' }} />
+                    </div>
+                  </div>
+                </div>
+             </div>
           </div>
-        </main>
+        </div>
       </div>
+      <SosButton />
     </div>
   );
 }
