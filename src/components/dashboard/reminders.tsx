@@ -11,8 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Check, SkipForward, Clock, Loader2 } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { query, collection, where, limit, addDoc, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from "@/firebase";
+import { query, collection, where, limit, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 export function Reminders() {
@@ -32,33 +32,25 @@ export function Reminders() {
 
   const { data: medications, isLoading } = useCollection(activeMedsQuery);
 
-  const handleTakeMedication = async (med: any) => {
+  const handleTakeMedication = (med: any) => {
     if (!user || !firestore) return;
     setProcessingId(med.id);
-    try {
-      await addDoc(collection(firestore, "users", user.uid, "medicationIntakes"), {
-        userId: user.uid,
-        medicineId: med.id,
-        medicineName: med.name,
-        scheduledTime: new Date().toISOString(),
-        actualTakeTime: new Date().toISOString(),
-        status: "taken",
-        createdAt: serverTimestamp(),
-      });
+    
+    addDocumentNonBlocking(collection(firestore, "users", user.uid, "medicationIntakes"), {
+      userId: user.uid,
+      medicineId: med.id,
+      medicineName: med.name,
+      scheduledTime: new Date().toISOString(),
+      actualTakeTime: new Date().toISOString(),
+      status: "taken",
+      createdAt: serverTimestamp(),
+    });
 
-      toast({
-        title: "Medication Logged",
-        description: `You have successfully taken ${med.name}. Keep it up!`,
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not log medication intake.",
-      });
-    } finally {
-      setProcessingId(null);
-    }
+    toast({
+      title: "Medication Logged",
+      description: `You have successfully taken ${med.name}. Keep it up!`,
+    });
+    setProcessingId(null);
   };
 
   return (
