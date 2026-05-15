@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Pill, Clock, BellRing, Check, X, AlertCircle, Loader2 } from "lucide-react";
+import { Pill, Clock, BellRing, Check, BellOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -38,35 +37,21 @@ export function ReminderAlarm() {
     }
   }, []);
 
-  useEffect(() => {
-    const checkReminders = () => {
-      const now = new Date();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
-
-      // For the prototype, we trigger an alarm every 5 minutes at the start of the minute
-      // In a real app, this would check against a scheduled 'reminders' collection
-      if (minutes % 5 === 0 && seconds === 0 && !activeAlarm) {
-        triggerAlarm("Lisinopril", "10mg");
-      }
-    };
-
-    const interval = setInterval(checkReminders, 1000);
-    return () => clearInterval(interval);
-  }, [activeAlarm]);
-
-  const triggerAlarm = (medName: string, dosage: string) => {
+  const triggerAlarm = useCallback((medName: string, dosage: string) => {
     setActiveAlarm({ medName, dosage });
     
-    // Play a soft medical chime
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    audio.play().catch(() => {/* Blocked by browser policy until interaction */});
+    // Play a soft medical chime if possible
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play().catch(() => {/* Blocked by browser policy until interaction */});
+    } catch (e) {
+      console.warn("Audio chime could not be played", e);
+    }
 
     // Show system notification if permitted
     if (hasPermission) {
       new Notification(`Medication Due: ${medName}`, {
         body: `It is time for your ${dosage} dose. Please confirm intake.`,
-        icon: "/bot-icon.png",
       });
     }
 
@@ -75,7 +60,23 @@ export function ReminderAlarm() {
       description: `Time for your ${medName} (${dosage})`,
       variant: "default",
     });
-  };
+  }, [hasPermission, toast]);
+
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+
+      // For the prototype, we trigger an alarm every 5 minutes at the start of the minute
+      if (minutes % 5 === 0 && seconds === 0 && !activeAlarm) {
+        triggerAlarm("Lisinopril", "10mg");
+      }
+    };
+
+    const interval = setInterval(checkReminders, 1000);
+    return () => clearInterval(interval);
+  }, [activeAlarm, triggerAlarm]);
 
   const handleConfirmTaken = async () => {
     if (!user || !firestore || !activeAlarm) return;
@@ -95,7 +96,7 @@ export function ReminderAlarm() {
 
       toast({
         title: "Dose Confirmed",
-        description: `Your ${activeAlarm.medName} intake has been logged.`,
+        description: `Your ${activeAlarm.medName} intake has been logged successfully.`,
       });
       
       setActiveAlarm(null);
@@ -112,15 +113,15 @@ export function ReminderAlarm() {
 
   return (
     <Dialog open={!!activeAlarm} onOpenChange={(v) => !v && !isProcessing && setActiveAlarm(null)}>
-      <DialogContent className="sm:max-w-[425px] overflow-hidden border-none p-0 bg-background/95 backdrop-blur-2xl">
+      <DialogContent className="sm:max-w-[425px] overflow-hidden border-none p-0 bg-background/95 backdrop-blur-2xl shadow-2xl">
         <div className="h-2 w-full bg-primary absolute top-0 left-0 animate-pulse" />
         
         <div className="p-8 space-y-6">
           <DialogHeader className="text-center">
             <div className="mx-auto w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
               <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
+                animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+                transition={{ repeat: Infinity, duration: 1 }}
               >
                 <BellRing className="h-12 w-12 text-primary" />
               </motion.div>
@@ -165,13 +166,14 @@ export function ReminderAlarm() {
               onClick={() => setActiveAlarm(null)}
               disabled={isProcessing}
             >
-              Snooze 5 mins
+              <BellOff className="size-4 mr-2" />
+              Dismiss / Snooze
             </Button>
           </div>
 
           <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">
             <Clock className="size-3" />
-            Auto-dismissing in 5 minutes
+            Check your schedule for more details
           </div>
         </div>
       </DialogContent>
