@@ -5,10 +5,13 @@ import * as React from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Navigation, Loader2, Hospital, Building2, Pill, AlertCircle, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Navigation, Loader2, Hospital, Building2, Pill, AlertCircle, ExternalLink, Star, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 const METROPOLIS_CENTER = { lat: 40.7128, lng: -74.0060 };
 const LIBRARIES: ("places")[] = ["places"];
@@ -24,6 +27,9 @@ interface Facility {
 }
 
 export default function DiscoverPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -37,6 +43,7 @@ export default function DiscoverPage() {
   const [facilities, setFacilities] = React.useState<Facility[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
   const [errorState, setErrorState] = React.useState<{ title: string; message: string; type: 'missing' | 'denied' | 'error' } | null>(null);
+  const [savedIds, setSavedIds] = React.useState<Set<string>>(new Set());
 
   const onMapLoad = React.useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -107,6 +114,28 @@ export default function DiscoverPage() {
     }
   };
 
+  const handleSaveProvider = (facility: Facility) => {
+    if (!user || !firestore) return;
+    
+    const providerRef = doc(firestore, "users", user.uid, "preferredProviders", facility.id);
+    setDocumentNonBlocking(providerRef, {
+      userId: user.uid,
+      providerId: facility.id,
+      providerName: facility.name,
+      providerAddress: facility.address,
+      providerPhone: facility.phone,
+      providerSpecialty: facility.type,
+      savedAt: new Date().toISOString(),
+    }, { merge: true });
+
+    setSavedIds(prev => new Set(prev).add(facility.id));
+
+    toast({
+      title: "Provider Saved",
+      description: `${facility.name} has been added to your favorites.`,
+    });
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'Hospital': return <Hospital className="size-4" />;
@@ -171,11 +200,27 @@ export default function DiscoverPage() {
                 <div className="p-2 max-w-[220px]">
                   <h3 className="font-bold text-sm mb-1 text-primary">{selectedFacility.name}</h3>
                   <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">{selectedFacility.address}</p>
-                  <Button size="sm" className="w-full h-8 text-[10px] font-bold" asChild suppressHydrationWarning>
-                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.position.lat},${selectedFacility.position.lng}`} target="_blank" rel="noreferrer">
-                      <Navigation className="size-3 mr-1.5" /> Navigate
-                    </a>
-                  </Button>
+                  <div className="space-y-2">
+                    <Button size="sm" className="w-full h-8 text-[10px] font-bold" asChild suppressHydrationWarning>
+                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.position.lat},${selectedFacility.position.lng}`} target="_blank" rel="noreferrer">
+                        <Navigation className="size-3 mr-1.5" /> Navigate
+                      </a>
+                    </Button>
+                    <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full h-8 text-[10px] font-bold" 
+                        onClick={() => handleSaveProvider(selectedFacility)}
+                        disabled={savedIds.has(selectedFacility.id)}
+                        suppressHydrationWarning
+                    >
+                      {savedIds.has(selectedFacility.id) ? (
+                          <><CheckCircle className="size-3 mr-1.5 text-accent" /> Saved</>
+                      ) : (
+                          <><Star className="size-3 mr-1.5" /> Save to Favorites</>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </InfoWindow>
             )}
@@ -267,12 +312,21 @@ export default function DiscoverPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button size="sm" variant="ghost" className="flex-1 h-8 text-[11px] font-bold" asChild suppressHydrationWarning>
-                    <a href={`tel:${facility.phone}`} onClick={(e) => e.stopPropagation()}>
-                      <Phone className="size-3 mr-1.5" /> Contact
-                    </a>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="flex-1 h-8 text-[11px] font-bold" 
+                    onClick={(e) => { e.stopPropagation(); handleSaveProvider(facility); }}
+                    disabled={savedIds.has(facility.id)}
+                    suppressHydrationWarning
+                  >
+                    {savedIds.has(facility.id) ? (
+                        <CheckCircle className="size-3 text-accent" />
+                    ) : (
+                        <Star className="size-3" />
+                    )}
                   </Button>
-                  <Button size="sm" className="flex-1 h-8 text-[11px] font-bold shadow-lg shadow-primary/20" asChild suppressHydrationWarning>
+                  <Button size="sm" className="flex-2 h-8 text-[11px] font-bold shadow-lg shadow-primary/20" asChild suppressHydrationWarning>
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position.lat},${facility.position.lng}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                       <Navigation className="size-3 mr-1.5" /> Navigate
                     </a>

@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Phone, User, Loader2, ExternalLink } from "lucide-react";
+import { Phone, User, Loader2, ExternalLink, HeartPulse } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { query, collection } from "firebase/firestore";
 
@@ -33,9 +33,12 @@ export function CallDoctorDialog({ open, onOpenChange }: CallDoctorDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Contact Healthcare Provider</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <HeartPulse className="text-primary h-6 w-6" />
+            Healthcare Directory
+          </DialogTitle>
           <DialogDescription>
-            Reach out to your saved doctors or emergency contacts.
+            Instantly connect with your primary care team or emergency services.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -44,49 +47,67 @@ export function CallDoctorDialog({ open, onOpenChange }: CallDoctorDialogProps) 
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : !preferredProviders || preferredProviders.length === 0 ? (
-            <div className="text-center py-8 space-y-4">
-              <p className="text-sm text-muted-foreground">No preferred providers saved yet.</p>
-              <Button variant="outline" className="w-full" asChild>
+            <div className="space-y-6">
+              <div className="text-center py-6 bg-muted/30 rounded-2xl border-2 border-dashed border-muted-foreground/20">
+                <User className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">No preferred providers saved.</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Add providers via the Discover map to see them here.</p>
+              </div>
+              
+              <div className="p-4 bg-destructive/5 rounded-2xl border-2 border-destructive/20 space-y-3">
+                <div className="flex items-center gap-2 text-destructive">
+                  <HeartPulse className="h-4 w-4" />
+                  <span className="text-xs font-black uppercase tracking-tighter">Emergency Protocol</span>
+                </div>
+                <p className="text-xs font-medium leading-relaxed">
+                  If you are experiencing a medical emergency, do not wait. Connect to local services immediately.
+                </p>
+                <Button variant="destructive" className="w-full font-black h-12 shadow-lg shadow-destructive/20" asChild>
+                  <a href="tel:911">
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call Emergency Services
+                  </a>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              {preferredProviders.map((provider) => (
+                <div key={provider.id} className="p-4 rounded-xl border-2 bg-card hover:border-primary/50 transition-all space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex gap-3">
+                      <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                        <User className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm leading-none mb-1">{provider.providerName || "Dr. Professional"}</h4>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{provider.providerSpecialty || "General Practitioner"}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1 font-bold h-9 shadow-sm" asChild>
+                      <a href={`tel:${provider.providerPhone || '000-000-0000'}`}>
+                        <Phone className="h-3 w-3 mr-2" />
+                        Call
+                      </a>
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 font-bold h-9" asChild>
+                      <a href={`mailto:${provider.providerEmail || ''}`}>
+                        Email
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              
+              <Button variant="outline" className="w-full text-xs font-bold h-10 border-dashed" asChild>
                 <a href="tel:911">
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Emergency Services
+                  <Phone className="h-3 w-3 mr-2" />
+                  Secondary Emergency Line
                 </a>
               </Button>
             </div>
-          ) : (
-            preferredProviders.map((provider) => (
-              <div key={provider.id} className="p-4 rounded-xl border-2 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-3">
-                    <div className="p-2 bg-muted rounded-lg">
-                      <User className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm">{provider.providerName}</h4>
-                      <p className="text-xs text-muted-foreground">{provider.providerSpecialty}</p>
-                    </div>
-                  </div>
-                  {provider.providerEmail && (
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
-                      Verified
-                    </span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 font-bold" asChild>
-                    <a href={`tel:${provider.providerPhone || '000-000-0000'}`}>
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call Now
-                    </a>
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1 font-bold" asChild suppressHydrationWarning>
-                    <a href={`mailto:${provider.providerEmail || ''}`}>
-                      Email
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            ))
           )}
         </div>
       </DialogContent>
