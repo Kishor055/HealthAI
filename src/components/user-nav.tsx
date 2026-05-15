@@ -1,7 +1,7 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import {
   CreditCard,
   LogOut,
@@ -21,39 +21,50 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { placeholderImages } from '@/lib/placeholder-images';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 export function UserNav() {
   const router = useRouter();
+  const auth = useAuth();
+  const { user } = useUser();
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   };
+
+  const displayName = user?.displayName || user?.email?.split('@')[0] || "User";
+  const userEmail = user?.email || "";
+  const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-full justify-start gap-2">
-           <Avatar className="h-8 w-8">
+        <Button variant="ghost" className="relative h-10 w-full justify-start gap-2 px-2 hover:bg-muted/50">
+           <Avatar className="h-8 w-8 border">
             <AvatarImage 
-                src={placeholderImages.find(img => img.id === "user-avatar-1")?.imageUrl}
-                alt="@shadcn"
-                data-ai-hint="person portrait"
+                src={user?.photoURL || placeholderImages.find(img => img.id === "user-avatar-1")?.imageUrl}
+                alt={displayName}
             />
-            <AvatarFallback>SN</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary text-[10px]">{initials}</AvatarFallback>
           </Avatar>
-          <div className='text-left'>
-            <p className="text-sm font-medium">Sofia Davis</p>
-            <p className="text-xs text-muted-foreground">sofia.davis@example.com</p>
+          <div className='text-left overflow-hidden'>
+            <p className="text-sm font-bold truncate">{displayName}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
           </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Sofia Davis</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              sofia.davis@example.com
+              {userEmail}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -64,16 +75,12 @@ export function UserNav() {
             <span>Profile</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
