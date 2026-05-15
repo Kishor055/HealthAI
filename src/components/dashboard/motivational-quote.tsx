@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Quote, RefreshCw } from "lucide-react";
+import { Sparkles, Quote, RefreshCw, Trophy, HeartPulse } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -42,22 +41,36 @@ export function MotivationalQuote() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <Card className="overflow-hidden border-none bg-gradient-to-br from-primary/10 via-background to-accent/10 shadow-2xl shadow-primary/5 group">
-        <CardContent className="p-8 relative">
+      <Card className="overflow-hidden border-none bg-gradient-to-br from-primary/10 via-background to-accent/10 shadow-2xl shadow-primary/5 group relative">
+        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+          <HeartPulse className="size-32 -rotate-12" />
+        </div>
+        
+        <CardContent className="p-8 relative z-10">
           <Quote className="absolute -top-4 -left-4 size-20 text-primary/5 -rotate-12 transition-transform group-hover:rotate-0 duration-500" />
           
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-2xl bg-white shadow-xl shadow-primary/5">
-                  <Sparkles className="size-6 text-primary animate-pulse" />
+                <motion.div 
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="p-3 rounded-2xl bg-white shadow-xl shadow-primary/5 border border-primary/5"
+                >
+                  <Trophy className="size-6 text-primary" />
+                </motion.div>
+                <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 leading-none">Insight Portal</h4>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <div className="size-1.5 bg-accent rounded-full animate-pulse" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-accent">Active Recovery</span>
+                  </div>
                 </div>
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">Insight Portal</h4>
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="size-8 rounded-full hover:bg-primary/10 text-primary/40 hover:text-primary transition-all"
+                className="size-10 rounded-2xl hover:bg-primary/10 text-primary/40 hover:text-primary transition-all bg-white/50 backdrop-blur-sm shadow-sm"
                 onClick={refreshQuote}
               >
                 <RefreshCw className="size-4" />
@@ -65,18 +78,22 @@ export function MotivationalQuote() {
             </div>
 
             <AnimatePresence mode="wait">
-              <motion.p 
+              <motion.div
                 key={key}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                className="text-xl font-medium leading-relaxed italic text-foreground/80 font-headline"
+                initial={{ opacity: 0, scale: 0.95, x: -10 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 1.05, x: 10 }}
+                className="space-y-4"
               >
-                "{quote}"
-              </motion.p>
+                <p className="text-xl font-medium leading-relaxed italic text-foreground/80 font-headline">
+                  "{quote}"
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1 w-12 bg-primary rounded-full shadow-lg shadow-primary/20" />
+                  <span className="text-[10px] font-black text-primary/40 uppercase tracking-[0.4em]">Consistency is Power</span>
+                </div>
+              </motion.div>
             </AnimatePresence>
-            
-            <div className="h-1 w-12 bg-primary/20 rounded-full" />
           </div>
         </CardContent>
       </Card>
