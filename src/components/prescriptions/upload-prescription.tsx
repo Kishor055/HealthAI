@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2, Pill, Type, History } from 'lucide-react';
 import { analyzePrescription } from '@/ai/flows/analyze-prescription-flow';
 import { parsePrescriptionText } from '@/ai/flows/parse-prescription-text-flow';
@@ -119,7 +120,6 @@ export function UploadPrescription() {
       description: `${med.name} has been added to your medications.`,
     });
     
-    // Brief delay to show loading state
     setTimeout(() => setIsAdding(null), 500);
   };
 
@@ -153,7 +153,7 @@ export function UploadPrescription() {
           <CardContent>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" className="w-full rounded-2xl h-14 text-lg font-black shadow-lg shadow-primary/20" suppressHydrationWarning>
+                <Button size="lg" className="w-full rounded-2xl h-14 text-lg font-black shadow-lg shadow-primary/20">
                   <PlusCircle className="mr-2 h-6 w-6" />
                   Start Digitizing
                 </Button>
@@ -213,14 +213,12 @@ export function UploadPrescription() {
                             className="min-h-[250px] rounded-[2rem] p-6 border-2 focus-visible:ring-primary/20 text-base leading-relaxed"
                             value={manualText}
                             onChange={(e) => setManualText(e.target.value)}
-                            suppressHydrationWarning
                           />
                         </div>
                         <Button 
                           className="w-full h-14 text-xl font-black rounded-2xl shadow-xl shadow-primary/20" 
                           onClick={handleTextAnalysis}
                           disabled={!manualText.trim()}
-                          suppressHydrationWarning
                         >
                           <Sparkles className="mr-2 h-5 w-5" />
                           Analyze Text with AI
@@ -316,7 +314,6 @@ export function UploadPrescription() {
                                       className="w-full h-10 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary/5"
                                       onClick={() => handleAddToSchedule(med)}
                                       disabled={isAdding === med.name}
-                                      suppressHydrationWarning
                                     >
                                       {isAdding === med.name ? (
                                         <Loader2 className="animate-spin h-4 w-4" />
@@ -338,7 +335,6 @@ export function UploadPrescription() {
                           variant="ghost" 
                           className="w-full font-black text-xs uppercase tracking-[0.3em] opacity-40 hover:opacity-100" 
                           onClick={() => { setAnalysis(null); setManualText(""); }}
-                          suppressHydrationWarning
                         >
                           Reset & Digitization New Record
                         </Button>
