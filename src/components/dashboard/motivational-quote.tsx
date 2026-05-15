@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Sparkles, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -15,12 +15,17 @@ const quotes = [
   "Your health is your most precious asset. Protect it with consistency.",
   "Self-care is not selfish. It's essential for your well-being.",
   "Be patient with yourself. Health is a long-term commitment.",
+  "Success in health starts with the decision to try.",
+  "Healthy habits are the foundation of a long and vibrant life.",
+  "Small changes today lead to a healthier tomorrow.",
+  "Listen to your body, it's the smartest tool you own."
 ];
 
 export function MotivationalQuote() {
   const [quote, setQuote] = useState("");
 
   useEffect(() => {
+    // Select a random quote on mount
     const randomIndex = Math.floor(Math.random() * quotes.length);
     setQuote(quotes[randomIndex]);
   }, []);
