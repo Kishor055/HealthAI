@@ -12,6 +12,8 @@ import { ReminderAlarm } from "@/components/dashboard/reminder-alarm";
 import { AddMedicationDialog } from "@/components/medications/add-medication-dialog";
 import { TakeNowDialog } from "@/components/dashboard/take-now-dialog";
 import { CallDoctorDialog } from "@/components/dashboard/call-doctor-dialog";
+import { MotivationalQuote } from "@/components/dashboard/motivational-quote";
+import { motion } from "framer-motion";
 
 export default function DashboardPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -27,14 +29,18 @@ export default function DashboardPage() {
       <CallDoctorDialog open={isCallDoctorOpen} onOpenChange={setIsCallDoctorOpen} />
 
       <div className="flex flex-col gap-6 p-4 sm:p-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4"
+        >
           <WelcomeHeader />
           <QuickActions 
             onAddMed={() => setIsAddOpen(true)}
             onTakeNow={() => setIsTakeNowOpen(true)}
             onCallDoctor={() => setIsCallDoctorOpen(true)}
           />
-        </div>
+        </motion.div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
@@ -58,29 +64,50 @@ export default function DashboardPage() {
           </div>
           
           <div className="space-y-8">
-             <div className="bg-card rounded-2xl p-6 border shadow-sm">
+             <MotivationalQuote />
+             
+             <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="bg-card rounded-2xl p-6 border shadow-sm relative overflow-hidden group"
+             >
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <span className="text-6xl font-black">7D</span>
+                </div>
                 <h3 className="font-bold text-lg mb-4">Adherence Progress</h3>
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span>Lisinopril</span>
-                      <span className="font-semibold">100%</span>
+                      <span className="font-medium">Lisinopril</span>
+                      <span className="font-black text-accent">100%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-accent" style={{ width: '100%' }} />
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: '100%' }}
+                        className="h-full bg-accent" 
+                      />
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span>Metformin</span>
-                      <span className="font-semibold">85%</span>
+                      <span className="font-medium">Metformin</span>
+                      <span className="font-black text-primary">85%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: '85%' }} />
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: '85%' }}
+                        className="h-full bg-primary" 
+                      />
                     </div>
                   </div>
                 </div>
-             </div>
+                <p className="text-[10px] text-muted-foreground mt-6 text-center italic">
+                  "You're doing great! Keep up the consistent schedule."
+                </p>
+             </motion.div>
           </div>
         </div>
       </div>
