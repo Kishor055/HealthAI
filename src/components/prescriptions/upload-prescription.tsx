@@ -22,8 +22,8 @@ import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2, 
 import { analyzePrescription, AnalyzePrescriptionOutput } from '@/ai/flows/analyze-prescription-flow';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 export function UploadPrescription() {
   const { user } = useUser();
@@ -69,38 +69,29 @@ export function UploadPrescription() {
     reader.readAsDataURL(file);
   };
 
-  const handleAddToSchedule = async (med: any) => {
+  const handleAddToSchedule = (med: any) => {
     if (!user || !firestore) return;
     setIsAdding(med.name);
 
-    try {
-      await addDoc(collection(firestore, "users", user.uid, "medicines"), {
-        userId: user.uid,
-        name: med.name,
-        dosage: med.dosage,
-        frequency: med.frequency,
-        instructions: med.instructions,
-        category: med.category || 'General',
-        startDate: new Date().toISOString().split('T')[0],
-        isActive: true,
-        aiInterpretation: `Extracted from prescription. Diagnosis: ${analysis?.diagnosis}`,
-        safetyNotes: "Extracted by AI. Please verify with your pharmacist.",
-        createdAt: serverTimestamp(),
-      });
+    addDocumentNonBlocking(collection(firestore, "users", user.uid, "medicines"), {
+      userId: user.uid,
+      name: med.name,
+      dosage: med.dosage,
+      frequency: med.frequency,
+      instructions: med.instructions,
+      category: med.category || 'General',
+      startDate: new Date().toISOString().split('T')[0],
+      isActive: true,
+      aiInterpretation: `Extracted from prescription. Diagnosis: ${analysis?.diagnosis}`,
+      safetyNotes: "Extracted by AI. Please verify with your pharmacist.",
+      createdAt: serverTimestamp(),
+    });
 
-      toast({
-        title: "Added to Schedule",
-        description: `${med.name} has been added to your medications.`,
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not add medication to schedule.",
-      });
-    } finally {
-      setIsAdding(null);
-    }
+    toast({
+      title: "Added to Schedule",
+      description: `${med.name} has been added to your medications.`,
+    });
+    setIsAdding(null);
   };
 
   const triggerUpload = () => {
