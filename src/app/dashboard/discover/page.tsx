@@ -5,8 +5,9 @@ import * as React from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Navigation, Loader2, Hospital, Building2, Pill } from "lucide-react";
+import { MapPin, Phone, Navigation, Loader2, Hospital, Building2, Pill, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const METROPOLIS_CENTER = { lat: 40.7128, lng: -74.0060 };
 const LIBRARIES: ("places")[] = ["places"];
@@ -22,9 +23,11 @@ interface Facility {
 }
 
 export default function DiscoverPage() {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    googleMapsApiKey: apiKey || "",
     libraries: LIBRARIES
   });
 
@@ -90,8 +93,43 @@ export default function DiscoverPage() {
     }
   };
 
+  if (!apiKey) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto space-y-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Google Maps API Key Missing</AlertTitle>
+          <AlertDescription>
+            The maps feature requires a valid Google Maps API Key. Please add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables.
+          </AlertDescription>
+        </Alert>
+        <Card>
+          <CardHeader>
+            <CardTitle>How to fix this:</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <p>1. Go to the <a href="https://console.cloud.google.com/" target="_blank" className="text-primary underline">Google Cloud Console</a>.</p>
+            <p>2. Enable the <strong>Maps JavaScript API</strong> and <strong>Places API</strong>.</p>
+            <p>3. Create an API Key and restrict it to your domain.</p>
+            <p>4. Add it to your <code>.env</code> file.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loadError) {
-    return <div className="p-8 text-center text-destructive">Error loading Google Maps. Please check your API key.</div>;
+    return (
+      <div className="p-8 text-center space-y-4">
+        <Alert variant="destructive" className="max-w-md mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Invalid API Key</AlertTitle>
+          <AlertDescription>
+            Google Maps reported an error (InvalidKeyMapError). Please check that your API key is correct and has the required permissions.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -192,12 +230,12 @@ export default function DiscoverPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs font-semibold" asChild>
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs font-semibold" asChild suppressHydrationWarning>
                     <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name)}`} target="_blank" rel="noreferrer">
                       Details
                     </a>
                   </Button>
-                  <Button size="sm" className="flex-1 h-8 text-xs font-semibold" asChild>
+                  <Button size="sm" className="flex-1 h-8 text-xs font-semibold" asChild suppressHydrationWarning>
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position.lat},${facility.position.lng}`} target="_blank" rel="noreferrer">
                       <Navigation className="size-3 mr-1.5" /> Go
                     </a>

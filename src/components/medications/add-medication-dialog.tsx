@@ -39,6 +39,7 @@ const formSchema = z.object({
   dosage: z.string().min(1, "Dosage is required"),
   frequency: z.string().min(1, "Frequency is required"),
   form: z.string().min(1, "Form is required"),
+  category: z.enum(['General', 'Asthma', 'BP', 'Diabetes', 'Heart', 'Allergy']).default('General'),
   startDate: z.string().min(1, "Start date is required"),
   instructions: z.string().optional(),
 });
@@ -59,8 +60,9 @@ export function AddMedicationDialog({ open, onOpenChange }: AddMedicationDialogP
     defaultValues: {
       name: "",
       dosage: "",
-      frequency: "",
+      frequency: "Once daily",
       form: "tablet",
+      category: "General",
       startDate: new Date().toISOString().split('T')[0],
       instructions: "",
     },
@@ -115,7 +117,7 @@ export function AddMedicationDialog({ open, onOpenChange }: AddMedicationDialogP
                 <FormItem>
                   <FormLabel>Medicine Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Lisinopril" {...field} />
+                    <Input placeholder="e.g. Lisinopril" {...field} suppressHydrationWarning />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,7 +131,7 @@ export function AddMedicationDialog({ open, onOpenChange }: AddMedicationDialogP
                   <FormItem>
                     <FormLabel>Dosage</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. 10mg" {...field} />
+                      <Input placeholder="e.g. 10mg" {...field} suppressHydrationWarning />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -143,7 +145,7 @@ export function AddMedicationDialog({ open, onOpenChange }: AddMedicationDialogP
                     <FormLabel>Form</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger suppressHydrationWarning>
                           <SelectValue placeholder="Select form" />
                         </SelectTrigger>
                       </FormControl>
@@ -162,13 +164,38 @@ export function AddMedicationDialog({ open, onOpenChange }: AddMedicationDialogP
             </div>
             <FormField
               control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Patient Category</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger suppressHydrationWarning>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="General">General</SelectItem>
+                      <SelectItem value="Asthma">Asthma</SelectItem>
+                      <SelectItem value="BP">Blood Pressure</SelectItem>
+                      <SelectItem value="Diabetes">Diabetes</SelectItem>
+                      <SelectItem value="Heart">Heart Patient</SelectItem>
+                      <SelectItem value="Allergy">Allergy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="frequency"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Frequency</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger suppressHydrationWarning>
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                     </FormControl>
@@ -191,14 +218,14 @@ export function AddMedicationDialog({ open, onOpenChange }: AddMedicationDialogP
                 <FormItem>
                   <FormLabel>Start Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} suppressHydrationWarning />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
                 {isLoading ? "Saving..." : "Save Medication"}
               </Button>
             </DialogFooter>
