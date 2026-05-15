@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -42,7 +41,7 @@ export default function DiscoverPage() {
   const [selectedFacility, setSelectedFacility] = React.useState<Facility | null>(null);
   const [facilities, setFacilities] = React.useState<Facility[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
-  const [errorState, setErrorState] = React.useState<{ title: string; message: string; type: 'missing' | 'denied' | 'error' } | null>(null);
+  const [errorState, setErrorState] = React.useState<{ title: string; message: string; type: 'missing' | 'denied' | 'error' | 'not-activated' } | null>(null);
   const [savedIds, setSavedIds] = React.useState<Set<string>>(new Set());
 
   const onMapLoad = React.useCallback((map: google.maps.Map) => {
@@ -82,16 +81,16 @@ export default function DiscoverPage() {
           setFacilities(mapped);
         } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
           setErrorState({
-            title: "Places API Permission Denied",
-            message: "The Google Places API is currently disabled or restricted for this key. To enable it: Go to Google Cloud Console -> APIs & Services -> Enabled APIs -> Search for 'Places API' and click 'Enable'.",
+            title: "API Permission Denied",
+            message: "The Google Places API is disabled or restricted. Ensure 'Maps JavaScript API' AND 'Places API' are enabled in your Google Cloud Console.",
             type: 'denied'
           });
         } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
           setFacilities([]);
         } else {
           setErrorState({
-            title: "Map Service Error",
-            message: `The map service returned an error: ${status}. Please check your configuration.`,
+            title: "Service Error",
+            message: `Map service returned status: ${status}. This often means an API is not activated for this key.`,
             type: 'error'
           });
         }
@@ -100,7 +99,7 @@ export default function DiscoverPage() {
       setIsSearching(false);
       setErrorState({
         title: "Initialization Error",
-        message: "Failed to initialize the Google Places Service. Please refresh or try again.",
+        message: "Failed to initialize Places Service. Verify your APIs are enabled.",
         type: 'error'
       });
     }
@@ -132,7 +131,7 @@ export default function DiscoverPage() {
 
     toast({
       title: "Provider Saved",
-      description: `${facility.name} has been added to your favorites.`,
+      description: `${facility.name} added to your favorites.`,
     });
   };
 
@@ -140,19 +139,49 @@ export default function DiscoverPage() {
     switch (type) {
       case 'Hospital': return <Hospital className="size-4" />;
       case 'Clinic': return <Building2 className="size-4" />;
-      case 'Pharmacy': return <Pill className="size-4" />;
+      case 'Pill': return <Pill className="size-4" />;
       default: return <MapPin className="size-4" />;
     }
   };
+
+  if (loadError) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto space-y-6">
+        <Alert variant="destructive" className="border-2 shadow-xl" suppressHydrationWarning>
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="text-lg font-bold">Google Maps Load Error</AlertTitle>
+          <AlertDescription className="mt-2 text-sm space-y-4">
+            <p>The Google Maps script failed to load. This is likely due to an unactivated API in your console.</p>
+            <div className="bg-destructive/10 p-4 rounded-xl border border-destructive/20 font-mono text-[11px] leading-relaxed">
+              Error: ApiNotActivatedMapError
+            </div>
+            <div className="space-y-2">
+              <p className="font-bold">How to fix this:</p>
+              <ol className="list-decimal list-inside space-y-1 opacity-80">
+                <li>Go to the <a href="https://console.cloud.google.com/" target="_blank" className="underline font-bold">Google Cloud Console</a>.</li>
+                <li>Select your project.</li>
+                <li>Go to <strong>APIs & Services</strong> > <strong>Library</strong>.</li>
+                <li>Search for and Enable: <strong>"Maps JavaScript API"</strong></li>
+                <li>Search for and Enable: <strong>"Places API"</strong></li>
+              </ol>
+            </div>
+            <Button size="sm" variant="outline" className="w-full mt-4" onClick={() => window.location.reload()}>
+              Reload Page After Enabling
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (!apiKey || apiKey.includes('---')) {
     return (
       <div className="p-8 max-w-2xl mx-auto">
         <Alert variant="destructive" className="border-2" suppressHydrationWarning>
           <AlertCircle className="h-5 w-5" />
-          <AlertTitle className="text-lg font-bold">Invalid API Key</AlertTitle>
+          <AlertTitle className="text-lg font-bold">Missing API Key</AlertTitle>
           <AlertDescription className="mt-2 text-sm">
-            The Google Maps API Key provided is either missing or contains placeholders. Please update your <code>.env</code> file with a valid <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>.
+            Please update your <code>.env</code> file with a valid <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>.
           </AlertDescription>
         </Alert>
       </div>
@@ -166,7 +195,7 @@ export default function DiscoverPage() {
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
             <div className="text-center space-y-4">
               <Loader2 className="size-12 animate-spin text-primary mx-auto" />
-              <p className="text-sm font-medium text-muted-foreground">Initializing Google Services...</p>
+              <p className="text-sm font-medium text-muted-foreground">Connecting to Maps Engine...</p>
             </div>
           </div>
         ) : (
@@ -242,12 +271,12 @@ export default function DiscoverPage() {
                   {errorState.message}
                   <div className="mt-4 flex gap-2">
                     <Button variant="outline" size="sm" className="h-7 text-[10px] bg-background" asChild suppressHydrationWarning>
-                      <a href="https://console.cloud.google.com/google/maps-apis/api-list" target="_blank" rel="noreferrer">
-                        <ExternalLink className="size-3 mr-1" /> Open Console
+                      <a href="https://console.cloud.google.com/google/maps-apis/library" target="_blank" rel="noreferrer">
+                        <ExternalLink className="size-3 mr-1" /> Cloud Console
                       </a>
                     </Button>
-                    <Button size="sm" className="h-7 text-[10px]" onClick={() => map && searchNearbyHospitals(map)} suppressHydrationWarning>
-                      Retry Search
+                    <Button size="sm" className="h-7 text-[10px]" onClick={() => window.location.reload()} suppressHydrationWarning>
+                      Retry
                     </Button>
                   </div>
                 </AlertDescription>
