@@ -75,8 +75,8 @@ export default function DiscoverPage() {
           setFacilities(mapped);
         } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
           setErrorState({
-            title: "Places API Request Denied",
-            message: "The Google Places API is currently disabled for this key. Please go to your Google Cloud Console and enable the 'Places API' for this project to search for healthcare facilities.",
+            title: "Places API Permission Denied",
+            message: "The Google Places API is currently disabled or restricted for this key. To enable it: Go to Google Cloud Console -> APIs & Services -> Enabled APIs -> Search for 'Places API' and click 'Enable'.",
             type: 'denied'
           });
         } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
