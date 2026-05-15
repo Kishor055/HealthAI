@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check, SkipForward, Clock, Loader2, PartyPopper } from "lucide-react";
+import { Check, SkipForward, Clock, Loader2, PartyPopper, Timer } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from "@/firebase";
 import { query, collection, where, limit, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,12 @@ export function Reminders() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const activeMedsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -48,56 +54,69 @@ export function Reminders() {
     });
 
     toast({
-      title: "Excellent!",
-      description: `Success! You've taken your ${med.name}. Your body thanks you!`,
+      title: "Excellent Adherence!",
+      description: `Success! You've logged ${med.name}. Consistency is key.`,
       action: <PartyPopper className="size-5 text-accent animate-bounce" />,
     });
     
-    setTimeout(() => setProcessingId(null), 500);
+    setTimeout(() => setProcessingId(null), 800);
+  };
+
+  const getCountdown = () => {
+    const mins = 59 - currentTime.getMinutes();
+    const secs = 59 - currentTime.getSeconds();
+    return `${mins}m ${secs}s`;
   };
 
   return (
-    <Card className="border-none shadow-lg bg-card/50 backdrop-blur-md">
+    <Card className="border-none shadow-xl bg-card/60 backdrop-blur-xl">
       <CardHeader>
-        <CardTitle>Upcoming Reminders</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Schedule</CardTitle>
+          <div className="flex items-center gap-1.5 text-[10px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-widest">
+            <Timer className="size-3" />
+            Next Sync: {getCountdown()}
+          </div>
+        </div>
         <CardDescription>
-          Your next scheduled doses based on active medications.
+          Real-time tracking of your active medication plan.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
             {isLoading ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
               </div>
             ) : medications?.length === 0 ? (
-              <div className="text-center py-4 text-sm text-muted-foreground italic">
-                No active medications. Your schedule is clear!
+              <div className="text-center py-10 text-sm text-muted-foreground font-medium italic">
+                Your schedule is clear. Add medications to begin tracking.
               </div>
             ) : (
               medications?.map((med, index) => (
                 <motion.div 
                   key={med.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center space-x-4 p-4 rounded-2xl hover:bg-white/50 border border-transparent hover:border-primary/10 transition-all group"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center space-x-4 p-4 rounded-3xl bg-background/50 hover:bg-white border border-transparent hover:border-primary/20 transition-all group shadow-sm hover:shadow-md"
                 >
-                  <div className="flex items-center justify-center bg-primary/10 text-primary rounded-2xl size-12 shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="flex items-center justify-center bg-primary text-primary-foreground rounded-2xl size-12 shrink-0 group-hover:rotate-12 transition-transform shadow-lg shadow-primary/20">
                     <Clock className="h-6 w-6" />
                   </div>
                   <div className="flex-grow min-w-0">
-                    <p className="font-black text-sm truncate uppercase tracking-tight">{med.name}</p>
-                    <p className="text-[10px] text-muted-foreground truncate font-bold uppercase tracking-widest opacity-60">
-                      {med.dosage} • {med.frequency}
+                    <p className="font-black text-sm truncate uppercase tracking-tighter text-foreground">{med.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate font-black uppercase tracking-[0.15em] opacity-50">
+                      {med.dosage} • DUE NOW
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <Button 
-                      size="sm" 
+                      size="icon" 
                       variant="ghost" 
-                      className="h-10 w-10 p-0 text-muted-foreground rounded-xl"
+                      className="h-10 w-10 rounded-xl hover:bg-destructive/5 hover:text-destructive"
                       disabled={processingId === med.id}
                       suppressHydrationWarning
                     >
@@ -106,7 +125,7 @@ export function Reminders() {
                     <Button 
                       size="sm" 
                       variant="default" 
-                      className="h-10 bg-accent hover:bg-accent/90 text-accent-foreground font-black px-4 rounded-xl shadow-lg shadow-accent/20"
+                      className="h-10 bg-accent hover:bg-accent/90 text-accent-foreground font-black px-5 rounded-xl shadow-lg shadow-accent/20"
                       onClick={() => handleTakeMedication(med)}
                       disabled={processingId === med.id}
                       suppressHydrationWarning
@@ -114,7 +133,7 @@ export function Reminders() {
                       {processingId === med.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Check className="h-4 w-4 mr-1.5" />
+                        <Check className="h-4 w-4 mr-2" />
                       )}
                       Log
                     </Button>
