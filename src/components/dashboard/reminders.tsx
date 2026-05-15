@@ -36,6 +36,7 @@ export function Reminders() {
     if (!user || !firestore) return;
     setProcessingId(med.id);
     
+    // Log the intake to Firestore using non-blocking pattern
     addDocumentNonBlocking(collection(firestore, "users", user.uid, "medicationIntakes"), {
       userId: user.uid,
       medicineId: med.id,

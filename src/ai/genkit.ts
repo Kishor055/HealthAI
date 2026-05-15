@@ -4,7 +4,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 import * as openAIPlugin from 'genkitx-openai';
 
 /**
- * Robustly resolve the OpenAI plugin function.
+ * Robustly resolve the OpenAI plugin function to prevent 'plugin is not a function' errors.
  * Some versions of the community plugin export 'openAI' as a named export, 
  * while others use a default export.
  */
