@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useState } from "react";
 import { WelcomeHeader } from "@/components/dashboard/welcome-header";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { Reminders } from "@/components/dashboard/reminders";
@@ -7,15 +9,31 @@ import { Alerts } from "@/components/dashboard/alerts";
 import { SosButton } from "@/components/dashboard/sos-button";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { ReminderAlarm } from "@/components/dashboard/reminder-alarm";
+import { AddMedicationDialog } from "@/components/medications/add-medication-dialog";
+import { TakeNowDialog } from "@/components/dashboard/take-now-dialog";
+import { CallDoctorDialog } from "@/components/dashboard/call-doctor-dialog";
 
 export default function DashboardPage() {
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isTakeNowOpen, setIsTakeNowOpen] = useState(false);
+  const [isCallDoctorOpen, setIsCallDoctorOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/30 pb-20 md:pb-0">
       <ReminderAlarm />
+      
+      <AddMedicationDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
+      <TakeNowDialog open={isTakeNowOpen} onOpenChange={setIsTakeNowOpen} />
+      <CallDoctorDialog open={isCallDoctorOpen} onOpenChange={setIsCallDoctorOpen} />
+
       <div className="flex flex-col gap-6 p-4 sm:p-8">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <WelcomeHeader />
-          <QuickActions />
+          <QuickActions 
+            onAddMed={() => setIsAddOpen(true)}
+            onTakeNow={() => setIsTakeNowOpen(true)}
+            onCallDoctor={() => setIsCallDoctorOpen(true)}
+          />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -40,7 +58,6 @@ export default function DashboardPage() {
           </div>
           
           <div className="space-y-8">
-             {/* Dynamic Patient Info or Analytics could go here */}
              <div className="bg-card rounded-2xl p-6 border shadow-sm">
                 <h3 className="font-bold text-lg mb-4">Adherence Progress</h3>
                 <div className="space-y-4">
