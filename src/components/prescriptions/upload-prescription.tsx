@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,35 +15,57 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload } from 'lucide-react';
-import { simplifyMedicalTerminology, SimplifyMedicalTerminologyOutput } from '@/ai/flows/simplify-medical-terminology';
-import { generateSafetyNotes, GenerateSafetyNotesOutput } from '@/ai/flows/generate-safety-notes';
-
-const mockMedicalText = "Take Lisinopril 10mg once daily in the morning. May be taken with or without food. Monitor for dry cough. Avoid potassium supplements.";
+import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2 } from 'lucide-react';
+import { analyzePrescription, AnalyzePrescriptionOutput } from '@/ai/flows/analyze-prescription-flow';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from '../ui/badge';
 
 export function UploadPrescription() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [simplified, setSimplified] = useState<SimplifyMedicalTerminologyOutput | null>(null);
-  const [safetyNotes, setSafetyNotes] = useState<GenerateSafetyNotesOutput | null>(null);
+  const [analysis, setAnalysis] = useState<AnalyzePrescriptionOutput | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  const handleDigitize = async () => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setIsLoading(true);
-    try {
-      const [simplifiedRes, safetyNotesRes] = await Promise.all([
-        simplifyMedicalTerminology({ medicalText: mockMedicalText, activeMedicines: ['Metformin'] }),
-        generateSafetyNotes({ medicationName: 'Lisinopril', additionalInformation: 'Patient is also taking Metformin' })
-      ]);
-      setSimplified(simplifiedRes);
-      setSafetyNotes(safetyNotesRes);
-    } catch (error) {
-      console.error("AI processing failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    setAnalysis(null);
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUri = event.target?.result as string;
+      try {
+        const result = await analyzePrescription({
+          fileDataUri: dataUri,
+          mimeType: file.type
+        });
+        setAnalysis(result);
+        toast({
+          title: "Analysis Complete",
+          description: `Extracted ${result.medications.length} medications from your document.`,
+        });
+      } catch (error) {
+        console.error("AI Analysis failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Analysis Failed",
+          description: "Could not read the prescription. Please try a clearer image.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -50,72 +73,116 @@ export function UploadPrescription() {
       <CardHeader>
         <CardTitle>Manage Prescriptions</CardTitle>
         <CardDescription>
-          Upload, digitize, and understand your prescriptions with AI.
+          Upload, digitize, and understand your medical reports with AI.
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button size="lg">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add New Prescription
+            <Button size="lg" className="rounded-full px-8 shadow-lg hover:shadow-primary/20 transition-all">
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Digitize New Record
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px]">
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Digitize Prescription</DialogTitle>
+              <DialogTitle className="text-2xl font-bold font-headline">Smart AI Digitizer</DialogTitle>
               <DialogDescription>
-                Upload an image of your prescription to have AI simplify it for you.
+                Our AI analyzes images, PDFs, and medical reports to organize your care.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-6 py-4">
-              {!simplified && !isLoading && (
-                <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-muted-foreground/30 p-12">
-                  <div className="flex flex-col items-center gap-2 text-center">
-                    <Upload className="h-12 w-12 text-muted-foreground" />
-                    <h3 className="text-lg font-bold tracking-tight">
-                      Upload your prescription
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      You can take a photo or upload a file.
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*,.pdf,.docx,.txt"
+                onChange={handleFileChange}
+              />
+              
+              {!analysis && !isLoading && (
+                <div 
+                  className="flex flex-col items-center justify-center gap-6 rounded-2xl border-2 border-dashed border-muted-foreground/30 p-16 bg-muted/10 hover:bg-muted/20 transition-all cursor-pointer group"
+                  onClick={triggerUpload}
+                >
+                  <div className="bg-primary/10 p-4 rounded-full group-hover:scale-110 transition-transform">
+                    <Upload className="h-10 w-10 text-primary" />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <h3 className="text-xl font-bold tracking-tight">Drop medical record here</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                      Supports JPG, PNG, PDF, and Scanned Documents up to 10MB.
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline"><Camera className="mr-2 h-4 w-4" /> Take Photo</Button>
-                    <Button onClick={handleDigitize}>
-                      <FileText className="mr-2 h-4 w-4" /> Upload File
-                    </Button>
+                  <Button variant="outline" className="mt-2">Browse Files</Button>
+                </div>
+              )}
+
+              {isLoading && (
+                <div className="flex flex-col items-center justify-center gap-6 p-16">
+                  <div className="relative">
+                    <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                    <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-accent animate-pulse" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold">Processing with AI...</p>
+                    <p className="text-sm text-muted-foreground italic">Extracting handwriting and terminology...</p>
                   </div>
                 </div>
               )}
-              {isLoading && (
-                <div className="flex flex-col items-center justify-center gap-4 p-12">
-                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                  <p className="text-muted-foreground">AI is analyzing your prescription...</p>
-                </div>
-              )}
-              {simplified && safetyNotes && (
-                <div>
-                   <h3 className="text-lg font-semibold mb-2 flex items-center"><Sparkles className="h-5 w-5 mr-2 text-primary" />AI Interpretation</h3>
-                  <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>Dosage & Timing</AccordionTrigger>
-                      <AccordionContent>{simplified.dosageTiming}</AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-2">
-                      <AccordionTrigger>Food Instructions</AccordionTrigger>
-                      <AccordionContent>{simplified.foodInstructions}</AccordionContent>
-                    </AccordionItem>
-                     <AccordionItem value="item-3">
-                      <AccordionTrigger>Precautions</AccordionTrigger>
-                      <AccordionContent>{simplified.precautions}</AccordionContent>
-                    </AccordionItem>
-                     <AccordionItem value="item-4">
-                      <AccordionTrigger>AI-Generated Safety Notes</AccordionTrigger>
-                      <AccordionContent>{safetyNotes.safetyNotes}</AccordionContent>
+
+              {analysis && (
+                <div className="space-y-6 animate-in fade-in zoom-in duration-300">
+                  <div className="flex items-center justify-between p-4 bg-accent/10 rounded-xl border border-accent/20">
+                    <div className="flex items-center gap-3 text-accent-foreground">
+                      <CheckCircle2 className="h-6 w-6 text-accent" />
+                      <div>
+                        <h4 className="font-bold">Record Digitized</h4>
+                        <p className="text-xs">Successfully analyzed {analysis.patientName || "Patient Record"}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="border-accent text-accent">{analysis.diagnosis}</Badge>
+                  </div>
+
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    <Pill className="h-5 w-5 text-primary" />
+                    Detected Medications
+                  </h3>
+
+                  <div className="grid gap-4">
+                    {analysis.medications.map((med, idx) => (
+                      <Card key={idx} className="overflow-hidden border-l-4 border-l-primary">
+                        <CardHeader className="p-4 pb-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-md font-bold text-primary">{med.name}</CardTitle>
+                              <CardDescription>{med.dosage} • {med.frequency}</CardDescription>
+                            </div>
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none">{med.category}</Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <p className="text-xs text-muted-foreground italic mb-2">"{med.instructions}"</p>
+                          <Button size="sm" className="w-full h-8 text-[10px] font-bold uppercase tracking-wider">
+                            Add to My Schedule
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="raw">
+                      <AccordionTrigger className="text-sm text-muted-foreground">View Raw OCR Text</AccordionTrigger>
+                      <AccordionContent className="text-[10px] font-mono whitespace-pre-wrap bg-muted p-4 rounded-lg">
+                        {analysis.rawExtractedText}
+                      </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-                   <Button className="w-full mt-6">Add Lisinopril to My Medications</Button>
+                  
+                  <Button variant="outline" className="w-full" onClick={() => setAnalysis(null)}>
+                    Upload Another
+                  </Button>
                 </div>
               )}
             </div>

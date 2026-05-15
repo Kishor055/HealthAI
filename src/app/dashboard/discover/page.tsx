@@ -8,112 +8,114 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Navigation, Loader2, Hospital, Building2, Pill } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Mock data for Metropolis (centered around a realistic set of coordinates)
-const METROPOLIS_CENTER = { lat: 40.7128, lng: -74.0060 }; // NYC as a proxy for Metropolis
+const METROPOLIS_CENTER = { lat: 40.7128, lng: -74.0060 };
+const LIBRARIES: ("places")[] = ["places"];
 
-const facilities = [
-  { 
-    id: '1',
-    name: "City General Hospital", 
-    address: "123 Health St, Metropolis", 
-    distance: "2.5 mi", 
-    type: "Hospital",
-    position: { lat: 40.7200, lng: -74.0100 },
-    phone: "(555) 123-4567"
-  },
-  { 
-    id: '2',
-    name: "Downtown Urgent Care", 
-    address: "456 Wellness Ave, Metropolis", 
-    distance: "1.2 mi", 
-    type: "Clinic",
-    position: { lat: 40.7100, lng: -73.9900 },
-    phone: "(555) 987-6543"
-  },
-  { 
-    id: '3',
-    name: "CareFirst Pharmacy", 
-    address: "789 Remedy Ln, Metropolis", 
-    distance: "0.8 mi", 
-    type: "Pharmacy",
-    position: { lat: 40.7050, lng: -74.0080 },
-    phone: "(555) 444-5555"
-  },
-  { 
-    id: '4',
-    name: "Northside Medical Center", 
-    address: "101 Cure Blvd, Metropolis", 
-    distance: "4.1 mi", 
-    type: "Hospital",
-    position: { lat: 40.7350, lng: -74.0200 },
-    phone: "(555) 222-3333"
-  },
-];
-
-const containerStyle = {
-  width: '100%',
-  height: '100%'
-};
+interface Facility {
+  id: string;
+  name: string;
+  address: string;
+  distance: string;
+  type: string;
+  position: { lat: number, lng: number };
+  phone: string;
+}
 
 export default function DiscoverPage() {
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: LIBRARIES
   });
 
   const [map, setMap] = React.useState<google.maps.Map | null>(null);
-  const [selectedFacility, setSelectedFacility] = React.useState<typeof facilities[0] | null>(null);
+  const [selectedFacility, setSelectedFacility] = React.useState<Facility | null>(null);
+  const [facilities, setFacilities] = React.useState<Facility[]>([]);
+  const [isSearching, setIsSearching] = React.useState(false);
+
+  const onMapLoad = React.useCallback((map: google.maps.Map) => {
+    setMap(map);
+    if (window.google) {
+      searchNearbyHospitals(map);
+    }
+  }, []);
+
+  const searchNearbyHospitals = (mapInstance: google.maps.Map) => {
+    setIsSearching(true);
+    const service = new google.maps.places.PlacesService(mapInstance);
+    const request = {
+      location: METROPOLIS_CENTER,
+      radius: 5000,
+      type: 'hospital'
+    };
+
+    service.nearbySearch(request, (results, status) => {
+      setIsSearching(false);
+      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+        const mapped = results.map(place => ({
+          id: place.place_id!,
+          name: place.name!,
+          address: place.vicinity || "Address not available",
+          distance: "Nearby",
+          type: "Hospital",
+          position: {
+            lat: place.geometry!.location!.lat(),
+            lng: place.geometry!.location!.lng()
+          },
+          phone: "Contact via details"
+        }));
+        setFacilities(mapped);
+      }
+    });
+  };
 
   const onUnmount = React.useCallback(function callback() {
     setMap(null);
   }, []);
 
-  const handleFacilityClick = (facility: typeof facilities[0]) => {
+  const handleFacilityClick = (facility: Facility) => {
     setSelectedFacility(facility);
     if (map) {
       map.panTo(facility.position);
-      map.setZoom(15);
+      map.setZoom(16);
     }
   };
 
   const getIcon = (type: string) => {
     switch (type) {
-        case 'Hospital': return <Hospital className="size-4" />;
-        case 'Clinic': return <Building2 className="size-4" />;
-        case 'Pharmacy': return <Pill className="size-4" />;
-        default: return <MapPin className="size-4" />;
+      case 'Hospital': return <Hospital className="size-4" />;
+      case 'Clinic': return <Building2 className="size-4" />;
+      case 'Pharmacy': return <Pill className="size-4" />;
+      default: return <MapPin className="size-4" />;
     }
   };
 
+  if (loadError) {
+    return <div className="p-8 text-center text-destructive">Error loading Google Maps. Please check your API key.</div>;
+  }
+
   return (
     <div className="h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
-      <div className="flex-1 relative h-[50vh] md:h-full bg-muted">
+      <div className="flex-1 relative h-[40vh] md:h-full bg-muted">
         {!isLoaded ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center space-y-2">
               <Loader2 className="size-10 animate-spin text-primary mx-auto" />
-              <p className="text-sm text-muted-foreground">Loading interactive map...</p>
+              <p className="text-sm text-muted-foreground">Initializing map...</p>
             </div>
           </div>
         ) : (
           <GoogleMap
-            mapContainerStyle={containerStyle}
+            mapContainerStyle={{ width: '100%', height: '100%' }}
             center={METROPOLIS_CENTER}
             zoom={13}
-            onLoad={map => setMap(map)}
+            onLoad={onMapLoad}
             onUnmount={onUnmount}
             options={{
               disableDefaultUI: false,
               styles: [
-                {
-                  featureType: "poi.business",
-                  stylers: [{ visibility: "off" }],
-                },
-                {
-                  featureType: "poi.park",
-                  elementType: "labels.text",
-                  stylers: [{ visibility: "off" }],
-                },
+                { featureType: "poi.business", stylers: [{ visibility: "on" }] },
+                { featureType: "transit", stylers: [{ visibility: "on" }] }
               ],
             }}
           >
@@ -134,8 +136,10 @@ export default function DiscoverPage() {
                 <div className="p-2 max-w-[200px]">
                   <h3 className="font-bold text-sm mb-1">{selectedFacility.name}</h3>
                   <p className="text-xs text-muted-foreground mb-2">{selectedFacility.address}</p>
-                  <Button size="sm" className="w-full h-7 text-[10px]">
-                    <Navigation className="size-2 mr-1" /> Get Directions
+                  <Button size="sm" className="w-full h-7 text-[10px]" asChild>
+                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.position.lat},${selectedFacility.position.lng}`} target="_blank" rel="noreferrer">
+                      <Navigation className="size-2 mr-1" /> Get Directions
+                    </a>
                   </Button>
                 </div>
               </InfoWindow>
@@ -144,19 +148,27 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      <aside className="w-full md:w-80 lg:w-96 bg-background border-l flex flex-col h-[50vh] md:h-full">
+      <aside className="w-full md:w-80 lg:w-96 bg-background border-l flex flex-col h-[60vh] md:h-full">
         <Card className="flex-1 border-none shadow-none flex flex-col rounded-none overflow-hidden">
           <CardHeader className="bg-muted/30 pb-4">
             <CardTitle className="text-lg font-headline flex items-center gap-2">
-                <MapPin className="size-5 text-primary" />
-                Nearby Facilities
+              <MapPin className="size-5 text-primary" />
+              Proximity Search
             </CardTitle>
-            <p className="text-xs text-muted-foreground">Found {facilities.length} healthcare providers near you.</p>
+            <p className="text-xs text-muted-foreground">
+              {isSearching ? "Searching for nearby hospitals..." : `Discovered ${facilities.length} healthcare providers.`}
+            </p>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-3">
+            {facilities.length === 0 && !isSearching && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Hospital className="size-12 mx-auto mb-4 opacity-20" />
+                <p>No hospitals found in this area.</p>
+              </div>
+            )}
             {facilities.map((facility) => (
-              <div 
-                key={facility.id} 
+              <div
+                key={facility.id}
                 className={cn(
                   "p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-primary/50",
                   selectedFacility?.id === facility.id ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"
@@ -166,32 +178,30 @@ export default function DiscoverPage() {
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex gap-3">
                     <div className={cn(
-                        "p-2 rounded-lg",
-                        facility.type === 'Hospital' ? "bg-red-100 text-red-600" :
-                        facility.type === 'Pharmacy' ? "bg-green-100 text-green-600" :
+                      "p-2 rounded-lg",
+                      facility.type === 'Hospital' ? "bg-red-100 text-red-600" :
                         "bg-blue-100 text-blue-600"
                     )}>
-                        {getIcon(facility.type)}
+                      {getIcon(facility.type)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm">{facility.name}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-1">{facility.address}</p>
+                      <h3 className="font-bold text-sm leading-tight">{facility.name}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{facility.address}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-1 bg-muted rounded-full uppercase tracking-wider">
-                    {facility.distance}
-                  </span>
                 </div>
-                
-                <div className="flex gap-2 mt-3">
-                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs font-semibold" asChild>
-                        <a href={`tel:${facility.phone.replace(/\D/g,'')}`}>
-                            <Phone className="size-3 mr-1.5" /> Call
-                        </a>
-                    </Button>
-                    <Button size="sm" className="flex-1 h-8 text-xs font-semibold">
-                        <Navigation className="size-3 mr-1.5" /> Directions
-                    </Button>
+
+                <div className="flex gap-2 mt-4">
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs font-semibold" asChild>
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name)}`} target="_blank" rel="noreferrer">
+                      Details
+                    </a>
+                  </Button>
+                  <Button size="sm" className="flex-1 h-8 text-xs font-semibold" asChild>
+                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position.lat},${facility.position.lng}`} target="_blank" rel="noreferrer">
+                      <Navigation className="size-3 mr-1.5" /> Go
+                    </a>
+                  </Button>
                 </div>
               </div>
             ))}
