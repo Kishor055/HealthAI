@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Bot, Loader2, Mail, Lock } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -50,7 +50,7 @@ export default function LoginPage() {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
+        title: "Authentication Error",
         description: error.message,
       });
       setIsLoading(false);
@@ -65,7 +65,7 @@ export default function LoginPage() {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Google Login Failed",
+        title: "Google Sync Failed",
         description: error.message,
       });
       setIsGoogleLoading(false);
@@ -85,7 +85,7 @@ export default function LoginPage() {
       <div className="hidden bg-muted lg:block relative">
         <Image
           src={placeholderImages.find(img => img.id === "login-hero")?.imageUrl || "/placeholder.svg"}
-          alt="Healthcare illustration"
+          alt="Healthcare background"
           fill
           className="object-cover"
           priority

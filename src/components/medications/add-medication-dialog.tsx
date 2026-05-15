@@ -30,8 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUser, useFirestore } from "@/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, setDocumentNonBlocking } from "@/firebase";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -68,35 +68,27 @@ export function AddMedicationDialog({ open, onOpenChange }: AddMedicationDialogP
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (!user || !firestore) return;
     setIsLoading(true);
 
-    try {
-      await addDoc(collection(firestore, "users", user.uid, "medicines"), {
-        ...values,
-        userId: user.uid,
-        isActive: true,
-        aiInterpretation: "Manually added record.",
-        safetyNotes: "Take as directed by your healthcare provider.",
-        createdAt: serverTimestamp(),
-      });
+    const newDocRef = doc(collection(firestore, "users", user.uid, "medicines"));
+    setDocumentNonBlocking(newDocRef, {
+      ...values,
+      userId: user.uid,
+      isActive: true,
+      aiInterpretation: "Manually added record.",
+      safetyNotes: "Take as directed by your healthcare provider.",
+      createdAt: serverTimestamp(),
+    }, { merge: true });
 
-      toast({
-        title: "Medication Added",
-        description: `${values.name} has been added to your schedule.`,
-      });
-      onOpenChange(false);
-      form.reset();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    toast({
+      title: "Medication Added",
+      description: `${values.name} has been added to your schedule.`,
+    });
+    onOpenChange(false);
+    form.reset();
+    setIsLoading(false);
   };
 
   return (

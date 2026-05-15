@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -9,11 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/firebase';
+import { useAuth, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { doc, setDoc } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
+import { doc, getFirestore } from 'firebase/firestore';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -37,14 +37,14 @@ export default function SignupPage() {
       const displayName = `${firstName} ${lastName}`;
       await updateProfile(user, { displayName });
 
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
+      // Create user document in Firestore (Non-blocking)
+      setDocumentNonBlocking(doc(db, 'users', user.uid), {
         id: user.uid,
         email: user.email,
         displayName,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      });
+      }, { merge: true });
 
       toast({
         title: "Account Created",
@@ -92,6 +92,7 @@ export default function SignupPage() {
                     required 
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
+                    suppressHydrationWarning
                   />
                 </div>
                 <div className="grid gap-2">
@@ -102,6 +103,7 @@ export default function SignupPage() {
                     required 
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
+                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -115,6 +117,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   icon={<Mail />}
+                  suppressHydrationWarning
                 />
               </div>
               <div className="grid gap-2">
@@ -126,9 +129,10 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   icon={<Lock />}
+                  suppressHydrationWarning
                 />
               </div>
-              <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={isLoading}>
+              <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={isLoading} suppressHydrationWarning>
                 {isLoading ? <Loader2 className="animate-spin mr-2" /> : 'Create Account'}
               </Button>
             </form>

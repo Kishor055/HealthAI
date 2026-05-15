@@ -20,8 +20,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Loader2, Pill, Activity, Heart, Wind, AlertCircle } from "lucide-react";
-import { useCollection, useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, doc, deleteDoc } from "firebase/firestore";
+import { useCollection, useUser, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 import { AddMedicationDialog } from "@/components/medications/add-medication-dialog";
 
 export default function MedicationsPage() {
@@ -39,10 +39,10 @@ export default function MedicationsPage() {
 
   const { data: medications, isLoading } = useCollection(medsQuery);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!user || !firestore) return;
     const docRef = doc(firestore, "users", user.uid, "medicines", id);
-    await deleteDoc(docRef);
+    deleteDocumentNonBlocking(docRef);
   };
 
   const getCategoryIcon = (category: string) => {

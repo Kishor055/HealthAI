@@ -52,7 +52,7 @@ export default function DiscoverPage() {
     try {
       const service = new google.maps.places.PlacesService(mapInstance);
       const request = {
-        location: METROPOLIS_CENTER,
+        location: mapInstance.getCenter() || METROPOLIS_CENTER,
         radius: 5000,
         type: 'hospital'
       };
@@ -70,19 +70,21 @@ export default function DiscoverPage() {
               lat: place.geometry!.location!.lat(),
               lng: place.geometry!.location!.lng()
             },
-            phone: "Contact via details"
+            phone: "Contact for details"
           }));
           setFacilities(mapped);
         } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
           setErrorState({
-            title: "Places API Access Denied",
-            message: "The Places API is currently disabled for this key. To fix this: 1. Go to Google Cloud Console. 2. Enable 'Places API'. 3. Ensure billing is active.",
+            title: "Places API Request Denied",
+            message: "The Google Places API is currently disabled for this key. Please go to your Google Cloud Console and enable the 'Places API' for this project to search for healthcare facilities.",
             type: 'denied'
           });
-        } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
+        } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+          setFacilities([]);
+        } else {
           setErrorState({
-            title: "Quota Exceeded",
-            message: "You have exceeded your daily quota for the Places API.",
+            title: "Map Service Error",
+            message: `The map service returned an error: ${status}. Please check your configuration.`,
             type: 'error'
           });
         }
@@ -90,8 +92,8 @@ export default function DiscoverPage() {
     } catch (e) {
       setIsSearching(false);
       setErrorState({
-        title: "Service Initialization Error",
-        message: "Failed to initialize Google Places Service.",
+        title: "Initialization Error",
+        message: "Failed to initialize the Google Places Service. Please refresh or try again.",
         type: 'error'
       });
     }
@@ -114,14 +116,14 @@ export default function DiscoverPage() {
     }
   };
 
-  if (!apiKey) {
+  if (!apiKey || apiKey.includes('---')) {
     return (
       <div className="p-8 max-w-2xl mx-auto">
         <Alert variant="destructive" className="border-2">
           <AlertCircle className="h-5 w-5" />
-          <AlertTitle className="text-lg font-bold">API Configuration Missing</AlertTitle>
+          <AlertTitle className="text-lg font-bold">Invalid API Key</AlertTitle>
           <AlertDescription className="mt-2 text-sm">
-            The Discovery features require a Google Maps API Key. Please ensure <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> is set in your environment variables.
+            The Google Maps API Key provided is either missing or contains placeholders. Please update your <code>.env</code> file with a valid <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>.
           </AlertDescription>
         </Alert>
       </div>
@@ -135,7 +137,7 @@ export default function DiscoverPage() {
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
             <div className="text-center space-y-4">
               <Loader2 className="size-12 animate-spin text-primary mx-auto" />
-              <p className="text-sm font-medium text-muted-foreground">Connecting to Google Maps...</p>
+              <p className="text-sm font-medium text-muted-foreground">Initializing Google Services...</p>
             </div>
           </div>
         ) : (
@@ -200,7 +202,7 @@ export default function DiscoverPage() {
                       </a>
                     </Button>
                     <Button size="sm" className="h-7 text-[10px]" onClick={() => map && searchNearbyHospitals(map)} suppressHydrationWarning>
-                      Retry
+                      Retry Search
                     </Button>
                   </div>
                 </AlertDescription>
@@ -215,7 +217,7 @@ export default function DiscoverPage() {
           <CardHeader className="bg-primary/5 pb-4 border-b">
             <CardTitle className="text-lg font-headline flex items-center gap-2">
               <MapPin className="size-5 text-primary" />
-              Healthcare Proximity
+              Facility Locator
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               {isSearching ? "Searching nearby..." : `Discovered ${facilities.length} providers.`}
@@ -225,15 +227,15 @@ export default function DiscoverPage() {
             {isSearching && facilities.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-50">
                 <Loader2 className="size-8 animate-spin text-primary" />
-                <p className="text-xs font-medium">Scanning for hospitals...</p>
+                <p className="text-xs font-medium">Scanning for facilities...</p>
               </div>
             )}
             
             {!isSearching && facilities.length === 0 && !errorState && (
               <div className="text-center py-20 text-muted-foreground">
                 <Hospital className="size-16 mx-auto mb-4 opacity-10" />
-                <p className="text-sm font-medium">No results found in your area.</p>
-                <p className="text-xs mt-1">Try expanding your search radius.</p>
+                <p className="text-sm font-medium">No results found.</p>
+                <p className="text-xs mt-1">Try moving the map to another area.</p>
               </div>
             )}
 
@@ -246,7 +248,7 @@ export default function DiscoverPage() {
                 className={cn(
                   "p-4 rounded-2xl border-2 transition-all cursor-pointer group hover:shadow-lg",
                   selectedFacility?.id === facility.id 
-                    ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20" 
+                    ? "border-primary bg-primary/5 shadow-md" 
                     : "border-border bg-card hover:border-primary/30"
                 )}
                 onClick={() => handleFacilityClick(facility)}
@@ -267,12 +269,12 @@ export default function DiscoverPage() {
                 <div className="flex gap-2 mt-4">
                   <Button size="sm" variant="ghost" className="flex-1 h-8 text-[11px] font-bold" asChild suppressHydrationWarning>
                     <a href={`tel:${facility.phone}`} onClick={(e) => e.stopPropagation()}>
-                      <Phone className="size-3 mr-1.5" /> Call
+                      <Phone className="size-3 mr-1.5" /> Contact
                     </a>
                   </Button>
                   <Button size="sm" className="flex-1 h-8 text-[11px] font-bold shadow-lg shadow-primary/20" asChild suppressHydrationWarning>
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position.lat},${facility.position.lng}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                      <Navigation className="size-3 mr-1.5" /> Go
+                      <Navigation className="size-3 mr-1.5" /> Navigate
                     </a>
                   </Button>
                 </div>
