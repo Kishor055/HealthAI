@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Pill, Clock, X } from "lucide-react";
+import { Pill, Clock, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ReminderAlarm() {
@@ -10,7 +11,7 @@ export function ReminderAlarm() {
   const [hasPermission, setHasPermission] = useState(false);
 
   useEffect(() => {
-    if ("Notification" in window) {
+    if (typeof window !== "undefined" && "Notification" in window) {
       if (Notification.permission === "granted") {
         setHasPermission(true);
       } else if (Notification.permission !== "denied") {
@@ -21,38 +22,39 @@ export function ReminderAlarm() {
     }
   }, []);
 
-  // Mock interval to check for "upcoming" reminders every 30 seconds
   useEffect(() => {
     const checkReminders = () => {
-      // In a real app, this would query Firestore for the next scheduled dose
       const now = new Date();
-      const hours = now.getHours();
       const minutes = now.getMinutes();
 
-      // Mock trigger for demonstration at specific minutes
-      if (minutes % 10 === 0) {
-        showNotification("Lisinopril 10mg", "It's time for your morning dose.");
+      // Trigger a simulated reminder every 5 minutes for demonstration
+      if (minutes % 5 === 0 && now.getSeconds() === 0) {
+        showNotification("Lisinopril 10mg", "Time for your scheduled morning dose.");
       }
     };
 
-    const interval = setInterval(checkReminders, 60000);
+    const interval = setInterval(checkReminders, 1000);
     return () => clearInterval(interval);
   }, [hasPermission]);
 
   const showNotification = (medicine: string, message: string) => {
     if (hasPermission) {
-      new Notification(`Medication Reminder: ${medicine}`, {
-        body: message,
+      new Notification(`HealthAI Reminder`, {
+        body: `${medicine}: ${message}`,
         icon: "/bot-icon.png",
       });
+      
+      // Play a soft medical chime if possible
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play().catch(() => {/* Blocked by browser policy */});
     }
 
     toast({
-      title: `Medication Reminder: ${medicine}`,
-      description: message,
+      title: `Medication Reminder`,
+      description: `${medicine} - ${message}`,
       action: (
-        <Button variant="outline" size="sm" onClick={() => console.log("Medication logged")}>
-          Logged
+        <Button variant="default" size="sm" className="bg-accent text-accent-foreground">
+          Confirm Taken
         </Button>
       ),
     });

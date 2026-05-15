@@ -1,11 +1,10 @@
+
 'use server';
 
 /**
- * @fileOverview A medication question answering AI agent.
+ * @fileOverview A professional medication assistant AI agent.
  *
  * - answerMedicationQuestions - A function that handles answering questions about a user's medications.
- * - AnswerMedicationQuestionsInput - The input type for the answerMedicationQuestions function.
- * - AnswerMedicationQuestionsOutput - The return type for the answerMedicationQuestions function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -18,7 +17,8 @@ const AnswerMedicationQuestionsInputSchema = z.object({
 export type AnswerMedicationQuestionsInput = z.infer<typeof AnswerMedicationQuestionsInputSchema>;
 
 const AnswerMedicationQuestionsOutputSchema = z.object({
-  answer: z.string().describe('The answer to the user\'s question about their medications.'),
+  answer: z.string().describe('The answer to the user\'s question.'),
+  guidance: z.string().optional().describe('Additional health guidance or precautions.'),
 });
 export type AnswerMedicationQuestionsOutput = z.infer<typeof AnswerMedicationQuestionsOutputSchema>;
 
@@ -30,15 +30,22 @@ const prompt = ai.definePrompt({
   name: 'answerMedicationQuestionsPrompt',
   input: {schema: AnswerMedicationQuestionsInputSchema},
   output: {schema: AnswerMedicationQuestionsOutputSchema},
-  prompt: `You are a helpful AI assistant that answers questions about medications.
+  prompt: `You are a professional medical AI assistant. 
+Your goal is to help patients understand their medications based on their provided list.
 
-  You will be given a list of the user\'s current medications and a question about their medications.
+Medication List: {{{medicationList}}}
+User Question: {{{question}}}
 
-  Use the medication list to answer the question as accurately and concisely as possible. Avoid diagnosis and only provide medication guidance.
+Instructions:
+1. Provide accurate, evidence-based answers in simple, compassionate language.
+2. If asked about side effects, list the most common ones clearly.
+3. If asked about dosage, refer to the provided list strictly.
+4. ALWAYS include a disclaimer that you are an AI and they should consult their doctor for clinical decisions.
+5. If the question is about a disease not related to their meds, provide general medical information but avoid specific diagnoses.
 
-  Medication List: {{{medicationList}}}
-  Question: {{{question}}}
-  `,
+Guidelines:
+- Tone: Professional, empathetic, clear.
+- Scope: Medication management, general health queries, disease explanation.`,
 });
 
 const answerMedicationQuestionsFlow = ai.defineFlow(
