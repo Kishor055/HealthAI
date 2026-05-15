@@ -1,12 +1,14 @@
+
 "use client";
 
 import * as React from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Navigation, Loader2, Hospital, Building2, Pill, AlertCircle } from "lucide-react";
+import { MapPin, Phone, Navigation, Loader2, Hospital, Building2, Pill, AlertCircle, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const METROPOLIS_CENTER = { lat: 40.7128, lng: -74.0060 };
 const LIBRARIES: ("places")[] = ["places"];
@@ -34,7 +36,7 @@ export default function DiscoverPage() {
   const [selectedFacility, setSelectedFacility] = React.useState<Facility | null>(null);
   const [facilities, setFacilities] = React.useState<Facility[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
-  const [errorState, setErrorState] = React.useState<string | null>(null);
+  const [errorState, setErrorState] = React.useState<{ title: string; message: string; type: 'missing' | 'denied' | 'error' } | null>(null);
 
   const onMapLoad = React.useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -45,38 +47,55 @@ export default function DiscoverPage() {
 
   const searchNearbyHospitals = (mapInstance: google.maps.Map) => {
     setIsSearching(true);
-    const service = new google.maps.places.PlacesService(mapInstance);
-    const request = {
-      location: METROPOLIS_CENTER,
-      radius: 5000,
-      type: 'hospital'
-    };
+    setErrorState(null);
+    
+    try {
+      const service = new google.maps.places.PlacesService(mapInstance);
+      const request = {
+        location: METROPOLIS_CENTER,
+        radius: 5000,
+        type: 'hospital'
+      };
 
-    service.nearbySearch(request, (results, status) => {
+      service.nearbySearch(request, (results, status) => {
+        setIsSearching(false);
+        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+          const mapped = results.map(place => ({
+            id: place.place_id!,
+            name: place.name!,
+            address: place.vicinity || "Address not available",
+            distance: "Nearby",
+            type: "Hospital",
+            position: {
+              lat: place.geometry!.location!.lat(),
+              lng: place.geometry!.location!.lng()
+            },
+            phone: "Contact via details"
+          }));
+          setFacilities(mapped);
+        } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+          setErrorState({
+            title: "Places API Access Denied",
+            message: "The Places API is currently disabled for this key. To fix this: 1. Go to Google Cloud Console. 2. Enable 'Places API'. 3. Ensure billing is active.",
+            type: 'denied'
+          });
+        } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
+          setErrorState({
+            title: "Quota Exceeded",
+            message: "You have exceeded your daily quota for the Places API.",
+            type: 'error'
+          });
+        }
+      });
+    } catch (e) {
       setIsSearching(false);
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        const mapped = results.map(place => ({
-          id: place.place_id!,
-          name: place.name!,
-          address: place.vicinity || "Address not available",
-          distance: "Nearby",
-          type: "Hospital",
-          position: {
-            lat: place.geometry!.location!.lat(),
-            lng: place.geometry!.location!.lng()
-          },
-          phone: "Contact via details"
-        }));
-        setFacilities(mapped);
-      } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-        setErrorState("Places API request denied. Please ensure the Places API is enabled in your Google Cloud Console.");
-      }
-    });
+      setErrorState({
+        title: "Service Initialization Error",
+        message: "Failed to initialize Google Places Service.",
+        type: 'error'
+      });
+    }
   };
-
-  const onUnmount = React.useCallback(function callback() {
-    setMap(null);
-  }, []);
 
   const handleFacilityClick = (facility: Facility) => {
     setSelectedFacility(facility);
@@ -97,26 +116,12 @@ export default function DiscoverPage() {
 
   if (!apiKey) {
     return (
-      <div className="p-8 max-w-2xl mx-auto space-y-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Google Maps API Key Missing</AlertTitle>
-          <AlertDescription>
-            The maps feature requires a valid Google Maps API Key. Please add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (loadError || errorState) {
-    return (
-      <div className="p-8 text-center space-y-4">
-        <Alert variant="destructive" className="max-w-md mx-auto">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Google Maps Error</AlertTitle>
-          <AlertDescription>
-            {errorState || "Google Maps reported an error (InvalidKeyMapError). Please check that your API key is correct and has both 'Maps JavaScript API' and 'Places API' enabled."}
+      <div className="p-8 max-w-2xl mx-auto">
+        <Alert variant="destructive" className="border-2">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="text-lg font-bold">API Configuration Missing</AlertTitle>
+          <AlertDescription className="mt-2 text-sm">
+            The Discovery features require a Google Maps API Key. Please ensure <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> is set in your environment variables.
           </AlertDescription>
         </Alert>
       </div>
@@ -124,13 +129,13 @@ export default function DiscoverPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
-      <div className="flex-1 relative h-[40vh] md:h-full bg-muted">
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col md:flex-row overflow-hidden bg-muted/20">
+      <div className="flex-1 relative h-[40vh] md:h-full">
         {!isLoaded ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center space-y-2">
-              <Loader2 className="size-10 animate-spin text-primary mx-auto" />
-              <p className="text-sm text-muted-foreground">Initializing map...</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <div className="text-center space-y-4">
+              <Loader2 className="size-12 animate-spin text-primary mx-auto" />
+              <p className="text-sm font-medium text-muted-foreground">Connecting to Google Maps...</p>
             </div>
           </div>
         ) : (
@@ -139,7 +144,6 @@ export default function DiscoverPage() {
             center={METROPOLIS_CENTER}
             zoom={13}
             onLoad={onMapLoad}
-            onUnmount={onUnmount}
             options={{
               disableDefaultUI: false,
               styles: [
@@ -162,12 +166,12 @@ export default function DiscoverPage() {
                 position={selectedFacility.position}
                 onCloseClick={() => setSelectedFacility(null)}
               >
-                <div className="p-2 max-w-[200px]">
-                  <h3 className="font-bold text-sm mb-1">{selectedFacility.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{selectedFacility.address}</p>
-                  <Button size="sm" className="w-full h-7 text-[10px]" asChild suppressHydrationWarning>
+                <div className="p-2 max-w-[220px]">
+                  <h3 className="font-bold text-sm mb-1 text-primary">{selectedFacility.name}</h3>
+                  <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">{selectedFacility.address}</p>
+                  <Button size="sm" className="w-full h-8 text-[10px] font-bold" asChild suppressHydrationWarning>
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.position.lat},${selectedFacility.position.lng}`} target="_blank" rel="noreferrer">
-                      <Navigation className="size-2 mr-1" /> Get Directions
+                      <Navigation className="size-3 mr-1.5" /> Navigate
                     </a>
                   </Button>
                 </div>
@@ -175,64 +179,104 @@ export default function DiscoverPage() {
             )}
           </GoogleMap>
         )}
+
+        <AnimatePresence>
+          {errorState && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 z-50"
+            >
+              <Alert variant="destructive" className="shadow-2xl border-2 bg-background/95 backdrop-blur-md">
+                <AlertCircle className="h-5 w-5" />
+                <AlertTitle className="font-bold">{errorState.title}</AlertTitle>
+                <AlertDescription className="mt-2 text-xs leading-relaxed">
+                  {errorState.message}
+                  <div className="mt-4 flex gap-2">
+                    <Button variant="outline" size="sm" className="h-7 text-[10px] bg-background" asChild suppressHydrationWarning>
+                      <a href="https://console.cloud.google.com/google/maps-apis/api-list" target="_blank" rel="noreferrer">
+                        <ExternalLink className="size-3 mr-1" /> Open Console
+                      </a>
+                    </Button>
+                    <Button size="sm" className="h-7 text-[10px]" onClick={() => map && searchNearbyHospitals(map)} suppressHydrationWarning>
+                      Retry
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <aside className="w-full md:w-80 lg:w-96 bg-background border-l flex flex-col h-[60vh] md:h-full">
+      <aside className="w-full md:w-80 lg:w-96 bg-background border-l flex flex-col h-[60vh] md:h-full z-10 shadow-2xl">
         <Card className="flex-1 border-none shadow-none flex flex-col rounded-none overflow-hidden">
-          <CardHeader className="bg-muted/30 pb-4">
+          <CardHeader className="bg-primary/5 pb-4 border-b">
             <CardTitle className="text-lg font-headline flex items-center gap-2">
               <MapPin className="size-5 text-primary" />
-              Proximity Search
+              Healthcare Proximity
             </CardTitle>
             <p className="text-xs text-muted-foreground">
-              {isSearching ? "Searching for nearby hospitals..." : `Discovered ${facilities.length} healthcare providers.`}
+              {isSearching ? "Searching nearby..." : `Discovered ${facilities.length} providers.`}
             </p>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-4 space-y-3">
-            {facilities.length === 0 && !isSearching && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Hospital className="size-12 mx-auto mb-4 opacity-20" />
-                <p>No hospitals found in this area.</p>
+          <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+            {isSearching && facilities.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-50">
+                <Loader2 className="size-8 animate-spin text-primary" />
+                <p className="text-xs font-medium">Scanning for hospitals...</p>
               </div>
             )}
-            {facilities.map((facility) => (
-              <div
+            
+            {!isSearching && facilities.length === 0 && !errorState && (
+              <div className="text-center py-20 text-muted-foreground">
+                <Hospital className="size-16 mx-auto mb-4 opacity-10" />
+                <p className="text-sm font-medium">No results found in your area.</p>
+                <p className="text-xs mt-1">Try expanding your search radius.</p>
+              </div>
+            )}
+
+            {facilities.map((facility, index) => (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
                 key={facility.id}
                 className={cn(
-                  "p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-primary/50",
-                  selectedFacility?.id === facility.id ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"
+                  "p-4 rounded-2xl border-2 transition-all cursor-pointer group hover:shadow-lg",
+                  selectedFacility?.id === facility.id 
+                    ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20" 
+                    : "border-border bg-card hover:border-primary/30"
                 )}
                 onClick={() => handleFacilityClick(facility)}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex gap-3">
-                    <div className={cn(
-                      "p-2 rounded-lg",
-                      facility.type === 'Hospital' ? "bg-red-100 text-red-600" :
-                        "bg-blue-100 text-blue-600"
-                    )}>
-                      {getIcon(facility.type)}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm leading-tight">{facility.name}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{facility.address}</p>
-                    </div>
+                <div className="flex gap-4">
+                  <div className={cn(
+                    "p-3 rounded-xl shrink-0 group-hover:scale-110 transition-transform",
+                    facility.type === 'Hospital' ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
+                  )}>
+                    {getIcon(facility.type)}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-sm leading-tight text-foreground truncate">{facility.name}</h3>
+                    <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{facility.address}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs font-semibold" asChild suppressHydrationWarning>
-                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name)}`} target="_blank" rel="noreferrer">
-                      Details
+                  <Button size="sm" variant="ghost" className="flex-1 h-8 text-[11px] font-bold" asChild suppressHydrationWarning>
+                    <a href={`tel:${facility.phone}`} onClick={(e) => e.stopPropagation()}>
+                      <Phone className="size-3 mr-1.5" /> Call
                     </a>
                   </Button>
-                  <Button size="sm" className="flex-1 h-8 text-xs font-semibold" asChild suppressHydrationWarning>
-                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position.lat},${facility.position.lng}`} target="_blank" rel="noreferrer">
+                  <Button size="sm" className="flex-1 h-8 text-[11px] font-bold shadow-lg shadow-primary/20" asChild suppressHydrationWarning>
+                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position.lat},${facility.position.lng}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                       <Navigation className="size-3 mr-1.5" /> Go
                     </a>
                   </Button>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </CardContent>
         </Card>
