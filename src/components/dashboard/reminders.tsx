@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,11 +12,14 @@ import {
 } from "@/components/ui/card";
 import { Check, SkipForward, Clock, Loader2 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { query, collection, where, limit } from "firebase/firestore";
+import { query, collection, where, limit, addDoc, serverTimestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export function Reminders() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const activeMedsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -27,6 +31,35 @@ export function Reminders() {
   }, [firestore, user?.uid]);
 
   const { data: medications, isLoading } = useCollection(activeMedsQuery);
+
+  const handleTakeMedication = async (med: any) => {
+    if (!user || !firestore) return;
+    setProcessingId(med.id);
+    try {
+      await addDoc(collection(firestore, "users", user.uid, "medicationIntakes"), {
+        userId: user.uid,
+        medicineId: med.id,
+        medicineName: med.name,
+        scheduledTime: new Date().toISOString(),
+        actualTakeTime: new Date().toISOString(),
+        status: "taken",
+        createdAt: serverTimestamp(),
+      });
+
+      toast({
+        title: "Medication Logged",
+        description: `You have successfully taken ${med.name}. Keep it up!`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not log medication intake.",
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   return (
     <Card>
@@ -59,12 +92,27 @@ export function Reminders() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-8 w-8 p-0 text-muted-foreground"
+                    disabled={processingId === med.id}
+                  >
                     <SkipForward className="h-4 w-4" />
                     <span className="sr-only">Skip</span>
                   </Button>
-                  <Button size="sm" variant="default" className="h-8 bg-accent hover:bg-accent/90 text-accent-foreground font-bold px-3">
-                    <Check className="h-4 w-4 mr-1" />
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    className="h-8 bg-accent hover:bg-accent/90 text-accent-foreground font-bold px-3"
+                    onClick={() => handleTakeMedication(med)}
+                    disabled={processingId === med.id}
+                  >
+                    {processingId === med.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4 mr-1" />
+                    )}
                     Take
                   </Button>
                 </div>

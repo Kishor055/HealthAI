@@ -35,6 +35,7 @@ export default function DiscoverPage() {
   const [selectedFacility, setSelectedFacility] = React.useState<Facility | null>(null);
   const [facilities, setFacilities] = React.useState<Facility[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [errorState, setErrorState] = React.useState<string | null>(null);
 
   const onMapLoad = React.useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -68,6 +69,8 @@ export default function DiscoverPage() {
           phone: "Contact via details"
         }));
         setFacilities(mapped);
+      } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+        setErrorState("Places API request denied. Please ensure the Places API is enabled in your Google Cloud Console.");
       }
     });
   };
@@ -103,29 +106,18 @@ export default function DiscoverPage() {
             The maps feature requires a valid Google Maps API Key. Please add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables.
           </AlertDescription>
         </Alert>
-        <Card>
-          <CardHeader>
-            <CardTitle>How to fix this:</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <p>1. Go to the <a href="https://console.cloud.google.com/" target="_blank" className="text-primary underline">Google Cloud Console</a>.</p>
-            <p>2. Enable the <strong>Maps JavaScript API</strong> and <strong>Places API</strong>.</p>
-            <p>3. Create an API Key and restrict it to your domain.</p>
-            <p>4. Add it to your <code>.env</code> file.</p>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
-  if (loadError) {
+  if (loadError || errorState) {
     return (
       <div className="p-8 text-center space-y-4">
         <Alert variant="destructive" className="max-w-md mx-auto">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Invalid API Key</AlertTitle>
+          <AlertTitle>Google Maps Error</AlertTitle>
           <AlertDescription>
-            Google Maps reported an error (InvalidKeyMapError). Please check that your API key is correct and has the required permissions.
+            {errorState || "Google Maps reported an error (InvalidKeyMapError). Please check that your API key is correct and has both 'Maps JavaScript API' and 'Places API' enabled."}
           </AlertDescription>
         </Alert>
       </div>
@@ -174,7 +166,7 @@ export default function DiscoverPage() {
                 <div className="p-2 max-w-[200px]">
                   <h3 className="font-bold text-sm mb-1">{selectedFacility.name}</h3>
                   <p className="text-xs text-muted-foreground mb-2">{selectedFacility.address}</p>
-                  <Button size="sm" className="w-full h-7 text-[10px]" asChild>
+                  <Button size="sm" className="w-full h-7 text-[10px]" asChild suppressHydrationWarning>
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.position.lat},${selectedFacility.position.lng}`} target="_blank" rel="noreferrer">
                       <Navigation className="size-2 mr-1" /> Get Directions
                     </a>

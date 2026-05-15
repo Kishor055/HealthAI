@@ -18,14 +18,19 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2 } from 'lucide-react';
+import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2, Pill } from 'lucide-react';
 import { analyzePrescription, AnalyzePrescriptionOutput } from '@/ai/flows/analyze-prescription-flow';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export function UploadPrescription() {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdding, setIsAdding] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalyzePrescriptionOutput | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -64,6 +69,40 @@ export function UploadPrescription() {
     reader.readAsDataURL(file);
   };
 
+  const handleAddToSchedule = async (med: any) => {
+    if (!user || !firestore) return;
+    setIsAdding(med.name);
+
+    try {
+      await addDoc(collection(firestore, "users", user.uid, "medicines"), {
+        userId: user.uid,
+        name: med.name,
+        dosage: med.dosage,
+        frequency: med.frequency,
+        instructions: med.instructions,
+        category: med.category || 'General',
+        startDate: new Date().toISOString().split('T')[0],
+        isActive: true,
+        aiInterpretation: `Extracted from prescription. Diagnosis: ${analysis?.diagnosis}`,
+        safetyNotes: "Extracted by AI. Please verify with your pharmacist.",
+        createdAt: serverTimestamp(),
+      });
+
+      toast({
+        title: "Added to Schedule",
+        description: `${med.name} has been added to your medications.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not add medication to schedule.",
+      });
+    } finally {
+      setIsAdding(null);
+    }
+  };
+
   const triggerUpload = () => {
     fileInputRef.current?.click();
   };
@@ -79,7 +118,7 @@ export function UploadPrescription() {
       <CardContent className="text-center">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button size="lg" className="rounded-full px-8 shadow-lg hover:shadow-primary/20 transition-all">
+            <Button size="lg" className="rounded-full px-8 shadow-lg hover:shadow-primary/20 transition-all" suppressHydrationWarning>
               <PlusCircle className="mr-2 h-5 w-5" />
               Digitize New Record
             </Button>
@@ -114,7 +153,7 @@ export function UploadPrescription() {
                       Supports JPG, PNG, PDF, and Scanned Documents up to 10MB.
                     </p>
                   </div>
-                  <Button variant="outline" className="mt-2">Browse Files</Button>
+                  <Button variant="outline" className="mt-2" suppressHydrationWarning>Browse Files</Button>
                 </div>
               )}
 
@@ -163,8 +202,14 @@ export function UploadPrescription() {
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
                           <p className="text-xs text-muted-foreground italic mb-2">"{med.instructions}"</p>
-                          <Button size="sm" className="w-full h-8 text-[10px] font-bold uppercase tracking-wider">
-                            Add to My Schedule
+                          <Button 
+                            size="sm" 
+                            className="w-full h-8 text-[10px] font-bold uppercase tracking-wider"
+                            onClick={() => handleAddToSchedule(med)}
+                            disabled={isAdding === med.name}
+                            suppressHydrationWarning
+                          >
+                            {isAdding === med.name ? <Loader2 className="animate-spin h-3 w-3" /> : "Add to My Schedule"}
                           </Button>
                         </CardContent>
                       </Card>
@@ -180,7 +225,7 @@ export function UploadPrescription() {
                     </AccordionItem>
                   </Accordion>
                   
-                  <Button variant="outline" className="w-full" onClick={() => setAnalysis(null)}>
+                  <Button variant="outline" className="w-full" onClick={() => setAnalysis(null)} suppressHydrationWarning>
                     Upload Another
                   </Button>
                 </div>
