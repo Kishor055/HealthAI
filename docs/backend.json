@@ -55,7 +55,9 @@
         "dosage": { "type": "string" },
         "category": { "type": "string" },
         "isActive": { "type": "boolean" },
-        "startDate": { "type": "string" }
+        "startDate": { "type": "string" },
+        "frequency": { "type": "string" },
+        "instructions": { "type": "string" }
       }
     },
     "MedicationIntake": {

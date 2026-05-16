@@ -163,6 +163,7 @@ export const useUser = (): UserHookResult => {
     displayName: 'Kishor Patil',
     email: 'kishorkakde026@gmail.com',
     photoURL: 'https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?q=80&w=1080',
+    emailVerified: false,
   } as any;
 
   return { 
