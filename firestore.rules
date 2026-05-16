@@ -6,9 +6,9 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
 
-    // --- USER DATA ---
-    // This recursive pattern ensures that any user-specific data nested under 
-    // /users/{userId}/ is only accessible by the owner of that profile.
+    // --- USER DATA SILO ---
+    // This match covers the user document itself and ALL nested subcollections
+    // (prescriptions, medicines, healthRecords, appointments, medicationIntakes, etc.)
     match /users/{userId} {
       allow read, write: if isOwner(userId);
       
