@@ -1,25 +1,23 @@
 "use client";
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
+/**
+ * DashboardLayout with Auth-Bypass.
+ * Redirect logic is removed to allow for direct dashboard access.
+ */
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const { user, isUserLoading } = useUser();
   
-  React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.replace('/');
-    }
-  }, [user, isUserLoading, router]);
+  // Auth redirect logic removed to satisfy "Remove auth or login" request
 
   if (isUserLoading || !user) {
     return (
