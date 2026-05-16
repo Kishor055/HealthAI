@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WelcomeHeader } from "@/components/dashboard/welcome-header";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { Reminders } from "@/components/dashboard/reminders";
@@ -14,16 +13,53 @@ import { TakeNowDialog } from "@/components/dashboard/take-now-dialog";
 import { CallDoctorDialog } from "@/components/dashboard/call-doctor-dialog";
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Smile, Frown, Meh, Thermometer, Brain, TrendingUp, Activity } from "lucide-react";
+import { Smile, Frown, Meh, Brain, TrendingUp, Activity, Loader2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { query, collection, orderBy, limit } from 'firebase/firestore';
+import { analyzeHealthTrends, HealthTrendOutput } from "@/ai/flows/analyze-health-trends";
 
 export default function DashboardPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isTakeNowOpen, setIsTakeNowOpen] = useState(false);
   const [isCallDoctorOpen, setIsCallDoctorOpen] = useState(false);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  
+  const [aiInsight, setAiInsight] = useState<HealthTrendOutput | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const vitalsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "users", user.uid, "healthRecords"), orderBy("date", "desc"), limit(5));
+  }, [firestore, user?.uid]);
+
+  const medsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "users", user.uid, "medicines"), limit(10));
+  }, [firestore, user?.uid]);
+
+  const { data: vitals } = useCollection(vitalsQuery);
+  const { data: medicines } = useCollection(medsQuery);
+
+  const handleRunAiCheck = async () => {
+    if (!vitals || !medicines) return;
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeHealthTrends({
+        vitals: vitals.map(v => ({ type: v.type, value: v.value, date: v.date })),
+        activeMedications: medicines.filter(m => m.isActive).map(m => m.name),
+      });
+      setAiInsight(result);
+    } catch (e) {
+      console.error("AI Trend Analysis failed", e);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const checkIns = [
     { icon: Smile, label: "Good", color: "text-accent bg-accent/10" },
@@ -32,7 +68,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/30 pb-20 md:pb-0">
+    <div className="flex min-h-screen w-full flex-col bg-muted/30 pb-20 md:pb-0 font-body">
       <ReminderAlarm />
       
       <AddMedicationDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
@@ -105,7 +141,6 @@ export default function DashboardPage() {
              <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
                 className="bg-card rounded-[2rem] p-8 border-none shadow-xl relative overflow-hidden group"
              >
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -114,14 +149,16 @@ export default function DashboardPage() {
                 
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-black text-xl uppercase tracking-tighter">Clinical Adherence</h3>
-                  <Badge className="bg-accent/10 text-accent hover:bg-accent/20 border-none font-black text-[10px] tracking-widest uppercase">Verified</Badge>
+                  <Badge className="bg-accent/10 text-accent hover:bg-accent/20 border-none font-black text-[10px] tracking-widest uppercase">AI Verified</Badge>
                 </div>
 
                 <div className="space-y-6 relative z-10">
                   <div className="p-4 bg-muted/50 rounded-2xl border border-dashed border-primary/20">
                     <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-3 text-muted-foreground">
                       <span>7-Day Stability Index</span>
-                      <span className="text-accent flex items-center gap-1"><TrendingUp className="size-3" /> 94% Rate</span>
+                      <span className="text-accent flex items-center gap-1">
+                        <TrendingUp className="size-3" /> {aiInsight?.stabilityIndex || 94}% Rate
+                      </span>
                     </div>
                     <div className="flex gap-1.5 h-16 items-end">
                        {[60, 80, 100, 90, 100, 100, 100].map((h, i) => (
@@ -141,14 +178,20 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-tight text-primary mb-1">Smart Adherence Insight</p>
                       <p className="text-[10px] font-medium leading-relaxed opacity-70">
-                        "Perfect streak! You haven't missed a dose in 5 days. Your biometric baseline has stabilized significantly."
+                        {aiInsight?.trendInsight || '"Sync your biometric data to generate professional clinical insights based on your recent records."'}
                       </p>
                     </div>
                   </div>
 
                   <div className="pt-2">
-                    <Button variant="ghost" className="w-full h-10 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-all">
-                      Sync Wearable Data
+                    <Button 
+                      onClick={handleRunAiCheck}
+                      disabled={isAnalyzing || !vitals}
+                      variant="ghost" 
+                      className="w-full h-10 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-all gap-2"
+                    >
+                      {isAnalyzing ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3 text-primary" />}
+                      {aiInsight ? "Refresh AI Insight" : "Generate Clinical Analysis"}
                     </Button>
                   </div>
                 </div>
