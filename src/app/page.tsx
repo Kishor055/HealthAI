@@ -1,103 +1,17 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Bot, Loader2, Sparkles, ShieldCheck, Zap } from 'lucide-react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
-
+import { Bot, Sparkles, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { placeholderImages } from '@/lib/placeholder-images';
-import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useToast } from '@/hooks/use-toast';
 
-const GoogleIcon = () => (
-  <svg className="size-4" viewBox="0 0 48 48">
-    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20c0-1.341-.138-2.65-.389-3.917Z" />
-    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691Z" />
-    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.617-3.276-11.283-7.942l-6.522,5.025C9.505,39.556,16.227,44,24,44Z" />
-    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C44.982,36.308,48,30.638,48,24c0-1.341-.138-2.65-.389-3.917Z" />
-  </svg>
-);
-
-export default function LoginPage() {
-  const router = useRouter();
-  const auth = useAuth();
-  const { user, isUserLoading } = useUser();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isGuestLoading, setIsGuestLoading] = useState(false);
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  useEffect(() => {
-    if (!isUserLoading && user) {
-      router.replace('/dashboard');
-    }
-  }, [user, isUserLoading, router]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: error.message,
-      });
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sync Failed",
-        description: error.message,
-      });
-      setIsGoogleLoading(false);
-    }
-  };
-
-  const handleGuestLogin = () => {
-    setIsGuestLoading(true);
-    try {
-      initiateAnonymousSignIn(auth);
-      toast({
-        title: "Guest Session Active",
-        description: "Welcome to the Instant Portal. You are now exploring the health dashboard.",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Guest Access Failed",
-        description: error.message,
-      });
-      setIsGuestLoading(false);
-    }
-  };
-
-  if (isUserLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-muted/30">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      </div>
-    );
-  }
-
+/**
+ * Updated Landing Page as a "Bypass" entrance.
+ * Provides direct access to the dashboard.
+ */
+export default function LandingPage() {
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-background overflow-hidden">
       <div className="hidden bg-muted lg:block relative">
@@ -127,6 +41,7 @@ export default function LoginPage() {
           </div>
         </motion.div>
       </div>
+      
       <div className="flex items-center justify-center py-12 px-8">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
@@ -147,84 +62,27 @@ export default function LoginPage() {
           </div>
           
           <div className="bg-card p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border space-y-8">
-            {/* High-Priority Guest Access */}
-            <div className="relative group">
-               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-[1.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-               <Button 
-                    variant="secondary" 
-                    type="button" 
-                    className="relative w-full h-16 font-black rounded-xl border-2 border-primary/20 bg-background text-primary hover:bg-primary/5 transition-all flex items-center justify-between px-6" 
-                    onClick={handleGuestLogin} 
-                    disabled={isLoading || isGoogleLoading || isGuestLoading}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Zap className="size-5 fill-primary" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm leading-none mb-1">Instant Portal</p>
-                      <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">Enter as Guest</p>
-                    </div>
-                  </div>
-                  {isGuestLoading ? <Loader2 className="animate-spin" /> : <Sparkles className="size-5 text-accent animate-pulse" />}
-               </Button>
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black uppercase tracking-tight">Active Access Active</h2>
+              <p className="text-sm text-muted-foreground font-medium">Authentication has been bypassed for rapid clinical testing.</p>
             </div>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-[10px] uppercase font-bold">
-                <span className="bg-card px-4 text-muted-foreground tracking-[0.2em]">OR LOGIN WITH</span>
-              </div>
-            </div>
+            <Link href="/dashboard" className="block w-full">
+              <Button className="w-full h-16 text-xl font-black shadow-lg shadow-primary/20 rounded-2xl group transition-all hover:scale-105">
+                Enter Portal <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
 
-            <form onSubmit={handleLogin} className="grid gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-60 ml-1">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className="h-12 rounded-xl bg-muted/50 border-none px-4"
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider opacity-60 ml-1">Secure Password</Label>
-                  <Link href="#" className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">
-                    Recovery
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  className="h-12 rounded-xl bg-muted/50 border-none px-4"
-                />
-              </div>
-              <Button type="submit" className="w-full h-12 text-base font-black shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading || isGoogleLoading || isGuestLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : 'Enter Portal'}
-              </Button>
-              
-              <Button variant="outline" type="button" className="h-12 font-bold rounded-xl border-2" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading || isGuestLoading}>
-                {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon /> Continue with Google</>}
-              </Button>
-            </form>
+            <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex items-center gap-3">
+              <Zap className="text-primary size-5 fill-primary" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 leading-tight">
+                PROTOTYPE MODE: Full clinical suite unlocked.
+              </p>
+            </div>
           </div>
           
-          <p className="px-8 text-center text-sm text-muted-foreground font-medium">
-            New patient?{' '}
-            <Link href="/signup" className="font-black text-primary underline-offset-4 hover:underline">
-              Create Account
-            </Link>
+          <p className="text-center text-xs text-muted-foreground uppercase font-black tracking-[0.2em] opacity-40">
+            Enterprise Medical Adherence System
           </p>
         </motion.div>
       </div>
