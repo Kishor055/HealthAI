@@ -7,8 +7,8 @@ import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
 /**
- * DashboardLayout with Auth-Bypass.
- * Redirect logic is removed to allow for direct dashboard access.
+ * DashboardLayout with Auth-Bypass enabled.
+ * Provides immediate access to the clinical ecosystem without redirecting to login.
  */
 export default function DashboardLayout({
   children,
@@ -17,9 +17,10 @@ export default function DashboardLayout({
 }) {
   const { user, isUserLoading } = useUser();
   
-  // Auth redirect logic removed to satisfy "Remove auth or login" request
+  // Auth gates are removed to allow rapid prototyping and fix permission issues.
+  // The useUser hook will provide a mock clinical user if no real user is present.
 
-  if (isUserLoading || !user) {
+  if (isUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/30">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
