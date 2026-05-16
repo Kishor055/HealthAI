@@ -20,15 +20,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Loader2, Pill, Activity, Heart, Wind, AlertCircle, RefreshCw } from "lucide-react";
+import { PlusCircle, Loader2, Pill, Activity, Heart, Wind, AlertCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import { useCollection, useUser, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { AddMedicationDialog } from "@/components/medications/add-medication-dialog";
+import { SafetyAuditDialog } from "@/components/medications/safety-audit-dialog";
 
 export default function MedicationsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isSafetyOpen, setIsSafetyOpen] = useState(false);
 
   const medsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -57,17 +59,25 @@ export default function MedicationsPage() {
     }
   };
 
+  const activeMedsCount = medications?.filter(m => m.isActive).length || 0;
+
   return (
     <div className="p-4 sm:p-8 space-y-8 pb-24">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-black font-headline tracking-tighter">Pharmacy Center</h1>
           <p className="text-muted-foreground font-medium">Manage your active treatments and prescription refills.</p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} className="rounded-2xl font-black h-12 px-6 shadow-lg shadow-primary/20">
-          <PlusCircle className="mr-2 h-5 w-5" />
-          Register Medication
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setIsSafetyOpen(true)} className="rounded-2xl font-black h-12 px-6 border-2 border-primary/20 text-primary hover:bg-primary/5">
+            <ShieldCheck className="mr-2 h-5 w-5" />
+            Safety Audit
+          </Button>
+          <Button onClick={() => setIsAddOpen(true)} className="rounded-2xl font-black h-12 px-6 shadow-lg shadow-primary/20">
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Register Medication
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -155,20 +165,13 @@ export default function MedicationsPage() {
              <CardContent className="space-y-6 relative z-10">
                 <div className="space-y-3">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                    <span>Lisinopril</span>
-                    <span>12 days left</span>
+                    <span>Current Active List</span>
+                    <span>{activeMedsCount} Items</span>
                   </div>
-                  <Progress value={40} className="h-2 bg-white/20" indicatorClassName="bg-white" />
+                  <Progress value={activeMedsCount * 25} className="h-2 bg-white/20" indicatorClassName="bg-white" />
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                    <span>Metformin</span>
-                    <span>28 days left</span>
-                  </div>
-                  <Progress value={85} className="h-2 bg-white/20" indicatorClassName="bg-white" />
-                </div>
-                <Button variant="outline" className="w-full h-10 bg-white/10 border-white/20 font-black text-xs uppercase tracking-widest hover:bg-white/20">
-                  Request Refills
+                <Button variant="outline" className="w-full h-10 bg-white/10 border-white/20 font-black text-xs uppercase tracking-widest hover:bg-white/20" onClick={() => setIsSafetyOpen(true)}>
+                  Run Clinical Check
                 </Button>
              </CardContent>
           </Card>
@@ -181,10 +184,10 @@ export default function MedicationsPage() {
              </CardHeader>
              <CardContent className="space-y-4">
                 <p className="text-[11px] font-medium leading-relaxed opacity-70 italic">
-                  "Our AI is monitoring your combination of 4 active meds for potential interactions."
+                  "AI Clinical Shield is active. We are monitoring your combination of {activeMedsCount} meds for high-risk interactions."
                 </p>
-                <div className="p-3 rounded-xl bg-white/50 border border-primary/10">
-                  <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Clinical Shield Active</p>
+                <div className="p-3 rounded-xl bg-white/50 border border-primary/10 text-center">
+                  <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Clinical Shield Fully Engaged</p>
                 </div>
              </CardContent>
           </Card>
@@ -192,6 +195,7 @@ export default function MedicationsPage() {
       </div>
 
       <AddMedicationDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
+      <SafetyAuditDialog open={isSafetyOpen} onOpenChange={setIsSafetyOpen} medications={medications || []} />
     </div>
   );
 }
