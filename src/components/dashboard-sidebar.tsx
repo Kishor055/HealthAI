@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Bell,
-  Bot,
+  HeartPulse,
   ClipboardType,
   LayoutDashboard,
   Map,
@@ -69,7 +69,7 @@ export function DashboardSidebar() {
           <div className="flex h-20 items-center border-b px-6">
             <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
               <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
-                <Bot className="h-6 w-6" />
+                <HeartPulse className="h-6 w-6" />
               </div>
               <span className="font-headline text-primary">HealthAI</span>
             </Link>
@@ -95,7 +95,7 @@ export function DashboardSidebar() {
                 <div className="flex h-20 items-center border-b px-6">
                     <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
                        <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center">
-                            <Bot className="h-6 w-6" />
+                            <HeartPulse className="h-6 w-6" />
                         </div>
                         <span className="font-headline">HealthAI</span>
                     </Link>

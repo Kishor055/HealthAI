@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { Bot, Sparkles, ShieldCheck, Zap, ArrowRight, UserCheck } from 'lucide-react';
+import { HeartPulse, Sparkles, ShieldCheck, Zap, ArrowRight, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export default function LandingPage() {
           <div className="grid gap-4 text-center">
             <div className="flex items-center justify-center gap-4">
               <div className="w-14 h-14 bg-primary text-primary-foreground rounded-[1.25rem] flex items-center justify-center shadow-2xl shadow-primary/30">
-                <Bot className="h-8 w-8" />
+                <HeartPulse className="h-8 w-8" />
               </div>
               <h1 className="text-5xl font-black font-headline tracking-tighter text-primary">HealthAI</h1>
             </div>
