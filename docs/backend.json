@@ -1,10 +1,9 @@
 {
   "entities": {
     "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the HealthAI application, linked to an external authentication system.",
+      "description": "Represents a user of the HealthAI application.",
       "properties": {
         "id": { "type": "string" },
         "email": { "type": "string", "format": "email" },
@@ -15,7 +14,6 @@
       "required": ["id", "email", "createdAt"]
     },
     "HealthRecord": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "HealthRecord",
       "type": "object",
       "description": "Biometric data point or vital sign manually logged by the user.",
@@ -31,10 +29,9 @@
       "required": ["id", "userId", "type", "value", "unit", "date"]
     },
     "Appointment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Appointment",
       "type": "object",
-      "description": "Scheduled medical consultation with a preferred provider.",
+      "description": "Scheduled medical consultation.",
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
@@ -50,34 +47,37 @@
     "Medicine": {
       "title": "Medicine",
       "type": "object",
+      "description": "A medication entry.",
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
         "name": { "type": "string" },
         "dosage": { "type": "string" },
         "category": { "type": "string" },
-        "isActive": { "type": "boolean" }
+        "isActive": { "type": "boolean" },
+        "startDate": { "type": "string" }
       }
     }
   },
+  "auth": {
+    "providers": ["password", "google", "anonymous"]
+  },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": { "entityName": "User" }
-      },
-      {
-        "path": "/users/{userId}/healthRecords/{recordId}",
-        "definition": { "entityName": "HealthRecord" }
-      },
-      {
-        "path": "/users/{userId}/appointments/{appointmentId}",
-        "definition": { "entityName": "Appointment" }
-      },
-      {
-        "path": "/users/{userId}/medicines/{medicineId}",
-        "definition": { "entityName": "Medicine" }
-      }
-    ]
+    "/users/{userId}": {
+      "schema": { "$ref": "#/backend/entities/User" },
+      "description": "User profile document."
+    },
+    "/users/{userId}/healthRecords/{recordId}": {
+      "schema": { "$ref": "#/backend/entities/HealthRecord" },
+      "description": "Collection of biometric health logs."
+    },
+    "/users/{userId}/appointments/{appointmentId}": {
+      "schema": { "$ref": "#/backend/entities/Appointment" },
+      "description": "User medical appointments."
+    },
+    "/users/{userId}/medicines/{medicineId}": {
+      "schema": { "$ref": "#/backend/entities/Medicine" },
+      "description": "User medication list."
+    }
   }
 }
