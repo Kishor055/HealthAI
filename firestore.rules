@@ -7,14 +7,13 @@ service cloud.firestore {
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
 
     // --- USER DATA SILO ---
-    // This match covers the user document and ALL nested sub-resources (healthRecords, medicines, etc.)
+    // Explicitly grant access to the user document and all nested medical resources
     match /users/{userId} {
-      // Standard CRUD for the user document
-      allow get, list, write: if isOwner(userId);
+      allow read, write: if isOwner(userId);
       
-      // Recursive wildcard to ensure all subcollections inherit owner permissions
+      // Recursive wildcard ensures healthRecords, appointments, medicines, etc. inherit permissions
       match /{allPaths=**} {
-        allow get, list, write: if isOwner(userId);
+        allow read, write: if isOwner(userId);
       }
     }
 
