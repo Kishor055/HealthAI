@@ -1,9 +1,10 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     /**
      * GLOBAL PERMISSIVE RULES FOR PROTOTYPING
-     * Force Deployment Trigger: 2024-05-24T12:00:00Z
+     * Force Deployment Trigger: 2024-05-24T18:45:00Z
      * This allows unrestricted access during development to resolve permission errors.
      */
     match /{allPaths=**} {
