@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Bot, Loader2, UserCheck, Shield } from 'lucide-react';
+import { Bot, Loader2, UserCheck, Shield, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -78,7 +78,7 @@ export default function LoginPage() {
       initiateAnonymousSignIn(auth);
       toast({
         title: "Guest Session Active",
-        description: "Welcome! Explore the dashboard as a guest.",
+        description: "Welcome! You are now exploring the health dashboard.",
       });
     } catch (error: any) {
       toast({
@@ -155,7 +155,6 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   className="h-12 rounded-xl bg-muted/50 border-none px-4"
-                  suppressHydrationWarning
                 />
               </div>
               <div className="grid gap-2">
@@ -173,10 +172,9 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   className="h-12 rounded-xl bg-muted/50 border-none px-4"
-                  suppressHydrationWarning
                 />
               </div>
-              <Button type="submit" className="w-full h-12 text-base font-black shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading || isGoogleLoading || isGuestLoading} suppressHydrationWarning>
+              <Button type="submit" className="w-full h-12 text-base font-black shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading || isGoogleLoading || isGuestLoading}>
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Enter Portal'}
               </Button>
               
@@ -185,16 +183,27 @@ export default function LoginPage() {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase font-bold">
-                  <span className="bg-card px-4 text-muted-foreground tracking-[0.2em]">Partner Access</span>
+                  <span className="bg-card px-4 text-muted-foreground tracking-[0.2em]">Clinical Partner Access</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" type="button" className="h-12 font-bold rounded-xl border-2" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading || isGuestLoading} suppressHydrationWarning>
+                <Button variant="outline" type="button" className="h-12 font-bold rounded-xl border-2" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading || isGuestLoading}>
                   {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon /> Google</>}
                 </Button>
-                <Button variant="secondary" type="button" className="h-12 font-bold rounded-xl border-2 border-primary/10" onClick={handleGuestLogin} disabled={isLoading || isGoogleLoading || isGuestLoading} suppressHydrationWarning>
-                  {isGuestLoading ? <Loader2 className="animate-spin" /> : <><Shield className="size-4 mr-2" /> Guest</>}
+                <Button 
+                    variant="secondary" 
+                    type="button" 
+                    className="h-12 font-black rounded-xl border-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group" 
+                    onClick={handleGuestLogin} 
+                    disabled={isLoading || isGoogleLoading || isGuestLoading}
+                >
+                  {isGuestLoading ? <Loader2 className="animate-spin" /> : (
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="size-4 group-hover:rotate-12 transition-transform" /> 
+                      Guest Mode
+                    </span>
+                  )}
                 </Button>
               </div>
             </form>
