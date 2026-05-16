@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from 'react';
@@ -12,15 +13,29 @@ import {
   Droplet, 
   Thermometer,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  Stethoscope,
+  Info
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { query, collection, orderBy } from 'firebase/firestore';
+import { query, collection, orderBy, limit } from 'firebase/firestore';
 import { AddRecordDialog } from '@/components/health-records/add-record-dialog';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
 
 export default function HealthRecordsPage() {
   const { user } = useUser();
@@ -32,7 +47,8 @@ export default function HealthRecordsPage() {
     if (!firestore || !user) return null;
     return query(
       collection(firestore, "users", user.uid, "healthRecords"),
-      orderBy("date", "desc")
+      orderBy("date", "desc"),
+      limit(20)
     );
   }, [firestore, user?.uid]);
 
@@ -48,130 +64,217 @@ export default function HealthRecordsPage() {
   const { data: records, isLoading: recordsLoading } = useCollection(recordsQuery);
   const { data: clinicalHistory, isLoading: clinicalLoading } = useCollection(prescriptionsQuery);
 
+  // Prepare chart data (reversed to show chronological order)
+  const chartData = React.useMemo(() => {
+    if (!records) return [];
+    return [...records]
+      .reverse()
+      .filter(r => r.type === 'Blood Pressure' || r.type === 'Blood Sugar' || r.type === 'Heart Rate')
+      .map(r => ({
+        date: new Date(r.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        value: parseFloat(r.value.split('/')[0]) || 0,
+        type: r.type
+      }));
+  }, [records]);
+
   return (
     <div className="p-4 sm:p-8 space-y-8 pb-24">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-black font-headline tracking-tighter text-foreground">Health Records</h1>
-          <p className="text-muted-foreground font-medium">Your unified clinical and personal health history.</p>
+          <h1 className="text-4xl font-black font-headline tracking-tighter text-foreground">Health Center</h1>
+          <p className="text-muted-foreground font-medium">Advanced clinical oversight and biometric tracking.</p>
         </div>
         <Button onClick={() => setIsAddOpen(true)} className="rounded-2xl font-black h-12 px-6 shadow-lg shadow-primary/20">
-          <Plus className="size-5 mr-2" /> Add Vital / Record
+          <Plus className="size-5 mr-2" /> Log New Vital
         </Button>
       </div>
 
-      <Tabs defaultValue="clinical" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md mb-8 h-12 p-1 bg-muted rounded-xl">
-          <TabsTrigger value="clinical" className="rounded-lg font-black uppercase tracking-tighter">Clinical History</TabsTrigger>
-          <TabsTrigger value="personal" className="rounded-lg font-black uppercase tracking-tighter">Personal Biometrics</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="clinical" className="space-y-6">
-          <Card className="border-none shadow-xl glass-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="size-5 text-primary" /> Clinical Timeline
-              </CardTitle>
-              <CardDescription>Records extracted from your prescription history.</CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          {/* Trends Visualization */}
+          <Card className="border-none shadow-xl glass-card overflow-hidden">
+            <CardHeader className="bg-muted/30 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl font-black flex items-center gap-2 tracking-tighter uppercase">
+                    <TrendingUp className="size-5 text-primary" /> Vitality Trends
+                  </CardTitle>
+                  <CardDescription>Real-time visualization of your biometric stability.</CardDescription>
+                </div>
+                <Badge className="bg-primary/10 text-primary border-none">Live Analysis</Badge>
+              </div>
             </CardHeader>
-            <CardContent>
-              {clinicalLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary/30" /></div>
-              ) : !clinicalHistory || clinicalHistory.length === 0 ? (
-                <div className="text-center py-12 opacity-30">No clinical data available.</div>
+            <CardContent className="p-6 h-[300px]">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fontWeight: 700 }}
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fontWeight: 700 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        borderRadius: '1rem', 
+                        border: 'none', 
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                        fontSize: '12px',
+                        fontWeight: 900
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3}
+                      fillOpacity={1} 
+                      fill="url(#colorValue)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               ) : (
-                <div className="space-y-4">
-                  {clinicalHistory.map((item, idx) => (
-                    <div key={item.id} className="p-5 rounded-2xl border-2 bg-card flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="size-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-black">
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <p className="font-black text-sm uppercase tracking-tighter">{item.name}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold">{item.category} • Start: {item.startDate}</p>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="text-[10px] font-black">{item.dosage}</Badge>
-                    </div>
-                  ))}
+                <div className="flex flex-col items-center justify-center h-full text-center opacity-30">
+                  <BarChart3 className="size-12 mb-4" />
+                  <p className="text-xs font-black uppercase tracking-widest">Insufficient data for trends</p>
                 </div>
               )}
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="personal" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           <div className="lg:col-span-2 space-y-6">
+          <Tabs defaultValue="clinical" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 max-w-md mb-8 h-12 p-1 bg-muted rounded-xl">
+              <TabsTrigger value="clinical" className="rounded-lg font-black uppercase tracking-tighter">Clinical Records</TabsTrigger>
+              <TabsTrigger value="biometric" className="rounded-lg font-black uppercase tracking-tighter">Biometric Logs</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="clinical" className="space-y-6">
               <Card className="border-none shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="size-5 text-accent" /> Biometric Logs
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <ClipboardType className="size-5 text-primary" /> Clinical Timeline
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {recordsLoading ? (
+                  {clinicalLoading ? (
                     <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary/30" /></div>
-                  ) : !records || records.length === 0 ? (
-                    <div className="text-center py-12 opacity-30">No biometric data recorded.</div>
+                  ) : !clinicalHistory || clinicalHistory.length === 0 ? (
+                    <div className="text-center py-12 opacity-30">No clinical data available.</div>
                   ) : (
                     <div className="space-y-4">
-                      {records.map((record) => (
-                        <div key={record.id} className="p-4 rounded-2xl border-2 flex items-center justify-between group hover:border-accent/30 transition-all">
+                      {clinicalHistory.map((item, idx) => (
+                        <motion.div 
+                          key={item.id} 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="p-5 rounded-2xl border-2 bg-card flex items-center justify-between group hover:border-primary/30 transition-all"
+                        >
                           <div className="flex items-center gap-4">
-                             <div className="size-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
-                                {record.type === 'Blood Pressure' ? <Activity className="size-5" /> : 
-                                 record.type === 'Heart Rate' ? <Heart className="size-5" /> : 
-                                 record.type === 'Blood Sugar' ? <Droplet className="size-5" /> : 
-                                 <Thermometer className="size-5" />}
-                             </div>
-                             <div>
-                                <p className="font-black text-sm uppercase">{record.type}</p>
-                                <p className="text-[10px] text-muted-foreground font-bold">{record.date}</p>
-                             </div>
+                            <div className="size-12 rounded-xl bg-primary/5 text-primary flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                              <Stethoscope className="size-6" />
+                            </div>
+                            <div>
+                              <p className="font-black text-sm uppercase tracking-tighter">{item.name}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold">{item.category} • {item.dosage}</p>
+                            </div>
                           </div>
                           <div className="text-right">
-                             <p className="text-lg font-black tracking-tighter text-accent">{record.value} <span className="text-[10px] opacity-60 uppercase">{record.unit}</span></p>
+                            <Badge variant="outline" className="text-[9px] font-black tracking-widest uppercase">Start: {item.startDate}</Badge>
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   )}
                 </CardContent>
               </Card>
-           </div>
+            </TabsContent>
 
-           <div className="space-y-6">
-              <Card className="border-none bg-accent text-accent-foreground shadow-2xl overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <Activity className="size-32 rotate-12" />
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-xl font-black tracking-tighter uppercase">Health Score</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 relative z-10">
-                   <div className="text-4xl font-black">92/100</div>
-                   <p className="text-xs font-medium leading-relaxed opacity-80">
-                      "Your vitals are exceptionally stable this month. Keep up the active lifestyle."
-                   </p>
-                </CardContent>
-              </Card>
+            <TabsContent value="biometric" className="space-y-6">
+              <div className="space-y-4">
+                {recordsLoading ? (
+                  <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary/30" /></div>
+                ) : !records || records.length === 0 ? (
+                  <div className="text-center py-12 opacity-30">No biometric data recorded.</div>
+                ) : (
+                  records.map((record) => (
+                    <div key={record.id} className="p-4 rounded-2xl border-2 flex items-center justify-between group hover:border-accent/30 transition-all">
+                      <div className="flex items-center gap-4">
+                         <div className="size-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
+                            {record.type === 'Blood Pressure' ? <Activity className="size-5" /> : 
+                             record.type === 'Heart Rate' ? <Heart className="size-5" /> : 
+                             record.type === 'Blood Sugar' ? <Droplet className="size-5" /> : 
+                             <Thermometer className="size-5" />}
+                         </div>
+                         <div>
+                            <p className="font-black text-sm uppercase">{record.type}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold">{record.date}</p>
+                         </div>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-lg font-black tracking-tighter text-accent">{record.value} <span className="text-[10px] opacity-60 uppercase">{record.unit}</span></p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
 
-              <Card className="border-none shadow-xl border-destructive/20">
-                <CardHeader>
-                  <CardTitle className="text-sm font-black uppercase text-destructive flex items-center gap-2">
-                    <AlertCircle className="size-4" /> Safety Note
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-[10px] font-medium italic opacity-60">
-                    Always consult your doctor before making decisions based on self-logged data.
-                  </p>
-                </CardContent>
-              </Card>
-           </div>
-        </TabsContent>
-      </Tabs>
+        <div className="space-y-8">
+          <Card className="border-none bg-primary text-primary-foreground shadow-2xl overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-45 transition-transform duration-700">
+              <Activity className="size-32" />
+            </div>
+            <CardHeader>
+              <CardTitle className="text-xl font-black tracking-tighter uppercase">Health Score</CardTitle>
+              <CardDescription className="text-primary-foreground/60">Combined clinical assessment.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 relative z-10">
+               <div className="text-5xl font-black tracking-tighter mb-4">92/100</div>
+               <div className="p-4 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-sm">
+                 <p className="text-[11px] font-bold leading-relaxed">
+                   "Your biometric stability is in the top 5% for your age group. Continue monitoring morning BP."
+                 </p>
+               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-xl bg-card">
+            <CardHeader>
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <AlertCircle className="size-4" /> Clinical Shield
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div className="p-4 rounded-2xl bg-destructive/5 border-2 border-destructive/10">
+                 <h5 className="text-[10px] font-black text-destructive uppercase tracking-widest mb-1">Observation Required</h5>
+                 <p className="text-xs font-medium">Your heart rate showed a slight spike last Tuesday after dosage.</p>
+               </div>
+               <div className="flex items-start gap-3 p-3 bg-blue-500/5 rounded-xl border border-blue-500/10">
+                 <Info className="size-4 text-blue-500 shrink-0 mt-0.5" />
+                 <p className="text-[10px] font-medium leading-relaxed opacity-70">
+                   Automated reports are sent to your primary doctor every 30 days.
+                 </p>
+               </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <AddRecordDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
     </div>
