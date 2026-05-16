@@ -3,12 +3,12 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * Standard Genkit 1.x Initialization.
- * Using gemini-2.0-flash for high-performance medical analysis.
+ * Updated to gemini-2.5-flash for optimized medical analysis and higher rate limits.
  * Explicitly exported for consistent application-wide usage.
  */
 export const ai = genkit({
   plugins: [
     googleAI(),
   ],
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
 });
