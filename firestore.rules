@@ -2,16 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     /**
-     * GLOBAL BYPASS FOR CLINICAL PROTOTYPING
-     * Force Deployment Trigger: 2024-05-20T15:10:00Z
-     * This allows unrestricted access to all collections for user 5rkDzqywQvO8RUXgvdGBeqZfTdx1 and guests.
+     * GLOBAL PERMISSIVE RULES FOR PROTOTYPING
+     * Force Deployment Trigger: 2024-05-20T16:00:00Z
+     * This allows unrestricted access to ensure all health records and clinical data are accessible.
      */
     match /{allPaths=**} {
-      allow read, write: if true;
-    }
-
-    // Explicitly grant access to user resources to ensure no path shadowing
-    match /users/{userId}/{allPaths=**} {
       allow read, write: if true;
     }
   }
