@@ -7,3 +7,4 @@ import '@/ai/flows/answer-medication-questions.ts';
 import '@/ai/flows/generate-safety-notes.ts';
 import '@/ai/flows/analyze-prescription-flow.ts';
 import '@/ai/flows/parse-prescription-text-flow.ts';
+import '@/ai/flows/analyze-health-trends.ts';
