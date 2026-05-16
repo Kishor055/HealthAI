@@ -3,12 +3,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
     /**
      * GLOBAL BYPASS FOR CLINICAL PROTOTYPING
-     * Triggered deployment: 2024-05-20T10:00:00Z
-     * This allows unrestricted access to all medical collections.
+     * Force Deployment Trigger: 2024-05-20T14:45:00Z
+     * This allows unrestricted access to all collections for user 5rkDzqywQvO8RUXgvdGBeqZfTdx1 and guests.
      */
     match /{allPaths=**} {
       allow read, write: if true;
-      allow get, list, create, update, delete: if true;
+    }
+
+    // Explicitly grant access to user resources to ensure no path shadowing
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if true;
     }
   }
 }

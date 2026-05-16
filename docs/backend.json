@@ -57,6 +57,17 @@
         "isActive": { "type": "boolean" },
         "startDate": { "type": "string" }
       }
+    },
+    "MedicationIntake": {
+      "title": "MedicationIntake",
+      "type": "object",
+      "description": "Record of when a medication was taken.",
+      "properties": {
+        "userId": { "type": "string" },
+        "medicineName": { "type": "string" },
+        "actualTakeTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -78,6 +89,14 @@
     "/users/{userId}/medicines/{medicineId}": {
       "schema": { "$ref": "#/backend/entities/Medicine" },
       "description": "User medication list."
+    },
+    "/users/{userId}/medicationIntakes/{intakeId}": {
+      "schema": { "$ref": "#/backend/entities/MedicationIntake" },
+      "description": "Logs of medication adherence."
+    },
+    "/users/{userId}/preferredProviders/{providerId}": {
+      "schema": { "type": "object" },
+      "description": "Saved favorite healthcare facilities."
     }
   }
 }
