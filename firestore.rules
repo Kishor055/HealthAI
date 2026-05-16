@@ -2,223 +2,37 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * HEALTHAI SECURITY RULES DOCUMENTATION
-     *
-     * Core Philosophy:
-     * This ruleset enforces a strict user-ownership model designed for a personal health management 
-     * application. Security is centered around a hierarchical structure where all sensitive 
-     * information (prescriptions, medications, reminders, and chat history) is strictly partitioned 
-     * by the user's unique Firebase Authentication UID.
-     *
-     * Data Structure:
-     * - /users/{userId}: Root profile and container for all personal health data.
-     * - /users/{userId}/[subcollection]: Private data (Medicines, Prescriptions, Chat, etc.) 
-     *   accessible only by the authenticated owner.
-     * - /healthcareProviders & /healthcareFacilities: Global, read-only directories for 
-     *   lookup and selection.
-     *
-     * Key Security Decisions:
-     * 1. Authorization Independence: All user-specific documents contain a denormalized 
-     *    'userId' field. This allows rules to verify ownership without performing expensive 
-     *    cross-document lookups (get() calls).
-     * 2. Prototyping Flexibility: Rules strictly enforce 'who' can access data but are 
-     *    flexible on 'what' the data looks like (schema-agnostic), allowing for rapid 
-     *    feature iteration.
-     * 3. Relational Integrity: Critical fields like 'userId' are enforced on creation and 
-     *    made immutable on update to prevent data from being orphaned or hijacked.
-     * 4. State-Change Protection: All update and delete operations require the document 
-     *    to exist and belong to the requester before the action is permitted.
-     */
-
     // --- HELPER FUNCTIONS ---
-
-    /** Checks if the user is authenticated with Firebase Auth. */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /** Checks if the authenticated user's UID matches the provided userId. */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /** Checks if the document exists and is owned by the current user. */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    /** Validates that the internal data field 'userId' matches the path. */
-    function hasValidUserId(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /** Ensures the 'userId' field is not changed during an update. */
-    function isUserIdImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isExistingOwner(userId) { return resource != null && isOwner(userId); }
+    function hasValidUserId(userId) { return request.resource.data.userId == userId; }
+    function isUserIdImmutable() { return request.resource.data.userId == resource.data.userId; }
 
     // --- COLLECTION RULES ---
-
-    /**
-     * @description Rules for the top-level User profile document.
-     * @path /users/{userId}
-     * @allow (create) if auth.uid matches userId.
-     * @deny (read) if trying to view another user's profile.
-     * @principle Self-creation and strict owner-only access.
-     */
     match /users/{userId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
 
-      /**
-       * @description Private collection of uploaded prescription documents (images/PDFs).
-       * @path /users/{userId}/prescriptions/{prescriptionId}
-       * @allow (create) if the userId in the document matches the path and the authenticated user.
-       * @deny (list) if the requester is not the path owner.
-       * @principle Path-based ownership and relational integrity.
-       */
-      match /prescriptions/{prescriptionId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
+      match /prescriptions/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /medicines/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /medicationIntakes/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /reminders/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /safetyAlerts/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /preferredProviders/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /preferredFacilities/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /chatSessions/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); 
+        match /messages/{mId} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); }
       }
-
-      /**
-       * @description Structured medication records managed by the user.
-       * @path /users/{userId}/medicines/{medicineId}
-       * @allow (update) if the owner is modifying their own medication record.
-       * @deny (create) if the internal userId does not match the authenticated user.
-       * @principle Enforces document ownership for writes and private data segregation.
-       */
-      match /medicines/{medicineId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Records of medication intake events (alarms, activations, adherence).
-       * @path /users/{userId}/medicationIntakes/{intakeId}
-       * @allow (create) for marking a dose as taken.
-       * @deny (read) by any user other than the owner.
-       * @principle Restricts access to a user's own data tree.
-       */
-      match /medicationIntakes/{intakeId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Scheduled reminders for medications.
-       * @path /users/{userId}/reminders/{reminderId}
-       * @allow (list) for the owner to view upcoming notifications.
-       * @deny (delete) if the document does not exist.
-       * @principle Ensures path consistency and existence for destructive operations.
-       */
-      match /reminders/{reminderId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description AI-generated safety alerts (interactions, risks).
-       * @path /users/{userId}/safetyAlerts/{alertId}
-       * @allow (get) by the owner to read a specific interaction warning.
-       * @deny (update) if attempting to change the userId of the alert.
-       * @principle Immutability of relational fields for security auditability.
-       */
-      match /safetyAlerts/{alertId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description User-saved preferred healthcare providers.
-       * @path /users/{userId}/preferredProviders/{providerId}
-       * @allow (create) when a user 'saves' a provider from the global list.
-       * @principle Private favorites list for personalized UI.
-       */
-      match /preferredProviders/{providerId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description User-saved preferred healthcare facilities.
-       * @path /users/{userId}/preferredFacilities/{facilityId}
-       * @allow (list) for rendering the user's dashboard map.
-       * @principle Restricted access to user-curated healthcare locations.
-       */
-      match /preferredFacilities/{facilityId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Sessions for AI Chat Assistance (OpenAI integration).
-       * @path /users/{userId}/chatSessions/{sessionId}
-       * @allow (create) to start a new health consultation session.
-       * @principle Ensures private chat logs are only accessible to the participant.
-       */
-      match /chatSessions/{sessionId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidUserId(userId);
-        allow update: if isExistingOwner(userId) && isUserIdImmutable();
-        allow delete: if isExistingOwner(userId);
-
-        /**
-         * @description Individual messages within an AI chat session.
-         * @path /users/{userId}/chatSessions/{sessionId}/messages/{messageId}
-         * @allow (list) to retrieve the conversation history.
-         * @principle Authorization via parent path and denormalized userId.
-         */
-        match /messages/{messageId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && hasValidUserId(userId);
-          allow update: if isExistingOwner(userId) && isUserIdImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
-      }
+      
+      // NEW: Appointments and Health Records
+      match /appointments/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /healthRecords/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
     }
 
-    /**
-     * @description Global directory of healthcare providers.
-     * @path /healthcareProviders/{providerId}
-     * @allow (read) for all authenticated or public users to browse.
-     * @deny (write) as these are managed by system/admin processes.
-     * @principle Public Read with Admin-Only writes.
-     */
-    match /healthcareProviders/{providerId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Global directory of healthcare facilities.
-     * @path /healthcareFacilities/{facilityId}
-     * @allow (read) for discovery and lookup services.
-     * @deny (write) to prevent unauthorized catalog modification.
-     * @principle Public Read with Admin-Only writes.
-     */
-    match /healthcareFacilities/{facilityId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
-    }
-
+    match /healthcareProviders/{id} { allow get, list: if true; allow create, update, delete: if false; }
+    match /healthcareFacilities/{id} { allow get, list: if true; allow create, update, delete: if false; }
   }
 }
