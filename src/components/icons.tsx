@@ -1,7 +1,7 @@
-import { Bot } from 'lucide-react';
+import { HeartPulse } from 'lucide-react';
 
 export const Icons = {
   logo: (props: React.SVGProps<SVGSVGElement>) => (
-    <Bot {...props} />
+    <HeartPulse {...props} />
   ),
 };

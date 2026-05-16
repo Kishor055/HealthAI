@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bot, Loader2, Mail, Lock, User } from 'lucide-react';
+import { HeartPulse, Loader2, Mail, Lock, User } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -70,7 +69,7 @@ export default function SignupPage() {
           <CardHeader className="text-center space-y-4">
             <div className="flex items-center justify-center gap-3">
               <div className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center shadow-lg">
-                <Bot className="h-6 w-6" />
+                <HeartPulse className="h-6 w-6" />
               </div>
               <h1 className="text-3xl font-bold font-headline tracking-tight">HealthAI</h1>
             </div>
