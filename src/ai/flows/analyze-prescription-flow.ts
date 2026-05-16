@@ -8,6 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const AnalyzePrescriptionInputSchema = z.object({
   fileDataUri: z.string().describe("The prescription file as a Base64 Data URI."),
@@ -36,6 +37,7 @@ export type AnalyzePrescriptionOutput = z.infer<typeof AnalyzePrescriptionOutput
 
 const prompt = ai.definePrompt({
   name: 'analyzePrescriptionPrompt',
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: AnalyzePrescriptionInputSchema },
   output: { schema: AnalyzePrescriptionOutputSchema },
   prompt: `You are an expert medical OCR and pharmaceutical analyzer. 

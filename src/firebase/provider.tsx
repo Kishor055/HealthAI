@@ -156,8 +156,7 @@ export const useUser = (): UserHookResult => {
     throw new Error('useUser must be used within a FirebaseProvider.');
   }
 
-  // Fallback clinical user for rapid prototyping
-  // Using the exact UID from your error report to ensure data matching.
+  // Fallback clinical user for rapid prototyping matching your requested UID
   const mockUser = {
     uid: '5rkDzqywQvO8RUXgvdGBeqZfTdx1',
     displayName: 'Kishor Patil',
