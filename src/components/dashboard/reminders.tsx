@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -118,7 +117,6 @@ export function Reminders() {
                       variant="ghost" 
                       className="h-10 w-10 rounded-xl hover:bg-destructive/5 hover:text-destructive"
                       disabled={processingId === med.id}
-                      suppressHydrationWarning
                     >
                       <SkipForward className="h-4 w-4" />
                     </Button>
@@ -128,7 +126,6 @@ export function Reminders() {
                       className="h-10 bg-accent hover:bg-accent/90 text-accent-foreground font-black px-5 rounded-xl shadow-lg shadow-accent/20"
                       onClick={() => handleTakeMedication(med)}
                       disabled={processingId === med.id}
-                      suppressHydrationWarning
                     >
                       {processingId === med.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
