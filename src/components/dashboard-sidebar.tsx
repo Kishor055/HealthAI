@@ -13,6 +13,10 @@ import {
   Pill,
   Search,
   Settings,
+  ShieldAlert,
+  CalendarDays,
+  Activity,
+  UserCircle
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -27,9 +31,12 @@ import { Input } from './ui/input';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/prescriptions', icon: ClipboardType, label: 'Prescriptions' },
+  { href: '/dashboard/reminders-alerts', icon: Bell, label: 'Reminders & Alerts' },
   { href: '/dashboard/medications', icon: Pill, label: 'Medications' },
-  { href: '/dashboard/chat', icon: MessageSquare, label: 'Chat Assistant' },
+  { href: '/dashboard/prescriptions', icon: ClipboardType, label: 'Prescriptions' },
+  { href: '/dashboard/appointments', icon: CalendarDays, label: 'Appointments' },
+  { href: '/dashboard/health-records', icon: Activity, label: 'Health Records' },
+  { href: '/dashboard/chat', icon: MessageSquare, label: 'AI Assistant' },
   { href: '/dashboard/discover', icon: Map, label: 'Discover' },
 ];
 
@@ -37,18 +44,20 @@ export function DashboardSidebar() {
   const pathname = usePathname();
 
   const navLinks = (
-    <nav className="grid items-start gap-2 px-2 text-sm font-medium lg:px-4">
+    <nav className="grid items-start gap-1 px-2 text-sm font-medium lg:px-4 mt-4">
       {navItems.map((item) => (
         <Link
           key={item.href}
           href={item.href}
           className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-            { 'bg-muted text-primary': pathname === item.href }
+            'flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 group',
+            pathname === item.href 
+              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+              : 'text-muted-foreground hover:bg-muted hover:text-primary'
           )}
         >
-          <item.icon className="h-4 w-4" />
-          {item.label}
+          <item.icon className={cn('h-5 w-5 transition-transform group-hover:scale-110', { 'text-primary-foreground': pathname === item.href })} />
+          <span className="font-semibold tracking-tight">{item.label}</span>
         </Link>
       ))}
     </nav>
@@ -56,50 +65,43 @@ export function DashboardSidebar() {
 
   return (
     <>
-      <div className="hidden border-r bg-muted/40 md:block md:fixed md:inset-y-0 md:left-0 md:z-10 md:w-64">
-        <div className="flex h-full max-h-screen flex-col gap-2">
-          <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-              <div className="w-8 h-8 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
-                <Bot className="h-5 w-5" />
+      <div className="hidden border-r bg-card md:block md:fixed md:inset-y-0 md:left-0 md:z-10 md:w-64 shadow-xl">
+        <div className="flex h-full max-h-screen flex-col">
+          <div className="flex h-20 items-center border-b px-6">
+            <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
+              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
+                <Bot className="h-6 w-6" />
               </div>
-              <span className="font-headline">HealthAI</span>
+              <span className="font-headline text-primary">HealthAI</span>
             </Link>
-            <Button variant="outline" size="icon" className="ml-auto h-8 w-8">
-              <Bell className="h-4 w-4" />
-              <span className="sr-only">Toggle notifications</span>
-            </Button>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             {navLinks}
           </div>
-          <div className="mt-auto p-4">
+          <div className="mt-auto p-4 border-t bg-muted/30">
             <UserNav />
           </div>
         </div>
       </div>
-      <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 md:hidden">
+      
+      {/* Mobile Header */}
+      <header className="flex h-16 items-center gap-4 border-b bg-card/80 backdrop-blur-md px-4 md:hidden sticky top-0 z-50">
          <Sheet>
             <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-              >
-                <PanelLeft className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
+              <Button variant="ghost" size="icon" className="shrink-0 rounded-xl">
+                <PanelLeft className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col p-0">
-                <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-                    <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-                       <div className="w-8 h-8 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
-                            <Bot className="h-5 w-5" />
+            <SheetContent side="left" className="flex flex-col p-0 w-72 border-r">
+                <div className="flex h-20 items-center border-b px-6">
+                    <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
+                       <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center">
+                            <Bot className="h-6 w-6" />
                         </div>
                         <span className="font-headline">HealthAI</span>
                     </Link>
                 </div>
-                <div className="flex-1 py-2">
+                <div className="flex-1 overflow-y-auto py-4">
                     {navLinks}
                 </div>
                 <div className="mt-auto p-4 border-t">
@@ -107,17 +109,11 @@ export function DashboardSidebar() {
                 </div>
             </SheetContent>
           </Sheet>
-          <div className="w-full flex-1">
-             <form>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  className="w-full appearance-none bg-background pl-8 shadow-none"
-                />
-              </div>
-            </form>
+          <div className="flex-1 flex items-center justify-between">
+             <h1 className="font-black tracking-tighter text-lg uppercase text-primary">Portal</h1>
+             <Button variant="ghost" size="icon" className="rounded-full">
+                <Search className="h-5 w-5" />
+             </Button>
           </div>
       </header>
     </>
