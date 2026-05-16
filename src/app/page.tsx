@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Bot, Loader2 } from 'lucide-react';
+import { Bot, Loader2, UserCheck, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -12,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { placeholderImages } from '@/lib/placeholder-images';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,6 +31,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -69,6 +69,24 @@ export default function LoginPage() {
         description: error.message,
       });
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGuestLogin = () => {
+    setIsGuestLoading(true);
+    try {
+      initiateAnonymousSignIn(auth);
+      toast({
+        title: "Guest Session Active",
+        description: "Welcome! Explore the dashboard as a guest.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Guest Access Failed",
+        description: error.message,
+      });
+      setIsGuestLoading(false);
     }
   };
 
@@ -117,7 +135,7 @@ export default function LoginPage() {
               <div className="w-14 h-14 bg-primary text-primary-foreground rounded-[1.25rem] flex items-center justify-center shadow-2xl shadow-primary/30">
                 <Bot className="h-8 w-8" />
               </div>
-              <h1 className="text-5xl font-black font-headline tracking-tighter">HealthAI</h1>
+              <h1 className="text-5xl font-black font-headline tracking-tighter text-primary">HealthAI</h1>
             </div>
             <p className="text-muted-foreground text-xl font-medium">
               Intelligence in your care.
@@ -158,9 +176,10 @@ export default function LoginPage() {
                   suppressHydrationWarning
                 />
               </div>
-              <Button type="submit" className="w-full h-12 text-base font-black shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading || isGoogleLoading} suppressHydrationWarning>
+              <Button type="submit" className="w-full h-12 text-base font-black shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading || isGoogleLoading || isGuestLoading} suppressHydrationWarning>
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Enter Portal'}
               </Button>
+              
               <div className="relative my-2">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -169,9 +188,15 @@ export default function LoginPage() {
                   <span className="bg-card px-4 text-muted-foreground tracking-[0.2em]">Partner Access</span>
                 </div>
               </div>
-              <Button variant="outline" type="button" className="w-full h-12 font-bold rounded-xl border-2" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading} suppressHydrationWarning>
-                {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon /> Sign with Google</>}
-              </Button>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" type="button" className="h-12 font-bold rounded-xl border-2" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading || isGuestLoading} suppressHydrationWarning>
+                  {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon /> Google</>}
+                </Button>
+                <Button variant="secondary" type="button" className="h-12 font-bold rounded-xl border-2 border-primary/10" onClick={handleGuestLogin} disabled={isLoading || isGoogleLoading || isGuestLoading} suppressHydrationWarning>
+                  {isGuestLoading ? <Loader2 className="animate-spin" /> : <><Shield className="size-4 mr-2" /> Guest</>}
+                </Button>
+              </div>
             </form>
           </div>
           
