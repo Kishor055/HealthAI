@@ -20,9 +20,11 @@ export function Reminders() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
+    // Set initial time only on client to avoid hydration mismatch
+    setCurrentTime(new Date());
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
@@ -62,6 +64,7 @@ export function Reminders() {
   };
 
   const getCountdown = () => {
+    if (!currentTime) return "--m --s";
     const mins = 59 - currentTime.getMinutes();
     const secs = 59 - currentTime.getSeconds();
     return `${mins}m ${secs}s`;

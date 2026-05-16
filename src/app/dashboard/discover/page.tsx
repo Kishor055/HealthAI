@@ -43,6 +43,11 @@ export default function DiscoverPage() {
   const [isSearching, setIsSearching] = React.useState(false);
   const [errorState, setErrorState] = React.useState<{ title: string; message: string; type: 'missing' | 'denied' | 'error' | 'not-activated' } | null>(null);
   const [savedIds, setSavedIds] = React.useState<Set<string>>(new Set());
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const onMapLoad = React.useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -144,10 +149,13 @@ export default function DiscoverPage() {
     }
   };
 
+  // Prevent hydration mismatch by only rendering logic that depends on dynamic client state after mount
+  if (!isMounted) return null;
+
   if (loadError || errorState?.type === 'not-activated') {
     return (
       <div className="p-8 max-w-2xl mx-auto space-y-6">
-        <Alert variant="destructive" className="border-2 shadow-2xl bg-background/95 backdrop-blur-sm" suppressHydrationWarning>
+        <Alert variant="destructive" className="border-2 shadow-2xl bg-background/95 backdrop-blur-sm">
           <AlertCircle className="h-6 w-6" />
           <AlertTitle className="text-xl font-black uppercase tracking-tighter">Clinical Map Activation Required</AlertTitle>
           <AlertDescription className="mt-4 text-sm space-y-4">
@@ -182,7 +190,7 @@ export default function DiscoverPage() {
   if (!apiKey || apiKey.includes('---')) {
     return (
       <div className="p-8 max-w-2xl mx-auto">
-        <Alert variant="destructive" className="border-2 shadow-xl" suppressHydrationWarning>
+        <Alert variant="destructive" className="border-2 shadow-xl">
           <AlertCircle className="h-5 w-5" />
           <AlertTitle className="text-lg font-bold uppercase tracking-tight">Missing Maps Configuration</AlertTitle>
           <AlertDescription className="mt-2 text-sm">
@@ -235,7 +243,7 @@ export default function DiscoverPage() {
                   <h3 className="font-bold text-sm mb-1 text-primary">{selectedFacility.name}</h3>
                   <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">{selectedFacility.address}</p>
                   <div className="space-y-2">
-                    <Button size="sm" className="w-full h-8 text-[10px] font-bold" asChild suppressHydrationWarning>
+                    <Button size="sm" className="w-full h-8 text-[10px] font-bold" asChild>
                       <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.position.lat},${selectedFacility.position.lng}`} target="_blank" rel="noreferrer">
                         <Navigation className="size-3 mr-1.5" /> Navigate
                       </a>
@@ -246,7 +254,6 @@ export default function DiscoverPage() {
                         className="w-full h-8 text-[10px] font-bold" 
                         onClick={() => handleSaveProvider(selectedFacility)}
                         disabled={savedIds.has(selectedFacility.id)}
-                        suppressHydrationWarning
                     >
                       {savedIds.has(selectedFacility.id) ? (
                           <><CheckCircle className="size-3 mr-1.5 text-accent" /> Saved</>
@@ -269,18 +276,18 @@ export default function DiscoverPage() {
               exit={{ opacity: 0, y: 20 }}
               className="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 z-50"
             >
-              <Alert variant="destructive" className="shadow-2xl border-2 bg-background/95 backdrop-blur-md" suppressHydrationWarning>
+              <Alert variant="destructive" className="shadow-2xl border-2 bg-background/95 backdrop-blur-md">
                 <AlertCircle className="h-5 w-5" />
                 <AlertTitle className="font-bold uppercase tracking-tighter">{errorState.title}</AlertTitle>
                 <AlertDescription className="mt-2 text-xs leading-relaxed">
                   {errorState.message}
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold bg-background" asChild suppressHydrationWarning>
+                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold bg-background" asChild>
                       <a href="https://console.cloud.google.com/google/maps-apis/library" target="_blank" rel="noreferrer">
                         <ExternalLink className="size-3 mr-1" /> Cloud Console
                       </a>
                     </Button>
-                    <Button size="sm" className="h-7 text-[10px] font-bold" onClick={() => window.location.reload()} suppressHydrationWarning>
+                    <Button size="sm" className="h-7 text-[10px] font-bold" onClick={() => window.location.reload()}>
                       Retry
                     </Button>
                   </div>
@@ -352,7 +359,6 @@ export default function DiscoverPage() {
                     className="flex-1 h-9 text-[11px] font-black uppercase rounded-xl" 
                     onClick={(e) => { e.stopPropagation(); handleSaveProvider(facility); }}
                     disabled={savedIds.has(facility.id)}
-                    suppressHydrationWarning
                   >
                     {savedIds.has(facility.id) ? (
                         <CheckCircle className="size-3 text-accent" />
@@ -360,7 +366,7 @@ export default function DiscoverPage() {
                         <Star className="size-3" />
                     )}
                   </Button>
-                  <Button size="sm" className="flex-2 h-9 text-[11px] font-black uppercase rounded-xl shadow-lg shadow-primary/20" asChild suppressHydrationWarning>
+                  <Button size="sm" className="flex-2 h-9 text-[11px] font-black uppercase rounded-xl shadow-lg shadow-primary/20" asChild>
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position.lat},${facility.position.lng}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                       <Navigation className="size-3 mr-1.5" /> Navigate
                     </a>
