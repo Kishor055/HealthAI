@@ -5,34 +5,27 @@ service cloud.firestore {
     // --- HELPER FUNCTIONS ---
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
-    function isExistingOwner(userId) { return resource != null && isOwner(userId); }
-    function hasValidUserId(userId) { return request.resource.data.userId == userId; }
-    function isUserIdImmutable() { return request.resource.data.userId == resource.data.userId; }
 
-    // --- COLLECTION RULES ---
+    // --- USER DATA ---
+    // This recursive pattern ensures that any user-specific data nested under 
+    // /users/{userId}/ is only accessible by the owner of that profile.
     match /users/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-
-      match /prescriptions/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /medicines/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /medicationIntakes/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /reminders/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /safetyAlerts/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /preferredProviders/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /preferredFacilities/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /chatSessions/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); 
-        match /messages/{mId} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); }
-      }
+      allow read, write: if isOwner(userId);
       
-      // NEW: Appointments and Health Records
-      match /appointments/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
-      match /healthRecords/{id} { allow get, list: if isOwner(userId); allow create: if isOwner(userId) && hasValidUserId(userId); allow update: if isExistingOwner(userId) && isUserIdImmutable(); allow delete: if isExistingOwner(userId); }
+      match /{allPaths=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
-    match /healthcareProviders/{id} { allow get, list: if true; allow create, update, delete: if false; }
-    match /healthcareFacilities/{id} { allow get, list: if true; allow create, update, delete: if false; }
+    // --- GLOBAL DATA ---
+    // Publicly readable catalogs for providers and facilities
+    match /healthcareProviders/{id} { 
+      allow read: if true; 
+      allow write: if false; 
+    }
+    match /healthcareFacilities/{id} { 
+      allow read: if true; 
+      allow write: if false; 
+    }
   }
 }
