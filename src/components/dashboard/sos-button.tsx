@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Phone, Loader2, X, ShieldAlert, Wifi, MapPin } from "lucide-react";
+import { AlertTriangle, Phone, Loader2, X, ShieldAlert, Wifi, MapPin, UserPlus, Trash2, Heart } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,14 +11,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, query, doc } from "firebase/firestore";
 
 export function SosButton() {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [newContact, setNewContact] = useState({ name: "", phone: "", relationship: "" });
   const [step, setStep] = useState(0);
   const { toast } = useToast();
+
+  const contactsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "users", user.uid, "emergencyContacts"));
+  }, [firestore, user?.uid]);
+
+  const { data: contacts } = useCollection(contactsQuery);
 
   const handleSOS = () => {
     setIsActivating(true);
@@ -36,6 +50,19 @@ export function SosButton() {
         variant: "destructive"
       });
     }, 3500);
+  };
+
+  const handleAddContact = () => {
+    if (!user || !firestore || !newContact.name || !newContact.phone) return;
+    addDocumentNonBlocking(collection(firestore, "users", user.uid, "emergencyContacts"), newContact);
+    setNewContact({ name: "", phone: "", relationship: "" });
+    setShowAddContact(false);
+    toast({ title: "Contact Added", description: `${newContact.name} is now in your SOS list.` });
+  };
+
+  const handleDeleteContact = (id: string) => {
+    if (!user || !firestore) return;
+    deleteDocumentNonBlocking(doc(firestore, "users", user.uid, "emergencyContacts", id));
   };
 
   return (
@@ -61,13 +88,6 @@ export function SosButton() {
             className="absolute inset-0 bg-white rounded-full"
           />
         </Button>
-        <motion.span 
-          animate={{ y: [0, -5, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute -top-12 left-1/2 -translate-x-1/2 bg-destructive text-white text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-tighter whitespace-nowrap shadow-xl"
-        >
-          SOS SIGNAL
-        </motion.span>
       </motion.div>
 
       <Dialog open={isOpen} onOpenChange={(v) => !isActivating && setIsOpen(v)}>
@@ -87,17 +107,17 @@ export function SosButton() {
                 )}
                 <div className="absolute inset-0 bg-destructive/5 rounded-full animate-ping" />
               </div>
-              <DialogTitle className="text-4xl font-black text-destructive tracking-tighter">EMERGENCY SOS</DialogTitle>
+              <DialogTitle className="text-4xl font-black text-destructive tracking-tighter uppercase">SOS HUB</DialogTitle>
               <DialogDescription className="text-base font-bold text-muted-foreground">
-                Broadcasting medical profile and real-time location.
+                Immediate access to emergency services and contacts.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4">
+            <div className="space-y-4">
               <Button 
                 size="lg" 
                 variant="destructive" 
-                className="h-24 text-2xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-destructive/40 rounded-[2rem] relative overflow-hidden group"
+                className="w-full h-24 text-2xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-destructive/40 rounded-[2rem] relative overflow-hidden group"
                 onClick={handleSOS}
                 disabled={isActivating}
                 suppressHydrationWarning
@@ -110,11 +130,6 @@ export function SosButton() {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex flex-col items-center gap-1"
                     >
-                      <span className="text-[10px] font-bold normal-case tracking-widest opacity-80 uppercase">
-                        {step === 1 && "Locking GPS..."}
-                        {step === 2 && "Transmitting Bio-Signature..."}
-                        {step === 3 && "Connecting Dispatch..."}
-                      </span>
                       <Loader2 className="animate-spin h-8 w-8" />
                     </motion.div>
                   ) : (
@@ -125,38 +140,57 @@ export function SosButton() {
                   )}
                 </AnimatePresence>
               </Button>
-              
-              {!isActivating && (
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="h-14 font-black border-2 rounded-2xl hover:bg-muted"
-                  onClick={() => setIsOpen(false)}
-                  suppressHydrationWarning
-                >
-                  DISMISS SIGNAL
-                </Button>
-              )}
+
+              <div className="bg-muted/50 rounded-2xl p-4 border-2 border-dashed">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <Heart className="size-3 text-destructive" /> Emergency Contacts
+                  </h4>
+                  <Button variant="ghost" size="icon" className="size-6 rounded-full" onClick={() => setShowAddContact(!showAddContact)}>
+                    <UserPlus className="size-3" />
+                  </Button>
+                </div>
+
+                {showAddContact && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="space-y-2 mb-4 overflow-hidden">
+                    <Input placeholder="Name" className="h-8 text-xs" value={newContact.name} onChange={(e) => setNewContact({...newContact, name: e.target.value})} />
+                    <Input placeholder="Phone" className="h-8 text-xs" value={newContact.phone} onChange={(e) => setNewContact({...newContact, phone: e.target.value})} />
+                    <Button size="sm" className="w-full h-8 text-[10px] font-black" onClick={handleAddContact}>Save Contact</Button>
+                  </motion.div>
+                )}
+
+                <div className="space-y-2 max-h-[120px] overflow-y-auto pr-2">
+                  {contacts?.map(contact => (
+                    <div key={contact.id} className="bg-background p-3 rounded-xl border flex items-center justify-between shadow-sm group">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-tighter">{contact.name}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground">{contact.phone}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button size="icon" variant="ghost" className="size-7 rounded-lg text-primary" asChild>
+                          <a href={`tel:${contact.phone}`}><Phone className="size-3" /></a>
+                        </Button>
+                        <Button size="icon" variant="ghost" className="size-7 rounded-lg text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteContact(contact.id)}>
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {(!contacts || contacts.length === 0) && (
+                    <p className="text-[10px] text-center text-muted-foreground italic py-4">No trusted contacts added yet.</p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 py-6 border-t border-dashed">
+            <div className="flex gap-3 justify-center pt-4 border-t border-dashed">
                <div className="flex flex-col items-center gap-1.5 opacity-60">
-                  <div className="p-2 bg-muted rounded-full">
-                    <Wifi className="size-4" />
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest">Secure</span>
+                  <div className="p-2 bg-muted rounded-full"><Wifi className="size-4" /></div>
+                  <span className="text-[9px] font-black uppercase tracking-widest">Active</span>
                </div>
                <div className="flex flex-col items-center gap-1.5 opacity-60">
-                  <div className="p-2 bg-muted rounded-full">
-                    <MapPin className="size-4" />
-                  </div>
+                  <div className="p-2 bg-muted rounded-full"><MapPin className="size-4" /></div>
                   <span className="text-[9px] font-black uppercase tracking-widest">GPS Live</span>
-               </div>
-               <div className="flex flex-col items-center gap-1.5 opacity-60">
-                  <div className="p-2 bg-muted rounded-full">
-                    <X className="size-4" />
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest">Quick Kill</span>
                </div>
             </div>
           </div>

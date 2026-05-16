@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -70,6 +71,31 @@
         "actualTakeTime": { "type": "string", "format": "date-time" },
         "status": { "type": "string" }
       }
+    },
+    "EmergencyContact": {
+      "title": "EmergencyContact",
+      "type": "object",
+      "description": "Personal emergency contact information.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "relationship": { "type": "string" },
+        "phone": { "type": "string" }
+      },
+      "required": ["name", "phone"]
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "type": "object",
+      "description": "A manual reminder for a specific medication or health task.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "time": { "type": "string" },
+        "days": { "type": "array", "items": { "type": "string" } },
+        "isEnabled": { "type": "boolean" }
+      },
+      "required": ["title", "time"]
     }
   },
   "auth": {
@@ -95,6 +121,14 @@
     "/users/{userId}/medicationIntakes/{intakeId}": {
       "schema": { "$ref": "#/backend/entities/MedicationIntake" },
       "description": "Logs of medication adherence."
+    },
+    "/users/{userId}/emergencyContacts/{contactId}": {
+      "schema": { "$ref": "#/backend/entities/EmergencyContact" },
+      "description": "User's trusted emergency contacts."
+    },
+    "/users/{userId}/reminders/{reminderId}": {
+      "schema": { "$ref": "#/backend/entities/Reminder" },
+      "description": "Manual health and medication reminders."
     },
     "/users/{userId}/preferredProviders/{providerId}": {
       "schema": { "type": "object" },
