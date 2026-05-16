@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Bot, Loader2, UserCheck, Shield, Sparkles } from 'lucide-react';
+import { Bot, Loader2, Sparkles, ShieldCheck, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -78,7 +78,7 @@ export default function LoginPage() {
       initiateAnonymousSignIn(auth);
       toast({
         title: "Guest Session Active",
-        description: "Welcome! You are now exploring the health dashboard.",
+        description: "Welcome to the Instant Portal. You are now exploring the health dashboard.",
       });
     } catch (error: any) {
       toast({
@@ -116,8 +116,12 @@ export default function LoginPage() {
           className="absolute bottom-12 left-12 right-12"
         >
           <div className="bg-white/10 backdrop-blur-xl p-10 rounded-[2rem] border border-white/20 text-white shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <ShieldCheck className="text-primary size-8" />
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-80">Clinical Shield v2.5</span>
+            </div>
             <blockquote className="space-y-6">
-              <p className="text-3xl font-light italic leading-tight">"Health is not just a status, it's a journey. We're here to guide every step."</p>
+              <p className="text-3xl font-light italic leading-tight">"Health is not just a status, it's a journey. We're here to guide every step with AI-driven intelligence."</p>
               <footer className="text-sm font-black uppercase tracking-widest opacity-80">— The HealthAI Core</footer>
             </blockquote>
           </div>
@@ -142,7 +146,39 @@ export default function LoginPage() {
             </p>
           </div>
           
-          <div className="bg-card p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border">
+          <div className="bg-card p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border space-y-8">
+            {/* High-Priority Guest Access */}
+            <div className="relative group">
+               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-[1.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+               <Button 
+                    variant="secondary" 
+                    type="button" 
+                    className="relative w-full h-16 font-black rounded-xl border-2 border-primary/20 bg-background text-primary hover:bg-primary/5 transition-all flex items-center justify-between px-6" 
+                    onClick={handleGuestLogin} 
+                    disabled={isLoading || isGoogleLoading || isGuestLoading}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Zap className="size-5 fill-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm leading-none mb-1">Instant Portal</p>
+                      <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">Enter as Guest</p>
+                    </div>
+                  </div>
+                  {isGuestLoading ? <Loader2 className="animate-spin" /> : <Sparkles className="size-5 text-accent animate-pulse" />}
+               </Button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-bold">
+                <span className="bg-card px-4 text-muted-foreground tracking-[0.2em]">OR LOGIN WITH</span>
+              </div>
+            </div>
+
             <form onSubmit={handleLogin} className="grid gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-60 ml-1">Email Address</Label>
@@ -178,34 +214,9 @@ export default function LoginPage() {
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Enter Portal'}
               </Button>
               
-              <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase font-bold">
-                  <span className="bg-card px-4 text-muted-foreground tracking-[0.2em]">Clinical Partner Access</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" type="button" className="h-12 font-bold rounded-xl border-2" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading || isGuestLoading}>
-                  {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon /> Google</>}
-                </Button>
-                <Button 
-                    variant="secondary" 
-                    type="button" 
-                    className="h-12 font-black rounded-xl border-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group" 
-                    onClick={handleGuestLogin} 
-                    disabled={isLoading || isGoogleLoading || isGuestLoading}
-                >
-                  {isGuestLoading ? <Loader2 className="animate-spin" /> : (
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="size-4 group-hover:rotate-12 transition-transform" /> 
-                      Guest Mode
-                    </span>
-                  )}
-                </Button>
-              </div>
+              <Button variant="outline" type="button" className="h-12 font-bold rounded-xl border-2" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading || isGuestLoading}>
+                {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon /> Continue with Google</>}
+              </Button>
             </form>
           </div>
           
