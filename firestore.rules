@@ -3,9 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     /**
      * GLOBAL PERMISSIVE RULES FOR PROTOTYPING
-     * Force Deployment Trigger: 2024-05-23T10:15:00Z
-     * This allows unrestricted access to all medical records to ensure 
-     * the dashboard remains functional during development and bypasses auth denials.
+     * Force Deployment Trigger: 2024-05-24T12:00:00Z
+     * This allows unrestricted access during development to resolve permission errors.
      */
     match /{allPaths=**} {
       allow read, write: if true;

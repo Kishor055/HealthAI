@@ -8,6 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const ParsePrescriptionTextInputSchema = z.object({
   text: z.string().describe("The raw prescription text or clinical notes to analyze."),
@@ -34,6 +35,7 @@ export type ParsePrescriptionTextOutput = z.infer<typeof ParsePrescriptionTextOu
 
 const prompt = ai.definePrompt({
   name: 'parsePrescriptionTextPrompt',
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: ParsePrescriptionTextInputSchema },
   output: { schema: ParsePrescriptionTextOutputSchema },
   prompt: `You are an expert pharmaceutical analyst. 
