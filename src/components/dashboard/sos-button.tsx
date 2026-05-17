@@ -45,7 +45,6 @@ export function SosButton() {
   const [isActivating, setIsActivating] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
   const [newContact, setNewContact] = useState({ name: "", phone: "", relationship: "" });
-  const [step, setStep] = useState(0);
   const { toast } = useToast();
 
   const contactsQuery = useMemoFirebase(() => {
@@ -57,15 +56,11 @@ export function SosButton() {
 
   const handleSOS = () => {
     setIsActivating(true);
-    setStep(1);
     
     // Simulate multi-stage notification protocol
-    setTimeout(() => setStep(2), 1000);
-    setTimeout(() => setStep(3), 2000);
     setTimeout(() => {
       setIsActivating(false);
       setIsOpen(false);
-      setStep(0);
       toast({
         title: "Emergency Protocol Active",
         description: "Your physician and emergency contacts have been notified of your location.",
@@ -99,7 +94,6 @@ export function SosButton() {
         <Button
           onClick={() => setIsOpen(true)}
           className="h-20 w-20 rounded-full shadow-[0_0_40px_rgba(239,68,68,0.6)] bg-destructive hover:bg-destructive/90 transition-all p-0 border-4 border-white/40 group overflow-hidden"
-          suppressHydrationWarning
         >
           <div className="relative z-10">
             <AlertTriangle className="h-10 w-10 text-white animate-pulse" />
@@ -112,7 +106,7 @@ export function SosButton() {
         </Button>
       </motion.div>
 
-      <Dialog open={isOpen} onOpenChange={(v) => !isActivating && setIsOpen(v)}>
+      <Dialog open={isOpen} onOpenChange={(v) => { if (!isActivating) setIsOpen(v); }}>
         <DialogContent className="sm:max-w-[450px] overflow-hidden border-none p-0 bg-background/95 backdrop-blur-3xl shadow-2xl rounded-[2.5rem]">
           <div className="h-2 w-full bg-destructive absolute top-0 left-0" />
           
@@ -136,14 +130,12 @@ export function SosButton() {
             </DialogHeader>
 
             <div className="space-y-6">
-              {/* Primary SOS Action */}
               <Button 
                 size="lg" 
                 variant="destructive" 
                 className="w-full h-24 text-2xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-destructive/40 rounded-[2rem] relative overflow-hidden group"
                 onClick={handleSOS}
                 disabled={isActivating}
-                suppressHydrationWarning
               >
                 <AnimatePresence mode="wait">
                   {isActivating ? (
@@ -165,7 +157,6 @@ export function SosButton() {
                 </AnimatePresence>
               </Button>
 
-              {/* Standard Emergency Services */}
               <div className="grid grid-cols-3 gap-3">
                 {EMERGENCY_SERVICES.map((service) => (
                   <Button
@@ -187,7 +178,6 @@ export function SosButton() {
                 ))}
               </div>
 
-              {/* Personal Emergency Contacts */}
               <div className="bg-muted/30 rounded-[2rem] p-6 border-2 border-dashed border-muted-foreground/20">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -256,7 +246,7 @@ export function SosButton() {
                </div>
             </div>
           </div>
-        </div>
+        </DialogContent>
       </Dialog>
     </>
   );
