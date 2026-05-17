@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,7 +16,7 @@ import { MotivationalQuote } from "@/components/dashboard/motivational-quote";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Smile, Frown, Meh, Brain, TrendingUp, Activity, Loader2, Sparkles } from "lucide-react";
+import { Smile, Frown, Meh, Brain, TrendingUp, Activity, Loader2, Sparkles, HeartPulse, Watch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { query, collection, orderBy, limit } from 'firebase/firestore';
@@ -177,10 +178,18 @@ export default function DashboardPage() {
                     <Activity className="size-5 text-primary shrink-0 mt-0.5" />
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-tight text-primary mb-1">Smart Adherence Insight</p>
-                      <p className="text-[10px] font-medium leading-relaxed opacity-70">
-                        {aiInsight?.trendInsight || '"Sync your biometric data to generate professional clinical insights based on your recent records."'}
+                      <p className="text-[10px] font-medium leading-relaxed opacity-70 italic">
+                        {aiInsight?.trendInsight ? `"${aiInsight.trendInsight}"` : '"Sync your biometric data to generate professional clinical insights based on your recent records."'}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-muted flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Watch className="size-4 text-muted-foreground" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Wearable Sync</span>
+                    </div>
+                    <Badge variant="outline" className="text-[8px] font-black uppercase border-dashed">Active Overlay</Badge>
                   </div>
 
                   <div className="pt-2">
