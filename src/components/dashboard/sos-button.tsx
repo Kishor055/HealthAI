@@ -63,10 +63,10 @@ export function SosButton() {
       setIsOpen(false);
       toast({
         title: "Emergency Protocol Active",
-        description: "Your physician and emergency contacts have been notified of your location. Please remain calm.",
+        description: "Your physician and emergency contacts have been notified of your location. Initiating emergency call.",
         variant: "destructive"
       });
-      // Fallback: Trigger dialer for Ambulance if critical
+      // Fallback: Trigger dialer for Ambulance
       window.location.href = "tel:108";
     }, 3500);
   };
@@ -221,8 +221,8 @@ export function SosButton() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" className="size-8 rounded-xl text-primary hover:bg-primary/5 border" asChild>
-                          <a href={`tel:${contact.phone}`}><Phone className="size-3" /></a>
+                        <Button size="icon" variant="ghost" className="size-9 rounded-xl text-primary hover:bg-primary/5 border-2 border-primary/10 shadow-sm" asChild>
+                          <a href={`tel:${contact.phone}`}><Phone className="size-4" /></a>
                         </Button>
                         <Button size="icon" variant="ghost" className="size-8 rounded-xl text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteContact(contact.id)}>
                           <Trash2 className="size-3" />
@@ -250,7 +250,7 @@ export function SosButton() {
                </div>
                <div className="flex flex-col items-center gap-1.5">
                   <div className="p-2 bg-accent/10 rounded-full">
-                    <MapPin className="size-4 text-accent" />
+                    <MapPin className="size-4 text-accent animate-pulse" />
                   </div>
                   <span className="text-[8px] font-black uppercase tracking-widest text-accent">GPS Locked</span>
                </div>
