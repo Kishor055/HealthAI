@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { query, collection, orderBy, limit } from 'firebase/firestore';
 import { analyzeHealthTrends, HealthTrendOutput } from "@/ai/flows/analyze-health-trends";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { user } = useUser();
