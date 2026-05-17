@@ -20,7 +20,9 @@ import {
   Activity,
   HeartPulse,
   Apple,
-  Zap
+  Zap,
+  Search,
+  Rss
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -32,16 +34,32 @@ interface WearableSyncDialogProps {
   onConnect: (device: string) => void;
 }
 
-const DEVICES = [
+const PRESETS = [
   { id: 'apple', name: 'Apple Watch', icon: Apple, color: 'bg-black' },
   { id: 'garmin', name: 'Garmin Fenix', icon: Activity, color: 'bg-blue-600' },
   { id: 'fitbit', name: 'Fitbit Sense', icon: Zap, color: 'bg-teal-500' },
 ];
 
+const DISCOVERED_MOCK = [
+  { id: 'custom-1', name: 'Ultra-Health S3', strength: -65 },
+  { id: 'custom-2', name: 'Biometric Ring v2', strength: -72 },
+  { id: 'custom-3', name: 'Smart Band Pro', strength: -80 },
+];
+
 export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSyncDialogProps) {
-  const [step, setStep] = React.useState<'select' | 'pairing' | 'success'>('select');
+  const [step, setStep] = React.useState<'select' | 'scanning' | 'pairing' | 'success'>('select');
   const [selectedDevice, setSelectedDevice] = React.useState<string | null>(null);
+  const [discoveredDevices, setDiscoveredDevices] = React.useState<typeof DISCOVERED_MOCK>([]);
   const { toast } = useToast();
+
+  const handleStartScanning = () => {
+    setStep('scanning');
+    setDiscoveredDevices([]);
+    // Simulate finding devices over 3 seconds
+    setTimeout(() => {
+      setDiscoveredDevices(DISCOVERED_MOCK);
+    }, 2500);
+  };
 
   const handleStartPairing = (device: string) => {
     setSelectedDevice(device);
@@ -51,7 +69,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
     setTimeout(() => {
       setStep('success');
       toast({
-        title: "Health Report Synced",
+        title: "Clinical Link Established",
         description: `Your ${device} is now providing real-time biometric telemetry.`,
       });
       onConnect(device);
@@ -64,6 +82,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
     setTimeout(() => {
       setStep('select');
       setSelectedDevice(null);
+      setDiscoveredDevices([]);
     }, 300);
   };
 
@@ -86,14 +105,14 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                   <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
                     <Watch className="h-8 w-8 text-primary" />
                   </div>
-                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter">Connect Wearable</DialogTitle>
-                  <DialogDescription className="font-medium">
-                    Sync your smartwatch to generate an automated health report.
+                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">Connect Wearable</DialogTitle>
+                  <DialogDescription className="font-medium text-muted-foreground">
+                    Choose a preset or scan for any Bluetooth smartwatch.
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-3">
-                  {DEVICES.map((device) => (
+                  {PRESETS.map((device) => (
                     <Button
                       key={device.id}
                       variant="outline"
@@ -109,7 +128,77 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                       <Bluetooth className="size-4 text-muted-foreground opacity-30 group-hover:text-primary group-hover:opacity-100" />
                     </Button>
                   ))}
+                  
+                  <Button
+                    variant="outline"
+                    className="h-16 rounded-2xl border-2 border-dashed hover:border-primary/50 flex items-center justify-center gap-3 group transition-all mt-2"
+                    onClick={handleStartScanning}
+                  >
+                    <Bluetooth className="size-5 text-primary group-hover:animate-pulse" />
+                    <span className="font-black text-sm uppercase tracking-tight">Scan for Other Devices</span>
+                  </Button>
                 </div>
+              </motion.div>
+            )}
+
+            {step === 'scanning' && (
+              <motion.div 
+                key="scanning"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-6"
+              >
+                <div className="text-center space-y-2">
+                  <div className="relative mx-auto size-24 mb-6">
+                    <motion.div 
+                      animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="absolute inset-0 bg-primary/20 rounded-full"
+                    />
+                    <div className="relative z-10 size-24 bg-primary/10 rounded-full flex items-center justify-center">
+                       <Search className="size-8 text-primary animate-pulse" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-black uppercase tracking-tighter">Bluetooth Discovery</h3>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">Scanning for Clinical Sensors...</p>
+                </div>
+
+                <div className="space-y-3 min-h-[180px]">
+                   {discoveredDevices.length === 0 ? (
+                     <div className="flex flex-col items-center justify-center h-full py-10 opacity-30">
+                        <Loader2 className="size-6 animate-spin mb-2" />
+                        <span className="text-[10px] font-black uppercase">Polling local radio...</span>
+                     </div>
+                   ) : (
+                     discoveredDevices.map((device, idx) => (
+                       <motion.button
+                         initial={{ opacity: 0, x: -10 }}
+                         animate={{ opacity: 1, x: 0 }}
+                         transition={{ delay: idx * 0.1 }}
+                         key={device.id}
+                         onClick={() => handleStartPairing(device.name)}
+                         className="w-full h-14 bg-muted/30 hover:bg-muted border border-transparent hover:border-primary/30 rounded-xl px-4 flex items-center justify-between group transition-all"
+                       >
+                         <div className="flex items-center gap-3">
+                            <Rss className="size-4 text-primary" />
+                            <span className="font-bold text-sm">{device.name}</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                            <div className="flex gap-0.5 items-end h-3">
+                               {[1, 2, 3, 4].map(i => (
+                                 <div key={i} className={cn("w-1 rounded-full", i <= 3 ? "bg-accent" : "bg-muted-foreground/20")} style={{ height: `${i * 25}%` }} />
+                               ))}
+                            </div>
+                            <span className="text-[8px] font-black uppercase opacity-40">Pair Now</span>
+                         </div>
+                       </motion.button>
+                     ))
+                   )}
+                </div>
+
+                <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest opacity-40" onClick={() => setStep('select')}>
+                  Cancel Discovery
+                </Button>
               </motion.div>
             )}
 
@@ -182,7 +271,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                 <div>
                   <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Sync Active</h3>
                   <p className="text-sm font-medium text-muted-foreground px-8 leading-relaxed">
-                    Data flow established. Your clinical profile is now updated with real-time biometric reports.
+                    Data flow established. Your clinical profile is now updated with real-time biometric reports from {selectedDevice}.
                   </p>
                 </div>
 
