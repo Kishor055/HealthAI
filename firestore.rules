@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     /**
      * GLOBAL PROTOTYPING BYPASS
-     * Forced Deployment Trigger: 2024-06-01T14:30:00Z
+     * Forced Deployment Trigger: 2024-06-01T15:00:00Z
      * This rule ensures unrestricted access to medical collections during active development.
      */
     match /{allPaths=**} {

@@ -36,8 +36,9 @@ export default function DiscoverPage() {
   const [isSearching, setIsSearching] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
 
+  // Modern Library Loading Pattern
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-clinical-portal',
+    id: 'google-map-clinical-portal-v2',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: MAP_LIBRARIES
   });
@@ -55,7 +56,7 @@ export default function DiscoverPage() {
   const savedIds = React.useMemo(() => new Set(savedProviders?.map(p => p.providerId) || []), [savedProviders]);
 
   const searchNearby = React.useCallback((mapInstance: google.maps.Map) => {
-    if (!window.google) return;
+    if (!window.google || !window.google.maps.places) return;
     setIsSearching(true);
     
     const service = new google.maps.places.PlacesService(mapInstance);
@@ -111,24 +112,27 @@ export default function DiscoverPage() {
 
   if (!isMounted) return null;
 
+  // Handle specific ApiNotActivatedMapError via UI
   if (loadError) {
     return (
       <div className="p-8 max-w-2xl mx-auto space-y-6">
-        <Alert variant="destructive" className="border-none shadow-2xl bg-destructive/10 text-destructive">
-          <AlertCircle className="h-6 w-6" />
-          <AlertTitle className="text-xl font-black uppercase tracking-tighter">Clinical Map Access Restricted</AlertTitle>
+        <Alert variant="destructive" className="border-none shadow-2xl bg-destructive/10 text-destructive p-8 rounded-[2.5rem]">
+          <AlertCircle className="h-10 w-10 mb-4" />
+          <AlertTitle className="text-2xl font-black uppercase tracking-tighter">Maps API Activation Required</AlertTitle>
           <AlertDescription className="mt-4 space-y-6">
-            <p className="font-bold">The Google Maps JavaScript API has returned a configuration error (ApiNotActivatedMapError).</p>
-            <div className="bg-white/20 p-6 rounded-3xl border-2 border-destructive/20 space-y-4">
-              <p className="font-black text-xs uppercase tracking-[0.2em]">Required Activation Protocol:</p>
-              <ol className="list-decimal list-inside space-y-2 text-xs font-bold leading-relaxed">
-                <li>Go to the <a href="https://console.cloud.google.com/" target="_blank" className="underline inline-flex items-center gap-1">Google Cloud Console <ExternalLink className="size-3"/></a></li>
-                <li>Select your project and go to <strong>Enabled APIs & Services</strong></li>
-                <li>Search for and enable <strong>Maps JavaScript API</strong></li>
-                <li>Search for and enable <strong>Places API</strong></li>
+            <p className="font-bold text-lg">The Google Maps JS API is failing because it's not enabled for your project.</p>
+            <div className="bg-white/40 p-6 rounded-3xl border-2 border-destructive/20 space-y-4">
+              <p className="font-black text-xs uppercase tracking-[0.2em] text-destructive">Required Activation Protocol:</p>
+              <ol className="list-decimal list-inside space-y-3 text-sm font-bold leading-relaxed">
+                <li>Visit the <a href="https://console.cloud.google.com/google/maps-apis/library" target="_blank" className="underline inline-flex items-center gap-1">Maps API Library <ExternalLink className="size-3"/></a></li>
+                <li>Search for and <strong>Enable</strong>: "Maps JavaScript API"</li>
+                <li>Search for and <strong>Enable</strong>: "Places API"</li>
+                <li>Wait 2-3 minutes for the activation to propagate.</li>
               </ol>
             </div>
-            <Button variant="destructive" className="w-full h-12 rounded-2xl font-black uppercase tracking-widest" onClick={() => window.location.reload()}>Retry Handshake</Button>
+            <Button variant="destructive" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-destructive/20" onClick={() => window.location.reload()}>
+              Retry Connection
+            </Button>
           </AlertDescription>
         </Alert>
       </div>
@@ -142,7 +146,7 @@ export default function DiscoverPage() {
           <div className="absolute inset-0 flex items-center justify-center bg-muted/20 backdrop-blur-sm z-50">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="size-12 animate-spin text-primary opacity-30" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40">Initializing Lens...</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40">Loading Map Lab...</span>
             </div>
           </div>
         ) : (
@@ -254,7 +258,7 @@ export default function DiscoverPage() {
             <div className="flex items-start gap-3 p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10">
               <Info className="size-4 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-[10px] font-medium leading-relaxed opacity-70">
-                Medical facilities are retrieved from Google Places based on your current map coordinates.
+                Maps Lab loading pattern enabled for enhanced clinic discovery.
               </p>
             </div>
           </div>
