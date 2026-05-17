@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,12 +59,40 @@
   }
 }
 
-.glass-card {
-  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+/* Leaflet Professional Overrides */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
-.timeline-gradient {
-  background: linear-gradient(180deg, hsl(var(--primary)) 0%, transparent 100%);
+.leaflet-popup-content-wrapper {
+  @apply rounded-2xl shadow-xl border-none p-0 overflow-hidden !important;
+}
+
+.leaflet-popup-tip-container {
+  @apply hidden !important;
+}
+
+.leaflet-control-zoom {
+  @apply border-none shadow-lg !important;
+  margin-top: 2rem !important;
+  margin-left: 2rem !important;
+}
+
+.leaflet-control-zoom-in, .leaflet-control-zoom-out {
+  @apply bg-white text-primary border-none font-bold !important;
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+}
+
+.leaflet-control-attribution {
+  @apply text-[8px] uppercase font-black opacity-30 !important;
+}
+
+.glass-card {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
 }
 
 .pulse-red {
