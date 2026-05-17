@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from 'react';
@@ -5,14 +6,15 @@ import { motion } from 'framer-motion';
 import { 
   CalendarDays, 
   Clock, 
-  User, 
   Plus, 
   MoreVertical, 
   MapPin, 
   CheckCircle2, 
   Calendar,
   Loader2,
-  Stethoscope
+  Stethoscope,
+  Star,
+  Phone
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +36,13 @@ export default function AppointmentsPage() {
     );
   }, [firestore, user?.uid]);
 
+  const savedProvidersQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "users", user.uid, "preferredProviders"));
+  }, [firestore, user?.uid]);
+
   const { data: appointments, isLoading } = useCollection(appointmentsQuery);
+  const { data: savedProviders, isLoading: providersLoading } = useCollection(savedProvidersQuery);
 
   return (
     <div className="p-4 sm:p-8 space-y-8 pb-24">
@@ -114,8 +122,8 @@ export default function AppointmentsPage() {
             </CardHeader>
             <CardContent className="space-y-4 relative z-10">
               <div className="p-4 bg-white/10 rounded-2xl border border-white/20">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Last Checkup</p>
-                <p className="text-lg font-black">12 Days Ago</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Adherence Rate</p>
+                <p className="text-lg font-black">94% Efficiency</p>
               </div>
               <div className="p-4 bg-white/10 rounded-2xl border border-white/20">
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Next Visit</p>
@@ -127,13 +135,25 @@ export default function AppointmentsPage() {
           <Card className="border-none shadow-xl">
              <CardHeader>
                <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                 <MapPin className="size-4" /> Near Doctors
+                 <Star className="size-4 text-accent" /> Saved Doctors
                </CardTitle>
              </CardHeader>
-             <CardContent className="p-4 space-y-3">
-                <p className="text-xs font-medium text-muted-foreground mb-4">You can book appointments directly with your saved preferred providers.</p>
-                <Button variant="outline" className="w-full rounded-xl font-black h-12" asChild>
-                  <a href="/dashboard/discover">Open Facility Map</a>
+             <CardContent className="p-4 space-y-4">
+                {providersLoading ? (
+                  <Loader2 className="size-4 animate-spin mx-auto" />
+                ) : savedProviders?.map(provider => (
+                  <div key={provider.id} className="p-3 rounded-2xl border bg-muted/30 flex items-center justify-between group">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-tighter">{provider.providerName}</p>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase">{provider.providerSpecialty}</p>
+                    </div>
+                    <Button size="icon" variant="ghost" className="size-8 rounded-full" asChild>
+                      <a href={`tel:${provider.providerPhone}`}><Phone className="size-3" /></a>
+                    </Button>
+                  </div>
+                ))}
+                <Button variant="outline" className="w-full rounded-xl font-black h-12 text-[10px] uppercase tracking-widest" asChild>
+                  <a href="/dashboard/discover">Discover More</a>
                 </Button>
              </CardContent>
           </Card>
