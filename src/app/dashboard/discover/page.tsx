@@ -5,7 +5,7 @@ import * as React from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Star, CheckCircle, Loader2, Info, Compass, ShieldPlus, ArrowRight, Activity, Crosshair } from "lucide-react";
+import { Search, MapPin, Star, CheckCircle, Loader2, Info, Compass, ShieldPlus, ArrowRight, Activity, Crosshair, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser, useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
@@ -150,6 +150,12 @@ export default function DiscoverPage() {
     });
   };
 
+  const handleNavigate = (facility: Facility) => {
+    // Deep link that opens the native maps app on mobile (Google/Apple) or browser on desktop
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.position[0]},${facility.position[1]}&travelmode=driving`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background overflow-hidden font-body">
       {/* Map Viewport */}
@@ -240,10 +246,15 @@ export default function DiscoverPage() {
                       <Button size="sm" variant="outline" className="flex-1 h-10 rounded-xl" onClick={(e) => { e.stopPropagation(); handleSaveProvider(facility); }} disabled={savedIds.has(facility.id)}>
                         {savedIds.has(facility.id) ? <CheckCircle className="size-4 text-accent" /> : <Star className="size-4" />}
                       </Button>
-                      <Button size="sm" className="flex-[3] h-10 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/10" asChild>
-                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position[0]},${facility.position[1]}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                          Navigate <ArrowRight className="size-3 ml-1.5" />
-                        </a>
+                      <Button 
+                        size="sm" 
+                        className="flex-[3] h-10 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/10" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNavigate(facility);
+                        }}
+                      >
+                        Navigate <Navigation className="size-3 ml-1.5" />
                       </Button>
                     </div>
                   </motion.div>
