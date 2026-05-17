@@ -63,15 +63,20 @@ export function SosButton() {
       setIsOpen(false);
       toast({
         title: "Emergency Protocol Active",
-        description: "Your physician and emergency contacts have been notified of your location.",
+        description: "Your physician and emergency contacts have been notified of your location. Please remain calm.",
         variant: "destructive"
       });
+      // Fallback: Trigger dialer for Ambulance if critical
+      window.location.href = "tel:108";
     }, 3500);
   };
 
   const handleAddContact = () => {
     if (!user || !firestore || !newContact.name || !newContact.phone) return;
-    addDocumentNonBlocking(collection(firestore, "users", user.uid, "emergencyContacts"), newContact);
+    addDocumentNonBlocking(collection(firestore, "users", user.uid, "emergencyContacts"), {
+      ...newContact,
+      createdAt: new Date().toISOString()
+    });
     setNewContact({ name: "", phone: "", relationship: "" });
     setShowAddContact(false);
     toast({ title: "Contact Added", description: `${newContact.name} is now in your SOS list.` });
@@ -79,7 +84,7 @@ export function SosButton() {
 
   const handleDeleteContact = (id: string) => {
     if (!user || !firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "users", user.uid, "emergencyContacts", id));
+    deleteDocumentNonBlocking(doc(firestore, user.uid, "emergencyContacts", id));
   };
 
   return (
@@ -163,7 +168,7 @@ export function SosButton() {
                     key={service.name}
                     variant="outline"
                     className={cn(
-                      "h-auto py-4 flex flex-col gap-2 rounded-2xl border-2 hover:scale-105 transition-all",
+                      "h-auto py-4 flex flex-col gap-2 rounded-2xl border-2 hover:scale-105 transition-all bg-card/50",
                       service.shadow
                     )}
                     asChild
@@ -205,7 +210,7 @@ export function SosButton() {
 
                 <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2 clinical-scrollbar">
                   {contacts?.map(contact => (
-                    <div key={contact.id} className="bg-background p-3 rounded-2xl border-2 flex items-center justify-between shadow-sm group hover:border-primary/30 transition-all">
+                    <div key={contact.id} className="bg-card p-3 rounded-2xl border-2 flex items-center justify-between shadow-sm group hover:border-primary/30 transition-all">
                       <div className="flex items-center gap-3">
                         <div className="size-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shadow-inner">
                           <LifeBuoy className="size-4" />
@@ -216,7 +221,7 @@ export function SosButton() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" className="size-8 rounded-xl text-primary hover:bg-primary/5" asChild>
+                        <Button size="icon" variant="ghost" className="size-8 rounded-xl text-primary hover:bg-primary/5 border" asChild>
                           <a href={`tel:${contact.phone}`}><Phone className="size-3" /></a>
                         </Button>
                         <Button size="icon" variant="ghost" className="size-8 rounded-xl text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteContact(contact.id)}>
@@ -236,13 +241,18 @@ export function SosButton() {
             </div>
 
             <div className="flex gap-4 justify-center pt-4 border-t border-dashed">
-               <div className="flex flex-col items-center gap-1.5 opacity-40">
-                  <div className="p-2 bg-muted rounded-full"><Wifi className="size-4" /></div>
-                  <span className="text-[8px] font-black uppercase tracking-widest">Satellite Active</span>
+               <div className="flex flex-col items-center gap-1.5">
+                  <div className="p-2 bg-primary/10 rounded-full relative">
+                    <Wifi className="size-4 text-primary animate-pulse" />
+                    <motion.div animate={{ scale: [1, 1.5], opacity: [0.5, 0] }} transition={{ repeat: Infinity, duration: 1 }} className="absolute inset-0 bg-primary/20 rounded-full" />
+                  </div>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-primary">Satellite Active</span>
                </div>
-               <div className="flex flex-col items-center gap-1.5 opacity-40">
-                  <div className="p-2 bg-muted rounded-full"><MapPin className="size-4" /></div>
-                  <span className="text-[8px] font-black uppercase tracking-widest">GPS Locked</span>
+               <div className="flex flex-col items-center gap-1.5">
+                  <div className="p-2 bg-accent/10 rounded-full">
+                    <MapPin className="size-4 text-accent" />
+                  </div>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-accent">GPS Locked</span>
                </div>
             </div>
           </div>
