@@ -26,6 +26,10 @@ interface Facility {
   phone: string;
 }
 
+/**
+ * DiscoverPage - Clinical Facility Discovery Portal.
+ * Uses the modern Maps loading pattern and provides diagnostic feedback for API activation errors.
+ */
 export default function DiscoverPage() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -38,7 +42,7 @@ export default function DiscoverPage() {
 
   // Modern Library Loading Pattern
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-clinical-portal-v2',
+    id: 'google-map-clinical-portal-v3',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: MAP_LIBRARIES
   });
@@ -112,7 +116,7 @@ export default function DiscoverPage() {
 
   if (!isMounted) return null;
 
-  // Handle specific ApiNotActivatedMapError via UI
+  // Handle specific ApiNotActivatedMapError via UI Diagnostic Portal
   if (loadError) {
     return (
       <div className="p-8 max-w-2xl mx-auto space-y-6">
