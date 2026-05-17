@@ -1,0 +1,213 @@
+"use client";
+
+import * as React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { 
+  Watch, 
+  Bluetooth, 
+  Smartphone, 
+  CheckCircle2, 
+  Loader2, 
+  SmartphoneNfc,
+  Wifi,
+  Activity,
+  HeartPulse,
+  Apple,
+  Zap
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+interface WearableSyncDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConnect: (device: string) => void;
+}
+
+const DEVICES = [
+  { id: 'apple', name: 'Apple Watch', icon: Apple, color: 'bg-black' },
+  { id: 'garmin', name: 'Garmin Fenix', icon: Activity, color: 'bg-blue-600' },
+  { id: 'fitbit', name: 'Fitbit Sense', icon: Zap, color: 'bg-teal-500' },
+];
+
+export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSyncDialogProps) {
+  const [step, setStep] = React.useState<'select' | 'pairing' | 'success'>('select');
+  const [selectedDevice, setSelectedDevice] = React.useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleStartPairing = (device: string) => {
+    setSelectedDevice(device);
+    setStep('pairing');
+    
+    // Professional pairing simulation
+    setTimeout(() => {
+      setStep('success');
+      toast({
+        title: "Health Report Synced",
+        description: `Your ${device} is now providing real-time biometric telemetry.`,
+      });
+      onConnect(device);
+    }, 4000);
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    // Reset for next time after animation
+    setTimeout(() => {
+      setStep('select');
+      setSelectedDevice(null);
+    }, 300);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[450px] overflow-hidden border-none p-0 bg-background/95 backdrop-blur-3xl shadow-2xl rounded-[2.5rem]">
+        <div className="h-1.5 w-full bg-primary/20 absolute top-0 left-0" />
+        
+        <div className="p-8 space-y-6">
+          <AnimatePresence mode="wait">
+            {step === 'select' && (
+              <motion.div 
+                key="select"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-6"
+              >
+                <DialogHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
+                    <Watch className="h-8 w-8 text-primary" />
+                  </div>
+                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter">Connect Wearable</DialogTitle>
+                  <DialogDescription className="font-medium">
+                    Sync your smartwatch to generate an automated health report.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-3">
+                  {DEVICES.map((device) => (
+                    <Button
+                      key={device.id}
+                      variant="outline"
+                      className="h-16 rounded-2xl border-2 hover:border-primary/50 flex items-center justify-between px-6 group transition-all"
+                      onClick={() => handleStartPairing(device.name)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={cn("size-10 rounded-xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110", device.color)}>
+                          <device.icon className="size-5" />
+                        </div>
+                        <span className="font-black text-sm uppercase tracking-tight">{device.name}</span>
+                      </div>
+                      <Bluetooth className="size-4 text-muted-foreground opacity-30 group-hover:text-primary group-hover:opacity-100" />
+                    </Button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'pairing' && (
+              <motion.div 
+                key="pairing"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-12 text-center space-y-8"
+              >
+                <div className="relative">
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="size-32 bg-primary/10 rounded-full flex items-center justify-center"
+                  >
+                    <SmartphoneNfc className="size-12 text-primary" />
+                  </motion.div>
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                    className="absolute inset-0 border-4 border-dashed border-primary/30 rounded-full"
+                  />
+                  <div className="absolute -top-2 -right-2">
+                    <div className="size-8 bg-background border-2 border-primary rounded-full flex items-center justify-center shadow-xl">
+                      <Bluetooth className="size-4 text-primary animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Pairing with {selectedDevice}</h3>
+                  <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    <Loader2 className="size-3 animate-spin" />
+                    Establishing HealthLink Protocol...
+                  </div>
+                </div>
+
+                <div className="w-full max-w-[200px] space-y-2">
+                   <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 4 }}
+                        className="h-full bg-primary"
+                      />
+                   </div>
+                   <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">Handshake 0x4F92... Verified</p>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'success' && (
+              <motion.div 
+                key="success"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-12 text-center space-y-6"
+              >
+                <div className="size-24 bg-accent/10 rounded-[2.5rem] flex items-center justify-center relative">
+                  <CheckCircle2 className="size-12 text-accent" />
+                  <motion.div 
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1.5, opacity: 0 }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="absolute inset-0 border-2 border-accent rounded-[2.5rem]"
+                  />
+                </div>
+                
+                <div>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Sync Active</h3>
+                  <p className="text-sm font-medium text-muted-foreground px-8 leading-relaxed">
+                    Data flow established. Your clinical profile is now updated with real-time biometric reports.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center gap-1.5 opacity-60">
+                    <div className="p-3 bg-muted rounded-2xl"><HeartPulse className="size-5 text-destructive" /></div>
+                    <span className="text-[8px] font-black uppercase tracking-widest">BPM Active</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5 opacity-60">
+                    <div className="p-3 bg-muted rounded-2xl"><Wifi className="size-5 text-blue-500" /></div>
+                    <span className="text-[8px] font-black uppercase tracking-widest">Cloud Sync</span>
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full h-14 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90"
+                  onClick={handleClose}
+                >
+                  Return to Dashboard
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
