@@ -43,3 +43,36 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# API Keys
+apikeys.txt
+secret.json
+serviceAccountKey.json
+
+# Firebase
+firebase-adminsdk.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node Modules
+node_modules/
+
+# Build Files
+dist/
+build/
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
