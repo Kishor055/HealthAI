@@ -28,7 +28,11 @@ import {
   HeartPulse, 
   Watch,
   Wifi,
-  ShieldCheck
+  ShieldCheck,
+  ClipboardCheck,
+  ThumbsUp,
+  AlertCircle,
+  ArrowRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -80,16 +84,17 @@ export default function DashboardPage() {
 
   const handleDeviceConnect = (device: string) => {
     setConnectedDevice(device);
-    // Auto-trigger analysis when wearable connects
     if (vitals && medicines) {
       handleRunAiCheck();
     }
   };
 
   const checkIns = [
-    { icon: Smile, label: "Good", color: "text-accent bg-accent/10" },
-    { icon: Meh, label: "Neutral", color: "text-blue-500 bg-blue-500/10" },
-    { icon: Frown, label: "Poor", color: "text-destructive bg-destructive/10" },
+    { label: "Great", icon: ThumbsUp, color: "text-emerald-500 bg-emerald-500/5", desc: "Energy is high" },
+    { label: "Good", icon: Smile, color: "text-blue-500 bg-blue-500/5", desc: "Standard state" },
+    { label: "Fair", icon: Meh, color: "text-orange-500 bg-orange-500/5", desc: "Slight fatigue" },
+    { label: "Poor", icon: Frown, color: "text-destructive bg-destructive/5", desc: "Symptoms active" },
+    { label: "Critical", icon: AlertCircle, color: "text-red-700 bg-red-700/5", desc: "Need support" },
   ];
 
   return (
@@ -107,27 +112,50 @@ export default function DashboardPage() {
           animate={{ opacity: 1, x: 0 }}
           className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6"
         >
-          <div className="space-y-6 flex-1">
+          <div className="space-y-6 flex-1 w-full">
             <WelcomeHeader />
-            <Card className="border-none shadow-xl glass-card max-w-xl">
+            <Card className="border-none shadow-xl glass-card max-w-2xl">
               <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-1">Condition Monitor</h3>
-                    <p className="text-xs font-medium text-muted-foreground">How are you feeling this morning?</p>
+                <div className="flex flex-col space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-1 flex items-center gap-2">
+                        <ClipboardCheck className="size-4" /> Daily Health Check-In
+                      </h3>
+                      <p className="text-xs font-medium text-muted-foreground italic">Your input helps refine your AI stability index.</p>
+                    </div>
+                    <Badge variant="outline" className={cn("text-[9px] font-black uppercase tracking-widest px-3 border-2 transition-all", selectedVibe ? "bg-accent/10 border-accent text-accent" : "border-primary/20 text-primary")}>
+                      {selectedVibe ? "Assessment Complete" : "Pending Log"}
+                    </Badge>
                   </div>
-                  <div className="flex gap-3">
+                  
+                  <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                     {checkIns.map((item) => (
-                      <Button
+                      <button
                         key={item.label}
-                        variant="ghost"
-                        size="icon"
-                        className={`size-12 rounded-2xl transition-all ${selectedVibe === item.label ? 'ring-2 ring-primary scale-110 shadow-lg' : 'hover:scale-105'} ${item.color}`}
                         onClick={() => setSelectedVibe(item.label)}
+                        className={cn(
+                          "flex flex-col items-center gap-2 p-3 rounded-2xl transition-all border-2",
+                          selectedVibe === item.label 
+                            ? "border-primary bg-primary/5 shadow-lg scale-105" 
+                            : "border-transparent hover:border-muted-foreground/20 bg-muted/30"
+                        )}
                       >
-                        <item.icon className="size-6" />
-                      </Button>
+                        <item.icon className={cn("size-6", item.color.split(' ')[0])} />
+                        <div className="text-center">
+                          <span className="block text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
+                        </div>
+                      </button>
                     ))}
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-dashed">
+                     <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                       {selectedVibe ? `Last Logged: Just now` : "Last log: Yesterday, 8:45 PM"}
+                     </p>
+                     <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest text-primary gap-1 group">
+                        Log Detailed Symptoms <ArrowRight className="size-3 transition-transform group-hover:translate-x-1" />
+                     </Button>
                   </div>
                 </div>
               </CardContent>
