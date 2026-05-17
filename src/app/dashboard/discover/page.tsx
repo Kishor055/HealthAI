@@ -5,7 +5,7 @@ import * as React from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Star, CheckCircle, Loader2, Info, Compass, ShieldPlus, ArrowRight, Activity } from "lucide-react";
+import { Search, MapPin, Star, CheckCircle, Loader2, Info, Compass, ShieldPlus, ArrowRight, Activity, Crosshair } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser, useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
@@ -44,6 +44,7 @@ export default function DiscoverPage() {
   const [facilities, setFacilities] = React.useState<Facility[]>([]);
   const [selectedFacility, setSelectedFacility] = React.useState<Facility | null>(null);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [isLocating, setIsLocating] = React.useState(false);
 
   // Fetch saved providers
   const savedProvidersQuery = useMemoFirebase(() => {
@@ -55,12 +56,13 @@ export default function DiscoverPage() {
   const savedIds = React.useMemo(() => new Set(savedProviders?.map(p => p.providerId) || []), [savedProviders]);
 
   // Real-time facility scan via Overpass API (OpenStreetMap)
-  const scanArea = async () => {
+  const scanArea = async (currentPos?: [number, number]) => {
+    const searchPos = currentPos || center;
     setIsSearching(true);
     try {
       const radius = 5000; // 5km
       // Overpass query for hospitals and clinics
-      const query = `[out:json];node["amenity"~"hospital|clinic|pharmacy"](around:${radius},${center[0]},${center[1]});out 30;`;
+      const query = `[out:json];node["amenity"~"hospital|clinic|pharmacy"](around:${radius},${searchPos[0]},${searchPos[1]});out 30;`;
       const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
       const data = await response.json();
 
@@ -87,6 +89,41 @@ export default function DiscoverPage() {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleLocateUser = () => {
+    if (!navigator.geolocation) {
+      toast({
+        variant: "destructive",
+        title: "Not Supported",
+        description: "Your browser does not support geolocation.",
+      });
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newPos: [number, number] = [position.coords.latitude, position.coords.longitude];
+        setCenter(newPos);
+        setIsLocating(false);
+        toast({
+          title: "Location Accessed",
+          description: "Centering map on your current position.",
+        });
+        // Auto-scan new location
+        scanArea(newPos);
+      },
+      (error) => {
+        setIsLocating(false);
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "Unable to retrieve your location. Please check permissions.",
+        });
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   React.useEffect(() => {
@@ -127,13 +164,24 @@ export default function DiscoverPage() {
         {/* Map Overlay Controls */}
         <div className="absolute top-8 right-8 z-[1000] flex flex-col gap-3">
            <Button 
-            onClick={scanArea} 
+            onClick={handleLocateUser}
+            disabled={isLocating}
+            className="h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-black uppercase tracking-widest shadow-2xl px-6 group"
+           >
+             {isLocating ? <Loader2 className="animate-spin mr-2" /> : <Crosshair className="size-5 mr-2 group-hover:scale-110 transition-transform" />}
+             Locate Me
+           </Button>
+           
+           <Button 
+            onClick={() => scanArea()} 
             disabled={isSearching}
-            className="h-14 rounded-2xl bg-white text-primary hover:bg-muted font-black uppercase tracking-widest shadow-2xl border-2 border-primary/20 px-6 group"
+            variant="outline"
+            className="h-14 rounded-2xl bg-white/90 backdrop-blur-md text-primary hover:bg-white font-black uppercase tracking-widest shadow-2xl border-2 border-primary/20 px-6 group"
            >
              {isSearching ? <Loader2 className="animate-spin mr-2" /> : <Compass className="size-5 mr-2 group-hover:rotate-45 transition-transform" />}
              Rescan Area
            </Button>
+
            <div className="p-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border-2 border-primary/10 flex items-center gap-3">
               <div className="size-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
                  <ShieldPlus className="size-6" />
