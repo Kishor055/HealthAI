@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,11 +11,25 @@ import { ReminderAlarm } from "@/components/dashboard/reminder-alarm";
 import { AddMedicationDialog } from "@/components/medications/add-medication-dialog";
 import { TakeNowDialog } from "@/components/dashboard/take-now-dialog";
 import { CallDoctorDialog } from "@/components/dashboard/call-doctor-dialog";
+import { WearableSyncDialog } from "@/components/dashboard/wearable-sync-dialog";
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Smile, Frown, Meh, Brain, TrendingUp, Activity, Loader2, Sparkles, HeartPulse, Watch } from "lucide-react";
+import { 
+  Smile, 
+  Frown, 
+  Meh, 
+  Brain, 
+  TrendingUp, 
+  Activity, 
+  Loader2, 
+  Sparkles, 
+  HeartPulse, 
+  Watch,
+  Wifi,
+  ShieldCheck
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { query, collection, orderBy, limit } from 'firebase/firestore';
@@ -28,7 +41,9 @@ export default function DashboardPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isTakeNowOpen, setIsTakeNowOpen] = useState(false);
   const [isCallDoctorOpen, setIsCallDoctorOpen] = useState(false);
+  const [isWearableOpen, setIsWearableOpen] = useState(false);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  const [connectedDevice, setConnectedDevice] = useState<string | null>(null);
   
   const [aiInsight, setAiInsight] = useState<HealthTrendOutput | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -62,6 +77,14 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeviceConnect = (device: string) => {
+    setConnectedDevice(device);
+    // Auto-trigger analysis when wearable connects
+    if (vitals && medicines) {
+      handleRunAiCheck();
+    }
+  };
+
   const checkIns = [
     { icon: Smile, label: "Good", color: "text-accent bg-accent/10" },
     { icon: Meh, label: "Neutral", color: "text-blue-500 bg-blue-500/10" },
@@ -75,6 +98,7 @@ export default function DashboardPage() {
       <AddMedicationDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
       <TakeNowDialog open={isTakeNowOpen} onOpenChange={setIsTakeNowOpen} />
       <CallDoctorDialog open={isCallDoctorOpen} onOpenChange={setIsCallDoctorOpen} />
+      <WearableSyncDialog open={isWearableOpen} onOpenChange={setIsWearableOpen} onConnect={handleDeviceConnect} />
 
       <div className="flex flex-col gap-6 p-4 sm:p-8">
         <motion.div 
@@ -158,7 +182,7 @@ export default function DashboardPage() {
                     <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-3 text-muted-foreground">
                       <span>7-Day Stability Index</span>
                       <span className="text-accent flex items-center gap-1">
-                        <TrendingUp className="size-3" /> {aiInsight?.stabilityIndex || 94}% Rate
+                        <TrendingUp className="size-3" /> {connectedDevice ? (aiInsight?.stabilityIndex || 98) : 94}% Rate
                       </span>
                     </div>
                     <div className="flex gap-1.5 h-16 items-end">
@@ -179,18 +203,30 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-tight text-primary mb-1">Smart Adherence Insight</p>
                       <p className="text-[10px] font-medium leading-relaxed opacity-70 italic">
-                        {aiInsight?.trendInsight ? `"${aiInsight.trendInsight}"` : '"Sync your biometric data to generate professional clinical insights based on your recent records."'}
+                        {aiInsight?.trendInsight ? `"${aiInsight.trendInsight}"` : connectedDevice ? '"Analyzing live telemetry from your wearable..."' : '"Sync your biometric data to generate professional clinical insights based on your recent records."'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-muted flex items-center justify-between">
+                  <button 
+                    onClick={() => setIsWearableOpen(true)}
+                    className="w-full p-4 rounded-2xl bg-muted/30 border border-muted flex items-center justify-between hover:bg-muted transition-colors group"
+                  >
                     <div className="flex items-center gap-2">
-                      <Watch className="size-4 text-muted-foreground" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Wearable Sync</span>
+                      <div className={cn("size-8 rounded-lg flex items-center justify-center transition-all", connectedDevice ? "bg-accent text-white" : "bg-muted-foreground/10 text-muted-foreground")}>
+                        {connectedDevice ? <Wifi className="size-4 animate-pulse" /> : <Watch className="size-4" />}
+                      </div>
+                      <div className="text-left">
+                        <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Wearable Sync</span>
+                        <span className="text-[10px] font-bold uppercase tracking-tight text-foreground">
+                          {connectedDevice ? connectedDevice : "Disconnect / Connect"}
+                        </span>
+                      </div>
                     </div>
-                    <Badge variant="outline" className="text-[8px] font-black uppercase border-dashed">Active Overlay</Badge>
-                  </div>
+                    <Badge variant={connectedDevice ? "default" : "outline"} className={cn("text-[8px] font-black uppercase border-dashed", connectedDevice && "bg-accent hover:bg-accent")}>
+                      {connectedDevice ? "Active Overlay" : "Ready to Pair"}
+                    </Badge>
+                  </button>
 
                   <div className="pt-2">
                     <Button 
