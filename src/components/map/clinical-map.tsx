@@ -67,6 +67,11 @@ export default function ClinicalMap({ facilities, center, onFacilitySelect, sele
     setIsClient(true);
   }, []);
 
+  const handleNavigate = (facility: Facility) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.position[0]},${facility.position[1]}&travelmode=driving`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   if (!isClient) return (
     <div className="w-full h-full bg-muted/20 flex flex-col items-center justify-center gap-4">
       <div className="size-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
@@ -123,12 +128,19 @@ export default function ClinicalMap({ facilities, center, onFacilitySelect, sele
                   <p className="text-[10px] font-medium leading-relaxed">{facility.address}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20" asChild>
-                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${facility.position[0]},${facility.position[1]}`} target="_blank">
-                      <Navigation className="size-3 mr-1.5" /> Nav
-                    </a>
+                  <Button 
+                    size="sm" 
+                    className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20" 
+                    onClick={() => handleNavigate(facility)}
+                  >
+                    <Navigation className="size-3 mr-1.5" /> Nav
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => onFacilitySelect(facility)}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest" 
+                    onClick={() => onFacilitySelect(facility)}
+                  >
                     <Info className="size-3 mr-1.5" /> Details
                   </Button>
                 </div>
