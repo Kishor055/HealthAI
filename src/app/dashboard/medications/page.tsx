@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -62,7 +63,12 @@ export default function MedicationsPage() {
   const activeMedsCount = medications?.filter(m => m.isActive).length || 0;
 
   return (
-    <div className="p-4 sm:p-8 space-y-8 pb-24">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="p-4 sm:p-8 space-y-8 pb-24"
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-black font-headline tracking-tighter">Pharmacy Center</h1>
@@ -196,6 +202,6 @@ export default function MedicationsPage() {
 
       <AddMedicationDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
       <SafetyAuditDialog open={isSafetyOpen} onOpenChange={setIsSafetyOpen} medications={medications || []} />
-    </div>
+    </motion.div>
   );
 }
