@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -12,17 +13,18 @@ import { Button } from "@/components/ui/button";
 import { 
   Watch, 
   Bluetooth, 
-  Smartphone, 
   CheckCircle2, 
   Loader2, 
   SmartphoneNfc,
-  Wifi,
   Activity,
   HeartPulse,
   Apple,
   Zap,
   Search,
-  Rss
+  Rss,
+  ShieldCheck,
+  Stethoscope,
+  Microscope
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -47,15 +49,30 @@ const DISCOVERED_MOCK = [
 ];
 
 export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSyncDialogProps) {
-  const [step, setStep] = React.useState<'select' | 'scanning' | 'pairing' | 'success'>('select');
+  const [step, setStep] = React.useState<'select' | 'scanning' | 'pairing' | 'diagnosing' | 'success'>('select');
   const [selectedDevice, setSelectedDevice] = React.useState<string | null>(null);
   const [discoveredDevices, setDiscoveredDevices] = React.useState<typeof DISCOVERED_MOCK>([]);
   const { toast } = useToast();
 
-  const handleStartScanning = () => {
+  const handleStartScanning = async () => {
+    // Attempt real Bluetooth access if available
+    if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
+      try {
+        // Use Web Bluetooth API to request a device
+        // @ts-ignore
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+        });
+        handleStartPairing(device.name || "Unknown Wearable");
+        return;
+      } catch (error) {
+        console.warn("Real Bluetooth scan cancelled or failed, falling back to simulated polling.", error);
+      }
+    }
+
     setStep('scanning');
     setDiscoveredDevices([]);
-    // Simulate finding devices over 2.5 seconds
+    // Simulate finding devices over 2.5 seconds as fallback
     setTimeout(() => {
       setDiscoveredDevices(DISCOVERED_MOCK);
     }, 2500);
@@ -65,15 +82,19 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
     setSelectedDevice(device);
     setStep('pairing');
     
-    // Professional pairing simulation
+    // Simulate Handshake Protocol
     setTimeout(() => {
-      setStep('success');
-      toast({
-        title: "Clinical Link Established",
-        description: `Your ${device} is now providing real-time biometric telemetry.`,
-      });
-      onConnect(device);
-    }, 4000);
+      setStep('diagnosing');
+      // Step to medical diagnosis extraction from sensor
+      setTimeout(() => {
+        setStep('success');
+        toast({
+          title: "Medical Diagnostic Active",
+          description: `Telemetry link secured. Sensor diagnosis from ${device} is now live.`,
+        });
+        onConnect(device);
+      }, 3500);
+    }, 3000);
   };
 
   const handleClose = () => {
@@ -107,7 +128,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                   </div>
                   <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">Connect Wearable</DialogTitle>
                   <DialogDescription className="font-medium text-muted-foreground">
-                    Choose a preset or scan for any Bluetooth smartwatch.
+                    Link your smartwatch sensor for real-time medical diagnosis.
                   </DialogDescription>
                 </DialogHeader>
 
@@ -135,7 +156,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                     onClick={handleStartScanning}
                   >
                     <Bluetooth className="size-5 text-primary group-hover:animate-pulse" />
-                    <span className="font-black text-sm uppercase tracking-tight">Scan for Other Devices</span>
+                    <span className="font-black text-sm uppercase tracking-tight">Access Device Bluetooth</span>
                   </Button>
                 </div>
               </motion.div>
@@ -159,15 +180,15 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                        <Search className="size-8 text-primary animate-pulse" />
                     </div>
                   </div>
-                  <h3 className="text-xl font-black uppercase tracking-tighter">Bluetooth Discovery</h3>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">Scanning for Clinical Sensors...</p>
+                  <h3 className="text-xl font-black uppercase tracking-tighter">Scanning Near By</h3>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">Polling local Bluetooth spectrum...</p>
                 </div>
 
                 <div className="space-y-3 min-h-[180px]">
                    {discoveredDevices.length === 0 ? (
                      <div className="flex flex-col items-center justify-center h-full py-10 opacity-30">
                         <Loader2 className="size-6 animate-spin mb-2" />
-                        <span className="text-[10px] font-black uppercase">Polling local radio...</span>
+                        <span className="text-[10px] font-black uppercase">Identifying Smart Sensors...</span>
                      </div>
                    ) : (
                      discoveredDevices.map((device, idx) => (
@@ -189,7 +210,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                                  <div key={i} className={cn("w-1 rounded-full", i <= 3 ? "bg-accent" : "bg-muted-foreground/20")} style={{ height: `${i * 25}%` }} />
                                ))}
                             </div>
-                            <span className="text-[8px] font-black uppercase opacity-40">Pair Now</span>
+                            <span className="text-[8px] font-black uppercase opacity-40">Pair & Diagnose</span>
                          </div>
                        </motion.button>
                      ))
@@ -197,7 +218,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                 </div>
 
                 <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest opacity-40" onClick={() => setStep('select')}>
-                  Cancel Discovery
+                  Cancel Scan
                 </Button>
               </motion.div>
             )}
@@ -230,23 +251,58 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Pairing with {selectedDevice}</h3>
+                  <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Syncing {selectedDevice}</h3>
                   <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
                     <Loader2 className="size-3 animate-spin" />
-                    Establishing HealthLink Protocol...
+                    Handshaking Medical Protocol...
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'diagnosing' && (
+              <motion.div 
+                key="diagnosing"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-12 text-center space-y-8"
+              >
+                <div className="relative">
+                  <motion.div 
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="size-32 bg-accent/10 rounded-full flex items-center justify-center"
+                  >
+                    <Microscope className="size-12 text-accent" />
+                  </motion.div>
+                  <motion.div 
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                     <div className="w-48 h-48 border-4 border-accent/20 rounded-full border-t-accent animate-spin-slow" />
+                  </motion.div>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Clinical Diagnosis</h3>
+                  <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-accent">
+                    <Activity className="size-3 animate-pulse" />
+                    Extracting Sensor Biometrics...
                   </div>
                 </div>
 
-                <div className="w-full max-w-[200px] space-y-2">
+                <div className="w-full max-w-[250px] space-y-3">
+                   <div className="flex justify-between text-[10px] font-black uppercase opacity-60">
+                      <span>Sensor Calibration</span>
+                      <span>92%</span>
+                   </div>
                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 4 }}
-                        className="h-full bg-primary"
+                        animate={{ width: "92%" }}
+                        transition={{ duration: 3 }}
+                        className="h-full bg-accent"
                       />
                    </div>
-                   <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">Handshake 0x4F92... Verified</p>
                 </div>
               </motion.div>
             )}
@@ -269,20 +325,20 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                 </div>
                 
                 <div>
-                  <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Sync Active</h3>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Sensor Active</h3>
                   <p className="text-sm font-medium text-muted-foreground px-8 leading-relaxed">
-                    Data flow established. Your clinical profile is now updated with real-time biometric reports from {selectedDevice}.
+                    Medical diagnosis profile updated. Your clinical history is now synced with real-time reports from {selectedDevice}.
                   </p>
                 </div>
 
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center gap-1.5 opacity-60">
                     <div className="p-3 bg-muted rounded-2xl"><HeartPulse className="size-5 text-destructive" /></div>
-                    <span className="text-[8px] font-black uppercase tracking-widest">BPM Active</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest">Biometrics</span>
                   </div>
                   <div className="flex flex-col items-center gap-1.5 opacity-60">
-                    <div className="p-3 bg-muted rounded-2xl"><Wifi className="size-5 text-blue-500" /></div>
-                    <span className="text-[8px] font-black uppercase tracking-widest">Cloud Sync</span>
+                    <div className="p-3 bg-muted rounded-2xl"><Stethoscope className="size-5 text-blue-500" /></div>
+                    <span className="text-[8px] font-black uppercase tracking-widest">Diagnosis</span>
                   </div>
                 </div>
 
@@ -290,7 +346,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                   className="w-full h-14 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90"
                   onClick={handleClose}
                 >
-                  Return to Dashboard
+                  Confirm Sync
                 </Button>
               </motion.div>
             )}
