@@ -98,10 +98,16 @@
 .pulse-red {
   box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
   animation: pulse-red 2s infinite;
+  will-change: transform, box-shadow;
 }
 
 @keyframes pulse-red {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
   70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Optimization for Smooth Animations */
+.animate-pulse, .animate-ping, .animate-spin {
+  will-change: transform, opacity;
 }
