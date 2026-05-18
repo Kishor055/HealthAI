@@ -32,9 +32,9 @@ import {
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from "@/firebase";
 import { collection, query, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calendar, MapPin, Navigation, Phone, Search, Building2, ChevronRight } from "lucide-react";
+import { Loader2, Calendar, MapPin, Navigation, Phone, Search, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const formSchema = z.object({
   providerId: z.string().min(1, "Please select a provider"),
@@ -86,7 +86,6 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
     },
   });
 
-  // Effect to handle nearby selection vs preferred selection
   React.useEffect(() => {
     if (selectedNearby) {
       form.setValue("providerId", selectedNearby.id);
@@ -104,7 +103,7 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const radius = 5000; // 5km
+          const radius = 5000;
           const queryStr = `[out:json];node["amenity"~"hospital|clinic"](around:${radius},${latitude},${longitude});out 15;`;
           const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(queryStr)}`);
           const data = await response.json();
@@ -173,7 +172,13 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if(!v) { setNearbyFacilities([]); setSelectedNearby(null); } }}>
+    <Dialog open={open} onOpenChange={(isOpen) => { 
+      onOpenChange(isOpen); 
+      if(!isOpen) { 
+        setNearbyFacilities([]); 
+        setSelectedNearby(null); 
+      } 
+    }}>
       <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden bg-background">
         <div className="h-1.5 w-full bg-primary/20" />
         
@@ -186,7 +191,6 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Nearby Discovery Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
@@ -265,7 +269,13 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Clinical Provider</FormLabel>
-                      <Select onValueChange={(val) => { field.onChange(val); setSelectedNearby(null); }} value={field.value}>
+                      <Select 
+                        onValueChange={(val) => { 
+                          field.onChange(val); 
+                          setSelectedNearby(null); 
+                        }} 
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger className="h-14 rounded-2xl bg-muted/50 border-none px-5 text-sm font-bold focus:ring-primary/20">
                             <SelectValue placeholder={providersLoading ? "Loading Directory..." : selectedNearby ? `Selected: ${selectedNearby.name}` : "Choose from Care Team"} />
