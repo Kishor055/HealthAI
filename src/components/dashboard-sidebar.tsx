@@ -18,7 +18,8 @@ import {
   ShieldAlert,
   CalendarDays,
   Activity,
-  UserCircle
+  Languages,
+  Globe
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -28,21 +29,32 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { UserNav } from '@/components/user-nav';
-
-const NAV_ITEMS = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/reminders-alerts', icon: Bell, label: 'Reminders & Alerts' },
-  { href: '/dashboard/medications', icon: Pill, label: 'Medications' },
-  { href: '/dashboard/prescriptions', icon: ClipboardType, label: 'Prescriptions' },
-  { href: '/dashboard/appointments', icon: CalendarDays, label: 'Appointments' },
-  { href: '/dashboard/health-records', icon: Activity, label: 'Health Records' },
-  { href: '/dashboard/chat', icon: MessageSquare, label: 'AI Assistant' },
-  { href: '/dashboard/discover', icon: Map, label: 'Discover' },
-];
+import { useLanguage } from '@/context/language-context';
+import { Locale } from '@/lib/translations';
 
 export const DashboardSidebar = React.memo(() => {
   const pathname = usePathname();
+  const { t, locale, setLocale } = useLanguage();
+
+  const NAV_ITEMS = [
+    { href: '/dashboard', icon: LayoutDashboard, label: t.dashboard },
+    { href: '/dashboard/reminders-alerts', icon: Bell, label: t.reminders },
+    { href: '/dashboard/medications', icon: Pill, label: t.medications },
+    { href: '/dashboard/prescriptions', icon: ClipboardType, label: t.prescriptions },
+    { href: '/dashboard/appointments', icon: CalendarDays, label: t.appointments },
+    { href: '/dashboard/health-records', icon: Activity, label: t.healthRecords },
+    { href: '/dashboard/chat', icon: MessageSquare, label: t.aiAssistant },
+    { href: '/dashboard/discover', icon: Map, label: t.discover },
+  ];
 
   const navLinks = React.useMemo(() => (
     <nav className="grid items-start gap-1 px-2 text-sm font-medium lg:px-4 mt-4">
@@ -62,7 +74,25 @@ export const DashboardSidebar = React.memo(() => {
         </Link>
       ))}
     </nav>
-  ), [pathname]);
+  ), [pathname, t]);
+
+  const LanguageSwitcher = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="w-full justify-start gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted">
+          <Languages className="h-5 w-5" />
+          <span className="font-semibold">{t.language} ({locale.toUpperCase()})</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40 rounded-xl">
+        <DropdownMenuLabel>{t.language}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setLocale('en')} className={cn(locale === 'en' && "bg-primary/10 text-primary")}>English</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLocale('hi')} className={cn(locale === 'hi' && "bg-primary/10 text-primary")}>हिन्दी (Hindi)</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLocale('mr')} className={cn(locale === 'mr' && "bg-primary/10 text-primary")}>मराठी (Marathi)</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <>
@@ -78,6 +108,9 @@ export const DashboardSidebar = React.memo(() => {
           </div>
           <div className="flex-1 overflow-y-auto">
             {navLinks}
+            <div className="px-2 lg:px-4 mt-2">
+              <LanguageSwitcher />
+            </div>
           </div>
           <div className="mt-auto p-4 border-t bg-muted/30">
             <UserNav />
@@ -104,6 +137,9 @@ export const DashboardSidebar = React.memo(() => {
                 </div>
                 <div className="flex-1 overflow-y-auto py-4">
                     {navLinks}
+                    <div className="px-4 mt-2">
+                      <LanguageSwitcher />
+                    </div>
                 </div>
                 <div className="mt-auto p-4 border-t">
                     <UserNav />
