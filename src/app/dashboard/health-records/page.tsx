@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -18,8 +17,7 @@ import {
   Stethoscope,
   Info,
   History,
-  Type,
-  ChevronRight
+  Type
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,15 +27,13 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { query, collection, orderBy, limit } from 'firebase/firestore';
 import { AddRecordDialog } from '@/components/health-records/add-record-dialog';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area
 } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -93,7 +89,12 @@ export default function HealthRecordsPage() {
   }, [records]);
 
   return (
-    <div className="p-4 sm:p-8 space-y-8 pb-24">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="p-4 sm:p-8 space-y-8 pb-24"
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-black font-headline tracking-tighter text-foreground">Health Center</h1>
@@ -332,6 +333,6 @@ export default function HealthRecordsPage() {
       </div>
 
       <AddRecordDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
-    </div>
+    </motion.div>
   );
 }

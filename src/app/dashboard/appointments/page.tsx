@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -8,7 +7,6 @@ import {
   Clock, 
   Plus, 
   MoreVertical, 
-  MapPin, 
   CheckCircle2, 
   Calendar,
   Loader2,
@@ -45,7 +43,12 @@ export default function AppointmentsPage() {
   const { data: savedProviders, isLoading: providersLoading } = useCollection(savedProvidersQuery);
 
   return (
-    <div className="p-4 sm:p-8 space-y-8 pb-24">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="p-4 sm:p-8 space-y-8 pb-24"
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-black font-headline tracking-tighter text-foreground">Appointments</h1>
@@ -161,6 +164,6 @@ export default function AppointmentsPage() {
       </div>
 
       <BookAppointmentDialog open={isBookOpen} onOpenChange={setIsBookOpen} />
-    </div>
+    </motion.div>
   );
 }

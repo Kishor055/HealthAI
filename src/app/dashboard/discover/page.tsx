@@ -1,11 +1,10 @@
-
 "use client";
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Star, CheckCircle, Loader2, Info, Compass, ShieldPlus, ArrowRight, Activity, Crosshair, Navigation } from "lucide-react";
+import { Search, MapPin, Star, CheckCircle, Loader2, Info, Compass, ShieldPlus, Activity, Crosshair, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser, useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
@@ -151,13 +150,17 @@ export default function DiscoverPage() {
   };
 
   const handleNavigate = (facility: Facility) => {
-    // Deep link that opens the native maps app on mobile (Google/Apple) or browser on desktop
     const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.position[0]},${facility.position[1]}&travelmode=driving`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background overflow-hidden font-body">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-background overflow-hidden font-body"
+    >
       {/* Map Viewport */}
       <div className="flex-1 relative h-[45vh] md:h-full group">
         <ClinicalMap 
@@ -309,6 +312,6 @@ export default function DiscoverPage() {
           </div>
         </Tabs>
       </aside>
-    </div>
+    </motion.div>
   );
 }
