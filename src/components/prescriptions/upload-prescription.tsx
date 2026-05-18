@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from 'react';
@@ -19,13 +20,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2, Pill, Type, History } from 'lucide-react';
+import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2, Pill, Type, History, ChevronRight } from 'lucide-react';
 import { analyzePrescription } from '@/ai/flows/analyze-prescription-flow';
 import { parsePrescriptionText } from '@/ai/flows/parse-prescription-text-flow';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function UploadPrescription() {
@@ -38,6 +39,30 @@ export function UploadPrescription() {
   const [manualText, setManualText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Fetch recent digitized records
+  const recentRecordsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, "users", user.uid, "prescriptions"),
+      orderBy("createdAt", "desc"),
+      limit(5)
+    );
+  }, [firestore, user?.uid]);
+
+  const { data: recentRecords, isLoading: recordsLoading } = useCollection(recentRecordsQuery);
+
+  const savePrescriptionRecord = (result: any, source: 'file' | 'text') => {
+    if (!user || !firestore) return;
+    
+    addDocumentNonBlocking(collection(firestore, "users", user.uid, "prescriptions"), {
+      userId: user.uid,
+      diagnosis: result.diagnosis,
+      medications: result.medications,
+      source: source,
+      createdAt: new Date().toISOString(),
+    });
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,6 +80,7 @@ export function UploadPrescription() {
           mimeType: file.type
         });
         setAnalysis({ ...result, source: 'file' });
+        savePrescriptionRecord(result, 'file');
         toast({
           title: "Analysis Complete",
           description: `Extracted ${result.medications.length} medications from your document.`,
@@ -82,6 +108,7 @@ export function UploadPrescription() {
     try {
       const result = await parsePrescriptionText({ text: manualText });
       setAnalysis({ ...result, source: 'text' });
+      savePrescriptionRecord(result, 'text');
       toast({
         title: "Text Analyzed",
         description: `Successfully structured ${result.medications.length} medications.`,
@@ -358,11 +385,34 @@ export function UploadPrescription() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-             <div className="flex flex-col items-center justify-center py-10 opacity-20 grayscale">
-                <FileText className="size-16 mb-4" />
-                <p className="text-sm font-bold uppercase tracking-widest">No Recent Records</p>
-                <p className="text-[10px] mt-1">Digitized files will appear here.</p>
-             </div>
+             {recordsLoading ? (
+               <div className="flex justify-center py-10 opacity-20"><Loader2 className="animate-spin" /></div>
+             ) : !recentRecords || recentRecords.length === 0 ? (
+               <div className="flex flex-col items-center justify-center py-10 opacity-20 grayscale">
+                  <FileText className="size-16 mb-4" />
+                  <p className="text-sm font-bold uppercase tracking-widest">No Recent Records</p>
+                  <p className="text-[10px] mt-1">Digitized files will appear here.</p>
+               </div>
+             ) : (
+               <div className="space-y-3">
+                 {recentRecords.map((record) => (
+                   <div key={record.id} className="p-4 rounded-2xl border-2 bg-muted/20 hover:bg-muted/40 transition-all cursor-pointer group">
+                     <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-3">
+                         <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                           {record.source === 'file' ? <FileText className="size-5" /> : <Type className="size-5" />}
+                         </div>
+                         <div>
+                           <p className="text-xs font-black uppercase tracking-tighter">{record.diagnosis || 'General Record'}</p>
+                           <p className="text-[9px] font-bold text-muted-foreground uppercase">{record.medications?.length || 0} Medications</p>
+                         </div>
+                       </div>
+                       <ChevronRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             )}
           </CardContent>
         </Card>
       </div>
