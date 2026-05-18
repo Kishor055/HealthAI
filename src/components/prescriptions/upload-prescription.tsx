@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
-import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 
 export function UploadPrescription() {
@@ -156,7 +156,12 @@ export function UploadPrescription() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold font-headline">Prescriptions</h1>
@@ -431,6 +436,6 @@ export function UploadPrescription() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 }

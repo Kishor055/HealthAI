@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,7 +89,12 @@ export function ChatClient() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-muted/40">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="flex flex-col h-[calc(100vh-3.5rem)] bg-muted/40"
+    >
       <header className="p-4 border-b bg-background shadow-sm">
         <h1 className="text-xl font-semibold font-headline flex items-center gap-2">
           <Bot className="text-primary" />
@@ -98,7 +104,9 @@ export function ChatClient() {
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div className="space-y-6 max-w-4xl mx-auto">
           {messages.map((message) => (
-            <div
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               key={message.id}
               className={cn(
                 'flex items-start gap-3',
@@ -129,7 +137,7 @@ export function ChatClient() {
               >
                 {message.text}
               </div>
-            </div>
+            </motion.div>
           ))}
           {isLoading && (
              <div className="flex items-start gap-3 justify-start">
@@ -160,6 +168,6 @@ export function ChatClient() {
           </Button>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 }
