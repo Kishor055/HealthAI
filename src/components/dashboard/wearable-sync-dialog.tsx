@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -54,11 +53,21 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
   const [discoveredDevices, setDiscoveredDevices] = React.useState<typeof DISCOVERED_MOCK>([]);
   const { toast } = useToast();
 
+  // Accessibility: Persistent DialogTitle content based on step
+  const getTitle = () => {
+    switch(step) {
+      case 'select': return 'Connect Wearable';
+      case 'scanning': return 'Discovery Active';
+      case 'pairing': return 'Clinical Pairing';
+      case 'diagnosing': return 'Sensor Diagnosis';
+      case 'success': return 'Telemetry Secured';
+      default: return 'Wearable Sync';
+    }
+  };
+
   const handleStartScanning = async () => {
-    // Attempt real Bluetooth access if available
     if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
       try {
-        // Use Web Bluetooth API to request a device
         // @ts-ignore
         const device = await navigator.bluetooth.requestDevice({
           acceptAllDevices: true,
@@ -66,13 +75,12 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
         handleStartPairing(device.name || "Unknown Wearable");
         return;
       } catch (error) {
-        console.warn("Real Bluetooth scan cancelled or failed, falling back to simulated polling.", error);
+        console.warn("Bluetooth scan failed/cancelled", error);
       }
     }
 
     setStep('scanning');
     setDiscoveredDevices([]);
-    // Simulate finding devices over 2.5 seconds as fallback
     setTimeout(() => {
       setDiscoveredDevices(DISCOVERED_MOCK);
     }, 2500);
@@ -82,10 +90,8 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
     setSelectedDevice(device);
     setStep('pairing');
     
-    // Simulate Handshake Protocol
     setTimeout(() => {
       setStep('diagnosing');
-      // Step to medical diagnosis extraction from sensor
       setTimeout(() => {
         setStep('success');
         toast({
@@ -99,7 +105,6 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
 
   const handleClose = () => {
     onOpenChange(false);
-    // Reset for next time after animation
     setTimeout(() => {
       setStep('select');
       setSelectedDevice(null);
@@ -108,11 +113,23 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (step !== 'pairing' && step !== 'diagnosing') onOpenChange(v); }}>
       <DialogContent className="sm:max-w-[450px] overflow-hidden border-none p-0 bg-background/95 backdrop-blur-3xl shadow-2xl rounded-[2.5rem]">
         <div className="h-1.5 w-full bg-primary/20 absolute top-0 left-0" />
         
         <div className="p-8 space-y-6">
+          <DialogHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
+              <Watch className="h-8 w-8 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">
+              {getTitle()}
+            </DialogTitle>
+            <DialogDescription className="font-medium text-muted-foreground">
+              Link your smartwatch sensor for real-time medical diagnosis.
+            </DialogDescription>
+          </DialogHeader>
+
           <AnimatePresence mode="wait">
             {step === 'select' && (
               <motion.div 
@@ -120,18 +137,8 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
+                className="space-y-4"
               >
-                <DialogHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-                    <Watch className="h-8 w-8 text-primary" />
-                  </div>
-                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">Connect Wearable</DialogTitle>
-                  <DialogDescription className="font-medium text-muted-foreground">
-                    Link your smartwatch sensor for real-time medical diagnosis.
-                  </DialogDescription>
-                </DialogHeader>
-
                 <div className="grid gap-3">
                   {PRESETS.map((device) => (
                     <Button

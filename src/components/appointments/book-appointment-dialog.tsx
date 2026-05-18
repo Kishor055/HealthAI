@@ -172,9 +172,9 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { 
-      onOpenChange(isOpen); 
-      if(!isOpen) { 
+    <Dialog open={open} onOpenChange={(openState) => { 
+      onOpenChange(openState); 
+      if(!openState) { 
         setNearbyFacilities([]); 
         setSelectedNearby(null); 
       } 
@@ -270,8 +270,8 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Clinical Provider</FormLabel>
                       <Select 
-                        onValueChange={(val) => { 
-                          field.onChange(val); 
+                        onValueChange={(selectedVal) => { 
+                          field.onChange(selectedVal); 
                           setSelectedNearby(null); 
                         }} 
                         value={field.value}

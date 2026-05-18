@@ -18,23 +18,24 @@ import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Isolated Countdown component to prevent parent re-renders and fix hydration mismatches.
+ * Uses a double-render safety check for SSR compliance.
  */
 const CountdownTimer = React.memo(() => {
   const [isMounted, setIsMounted] = useState(false);
-  const [time, setTime] = useState<Date>(new Date());
+  const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
+    setTime(new Date());
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Return a skeleton on the server and during initial hydration to prevent mismatch
-  if (!isMounted) {
+  if (!isMounted || !time) {
     return (
-      <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">
+      <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest">
         <Timer className="size-3" />
-        Initializing...
+        Syncing...
       </div>
     );
   }

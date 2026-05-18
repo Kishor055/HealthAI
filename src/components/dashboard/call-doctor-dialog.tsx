@@ -90,6 +90,18 @@ export function CallDoctorDialog({ open, onOpenChange }: CallDoctorDialogProps) 
         <div className="h-1.5 w-full bg-primary/20 absolute top-0 left-0" />
         
         <div className="p-8 space-y-6">
+          <DialogHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
+              <HeartPulse className="h-8 w-8 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">
+              {view === 'list' ? 'Healthcare Directory' : 'Register Provider'}
+            </DialogTitle>
+            <DialogDescription className="font-medium text-muted-foreground">
+              Connect with your primary care team or emergency services.
+            </DialogDescription>
+          </DialogHeader>
+
           <AnimatePresence mode="wait">
             {view === 'list' ? (
               <motion.div 
@@ -99,16 +111,6 @@ export function CallDoctorDialog({ open, onOpenChange }: CallDoctorDialogProps) 
                 exit={{ opacity: 0, x: 10 }}
                 className="space-y-6"
               >
-                <DialogHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-                    <HeartPulse className="h-8 w-8 text-primary" />
-                  </div>
-                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">Healthcare Directory</DialogTitle>
-                  <DialogDescription className="font-medium text-muted-foreground">
-                    Connect with your primary care team or emergency services.
-                  </DialogDescription>
-                </DialogHeader>
-
                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 clinical-scrollbar">
                   <Button 
                     variant="outline" 
@@ -180,7 +182,7 @@ export function CallDoctorDialog({ open, onOpenChange }: CallDoctorDialogProps) 
                       <ArrowLeft className="size-5" />
                    </Button>
                    <div>
-                      <h3 className="text-xl font-black uppercase tracking-tighter">Register Provider</h3>
+                      <h3 className="text-xl font-black uppercase tracking-tighter">New Entry</h3>
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Manual Registry Protocol</p>
                    </div>
                 </div>
