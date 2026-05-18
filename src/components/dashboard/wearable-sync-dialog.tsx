@@ -55,7 +55,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
   const handleStartScanning = () => {
     setStep('scanning');
     setDiscoveredDevices([]);
-    // Simulate finding devices over 3 seconds
+    // Simulate finding devices over 2.5 seconds
     setTimeout(() => {
       setDiscoveredDevices(DISCOVERED_MOCK);
     }, 2500);
