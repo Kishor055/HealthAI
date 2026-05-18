@@ -265,7 +265,7 @@ export function BookAppointmentDialog({ open, onOpenChange }: BookAppointmentDia
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Clinical Provider</FormLabel>
-                      <Select onValueChange={(val) => { field.onChange(v); setSelectedNearby(null); }} value={field.value}>
+                      <Select onValueChange={(val) => { field.onChange(val); setSelectedNearby(null); }} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-14 rounded-2xl bg-muted/50 border-none px-5 text-sm font-bold focus:ring-primary/20">
                             <SelectValue placeholder={providersLoading ? "Loading Directory..." : selectedNearby ? `Selected: ${selectedNearby.name}` : "Choose from Care Team"} />
