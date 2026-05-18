@@ -16,7 +16,10 @@ import {
   AlertCircle,
   BarChart3,
   Stethoscope,
-  Info
+  Info,
+  History,
+  Type,
+  ChevronRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function HealthRecordsPage() {
   const { user } = useUser();
@@ -61,8 +65,19 @@ export default function HealthRecordsPage() {
     );
   }, [firestore, user?.uid]);
 
+  // Digitization History
+  const historyQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, "users", user.uid, "prescriptions"),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    );
+  }, [firestore, user?.uid]);
+
   const { data: records, isLoading: recordsLoading } = useCollection(recordsQuery);
   const { data: clinicalHistory, isLoading: clinicalLoading } = useCollection(prescriptionsQuery);
+  const { data: digitizationHistory, isLoading: historyLoading } = useCollection(historyQuery);
 
   // Prepare chart data (reversed to show chronological order)
   const chartData = React.useMemo(() => {
@@ -156,9 +171,10 @@ export default function HealthRecordsPage() {
           </Card>
 
           <Tabs defaultValue="clinical" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 max-w-md mb-8 h-12 p-1 bg-muted rounded-xl">
-              <TabsTrigger value="clinical" className="rounded-lg font-black uppercase tracking-tighter">Clinical Records</TabsTrigger>
-              <TabsTrigger value="biometric" className="rounded-lg font-black uppercase tracking-tighter">Biometric Logs</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 mb-8 h-12 p-1 bg-muted rounded-xl">
+              <TabsTrigger value="clinical" className="rounded-lg font-black uppercase tracking-tighter">Clinical</TabsTrigger>
+              <TabsTrigger value="biometric" className="rounded-lg font-black uppercase tracking-tighter">Biometric</TabsTrigger>
+              <TabsTrigger value="history" className="rounded-lg font-black uppercase tracking-tighter">History</TabsTrigger>
             </TabsList>
 
             <TabsContent value="clinical" className="space-y-6">
@@ -231,6 +247,45 @@ export default function HealthRecordsPage() {
                   ))
                 )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-6">
+              <Card className="border-none shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <History className="size-5 text-primary" /> Digitized Records
+                  </CardTitle>
+                  <CardDescription>Comprehensive history of AI-processed documents.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {historyLoading ? (
+                    <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary/30" /></div>
+                  ) : !digitizationHistory || digitizationHistory.length === 0 ? (
+                    <div className="text-center py-12 opacity-30">No digitization history found.</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {digitizationHistory.map((record, idx) => (
+                        <div key={record.id} className="p-5 rounded-2xl border-2 bg-card flex items-center justify-between group hover:border-primary/30 transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className="size-12 rounded-xl bg-muted text-muted-foreground flex items-center justify-center">
+                               {record.source === 'file' ? <FileText className="size-6" /> : <Type className="size-6" />}
+                            </div>
+                            <div>
+                              <p className="font-black text-sm uppercase tracking-tighter">{record.diagnosis || 'Clinical Analysis'}</p>
+                              <p className="text-[10px] text-muted-foreground font-bold uppercase">{record.medications?.length || 0} Medications Extracted</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-black uppercase text-muted-foreground opacity-50">
+                               {record.createdAt ? formatDistanceToNow(new Date(record.createdAt), { addSuffix: true }) : 'Recently'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
