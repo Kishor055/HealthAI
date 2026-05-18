@@ -1,5 +1,7 @@
+
 "use client";
 
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,19 +17,34 @@ import { query, collection, where, limit, serverTimestamp } from "firebase/fires
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function Reminders() {
+/**
+ * Isolated Countdown component to prevent parent re-renders every second.
+ */
+const CountdownTimer = React.memo(() => {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const mins = 59 - time.getMinutes();
+  const secs = 59 - time.getSeconds();
+  
+  return (
+    <div className="flex items-center gap-1.5 text-[10px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-widest">
+      <Timer className="size-3" />
+      Next Sync: {mins}m {secs}s
+    </div>
+  );
+});
+CountdownTimer.displayName = "CountdownTimer";
+
+export const Reminders = React.memo(() => {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
-
-  useEffect(() => {
-    // Set initial time only on client to avoid hydration mismatch
-    setCurrentTime(new Date());
-    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const activeMedsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -63,22 +80,12 @@ export function Reminders() {
     setTimeout(() => setProcessingId(null), 800);
   };
 
-  const getCountdown = () => {
-    if (!currentTime) return "--m --s";
-    const mins = 59 - currentTime.getMinutes();
-    const secs = 59 - currentTime.getSeconds();
-    return `${mins}m ${secs}s`;
-  };
-
   return (
     <Card className="border-none shadow-xl bg-card/60 backdrop-blur-xl">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Schedule</CardTitle>
-          <div className="flex items-center gap-1.5 text-[10px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-widest">
-            <Timer className="size-3" />
-            Next Sync: {getCountdown()}
-          </div>
+          <CountdownTimer />
         </div>
         <CardDescription>
           Real-time tracking of your active medication plan.
@@ -91,18 +98,18 @@ export function Reminders() {
               <div className="flex justify-center py-10">
                 <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
               </div>
-            ) : medications?.length === 0 ? (
+            ) : !medications || medications.length === 0 ? (
               <div className="text-center py-10 text-sm text-muted-foreground font-medium italic">
                 Your schedule is clear. Add medications to begin tracking.
               </div>
             ) : (
-              medications?.map((med, index) => (
+              medications.map((med, index) => (
                 <motion.div 
                   key={med.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05, duration: 0.2 }}
                   className="flex items-center space-x-4 p-4 rounded-3xl bg-background/50 hover:bg-white border border-transparent hover:border-primary/20 transition-all group shadow-sm hover:shadow-md"
                 >
                   <div className="flex items-center justify-center bg-primary text-primary-foreground rounded-2xl size-12 shrink-0 group-hover:rotate-12 transition-transform shadow-lg shadow-primary/20">
@@ -146,4 +153,5 @@ export function Reminders() {
       </CardContent>
     </Card>
   );
-}
+});
+Reminders.displayName = "Reminders";

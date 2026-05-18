@@ -1,5 +1,7 @@
+
 "use client";
 
+import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -28,7 +30,7 @@ import {
 } from '@/components/ui/sheet';
 import { UserNav } from '@/components/user-nav';
 
-const navItems = [
+const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/reminders-alerts', icon: Bell, label: 'Reminders & Alerts' },
   { href: '/dashboard/medications', icon: Pill, label: 'Medications' },
@@ -39,12 +41,12 @@ const navItems = [
   { href: '/dashboard/discover', icon: Map, label: 'Discover' },
 ];
 
-export function DashboardSidebar() {
+export const DashboardSidebar = React.memo(() => {
   const pathname = usePathname();
 
-  const navLinks = (
+  const navLinks = React.useMemo(() => (
     <nav className="grid items-start gap-1 px-2 text-sm font-medium lg:px-4 mt-4">
-      {navItems.map((item) => (
+      {NAV_ITEMS.map((item) => (
         <Link
           key={item.href}
           href={item.href}
@@ -60,7 +62,7 @@ export function DashboardSidebar() {
         </Link>
       ))}
     </nav>
-  );
+  ), [pathname]);
 
   return (
     <>
@@ -117,4 +119,5 @@ export function DashboardSidebar() {
       </header>
     </>
   );
-}
+});
+DashboardSidebar.displayName = "DashboardSidebar";
