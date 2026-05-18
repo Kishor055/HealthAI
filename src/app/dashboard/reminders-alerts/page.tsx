@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -11,7 +10,6 @@ import {
   Pill, 
   ShieldAlert, 
   Timer, 
-  MoreVertical, 
   History,
   Activity,
   Check,
@@ -78,10 +76,15 @@ export default function RemindersAlertsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-muted/20 p-4 sm:p-8 space-y-8 pb-24">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="min-h-screen bg-muted/20 p-4 sm:p-8 space-y-8 pb-24"
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <motion.h1 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-4xl font-black font-headline tracking-tighter text-foreground">Reminders & Alerts</motion.h1>
+          <h1 className="text-4xl font-black font-headline tracking-tighter text-foreground">Reminders & Alerts</h1>
           <p className="text-muted-foreground font-medium">Enterprise medical schedule management system.</p>
         </div>
         <div className="flex gap-3">
@@ -223,6 +226,6 @@ export default function RemindersAlertsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

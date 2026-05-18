@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { WelcomeHeader } from "@/components/dashboard/welcome-header";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { Reminders } from "@/components/dashboard/reminders";
@@ -13,7 +13,7 @@ import { TakeNowDialog } from "@/components/dashboard/take-now-dialog";
 import { CallDoctorDialog } from "@/components/dashboard/call-doctor-dialog";
 import { WearableSyncDialog } from "@/components/dashboard/wearable-sync-dialog";
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -28,7 +28,6 @@ import {
   HeartPulse, 
   Watch,
   Wifi,
-  ShieldCheck,
   ClipboardCheck,
   ThumbsUp,
   AlertCircle,
@@ -98,7 +97,12 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/30 pb-20 md:pb-0 font-body">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex min-h-screen w-full flex-col bg-muted/30 pb-20 md:pb-0 font-body"
+    >
       <ReminderAlarm />
       
       <AddMedicationDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
@@ -107,11 +111,7 @@ export default function DashboardPage() {
       <WearableSyncDialog open={isWearableOpen} onOpenChange={setIsWearableOpen} onConnect={handleDeviceConnect} />
 
       <div className="flex flex-col gap-6 p-4 sm:p-8">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6"
-        >
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div className="space-y-6 flex-1 w-full">
             <WelcomeHeader />
             <Card className="border-none shadow-xl glass-card max-w-2xl">
@@ -166,7 +166,7 @@ export default function DashboardPage() {
             onTakeNow={() => setIsTakeNowOpen(true)}
             onCallDoctor={() => setIsCallDoctorOpen(true)}
           />
-        </motion.div>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
@@ -192,11 +192,7 @@ export default function DashboardPage() {
           <div className="space-y-8">
              <MotivationalQuote />
              
-             <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-card rounded-[2rem] p-8 border-none shadow-xl relative overflow-hidden group"
-             >
+             <div className="bg-card rounded-[2rem] p-8 border-none shadow-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                   <Brain className="size-32 -rotate-12" />
                 </div>
@@ -271,11 +267,11 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-20" />
-             </motion.div>
+             </div>
           </div>
         </div>
       </div>
       <SosButton />
-    </div>
+    </motion.div>
   );
 }
