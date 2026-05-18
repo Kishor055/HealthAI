@@ -96,6 +96,20 @@
         "isEnabled": { "type": "boolean" }
       },
       "required": ["title", "time"]
+    },
+    "PrescriptionRecord": {
+      "title": "PrescriptionRecord",
+      "type": "object",
+      "description": "A digitized record of an uploaded or pasted prescription.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "medications": { "type": "array" },
+        "source": { "type": "string", "enum": ["file", "text"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "diagnosis", "createdAt"]
     }
   },
   "auth": {
@@ -133,6 +147,10 @@
     "/users/{userId}/preferredProviders/{providerId}": {
       "schema": { "type": "object" },
       "description": "Saved favorite healthcare facilities."
+    },
+    "/users/{userId}/prescriptions/{prescriptionId}": {
+      "schema": { "$ref": "#/backend/entities/PrescriptionRecord" },
+      "description": "History of digitized medical records."
     }
   }
 }
