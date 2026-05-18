@@ -51,9 +51,20 @@ Prescription Document: {{media url=fileDataUri}}`,
 });
 
 export async function analyzePrescription(input: AnalyzePrescriptionInput): Promise<AnalyzePrescriptionOutput> {
-  const { output } = await prompt(input);
-  if (!output) throw new Error("Failed to analyze prescription.");
-  return output;
+  try {
+    const { output } = await prompt(input);
+    if (!output) throw new Error("Failed to extract clinical data.");
+    return output;
+  } catch (error: any) {
+    if (error.message?.includes('503')) {
+      return {
+        diagnosis: "Service Temporarily Unavailable (503)",
+        medications: [],
+        rawExtractedText: "The clinical AI engine is currently experiencing high demand. Please retry your visual scan in a few moments."
+      };
+    }
+    throw error;
+  }
 }
 
 export const analyzePrescriptionFlow = ai.defineFlow(

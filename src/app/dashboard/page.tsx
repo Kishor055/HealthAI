@@ -38,10 +38,12 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { query, collection, orderBy, limit } from 'firebase/firestore';
 import { analyzeHealthTrends, HealthTrendOutput } from "@/ai/flows/analyze-health-trends";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isTakeNowOpen, setIsTakeNowOpen] = useState(false);
   const [isCallDoctorOpen, setIsCallDoctorOpen] = useState(false);
@@ -74,8 +76,20 @@ export default function DashboardPage() {
         activeMedications: medicines.filter(m => m.isActive).map(m => m.name),
       });
       setAiInsight(result);
+      
+      if (result.trendInsight.includes("peak capacity")) {
+        toast({
+          title: "Intelligence Baseline Active",
+          description: "AI engine is currently busy. Using clinical baseline for your health summary.",
+        });
+      }
     } catch (e) {
       console.error("AI Trend Analysis failed", e);
+      toast({
+        variant: "destructive",
+        title: "Analysis Failure",
+        description: "Clinical telemetry could not be generated. Using baseline defaults.",
+      });
     } finally {
       setIsAnalyzing(false);
     }
