@@ -19,14 +19,27 @@ import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Isolated Countdown component to prevent parent re-renders every second.
+ * Fixed: Handles hydration by deferring time initialization to client-side.
  */
 const CountdownTimer = React.memo(() => {
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
+    // These will only run on the client, after initial hydration
+    setTime(new Date());
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Return a stable placeholder or skeleton during server-side rendering and initial hydration
+  if (!time) {
+    return (
+      <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">
+        <Timer className="size-3" />
+        Syncing...
+      </div>
+    );
+  }
 
   const mins = 59 - time.getMinutes();
   const secs = 59 - time.getSeconds();
