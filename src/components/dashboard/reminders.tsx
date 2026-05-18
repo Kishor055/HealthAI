@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -18,25 +17,24 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
- * Isolated Countdown component to prevent parent re-renders every second.
- * Fixed: Handles hydration by deferring time initialization to client-side.
+ * Isolated Countdown component to prevent parent re-renders and fix hydration mismatches.
  */
 const CountdownTimer = React.memo(() => {
-  const [time, setTime] = useState<Date | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [time, setTime] = useState<Date>(new Date());
 
   useEffect(() => {
-    // These will only run on the client, after initial hydration
-    setTime(new Date());
+    setIsMounted(true);
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Return a stable placeholder or skeleton during server-side rendering and initial hydration
-  if (!time) {
+  // Return a skeleton on the server and during initial hydration to prevent mismatch
+  if (!isMounted) {
     return (
       <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">
         <Timer className="size-3" />
-        Syncing...
+        Initializing...
       </div>
     );
   }
