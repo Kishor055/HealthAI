@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, ArrowRight, Loader2, ShieldCheck, Smartphone, MailCheck } from "lucide-react";
+import { Mail, Phone, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -35,18 +35,10 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = React.useState("");
   const [otp, setOtp] = React.useState("");
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
-  const [timer, setTimer] = React.useState(0);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
-
-  React.useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => setTimer(t => t - 1), 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer]);
 
   const setupRecaptcha = () => {
     if (typeof window !== "undefined" && !(window as any).recaptchaVerifier) {
@@ -93,7 +85,6 @@ export default function LoginPage() {
         toast({ title: "Verification Code Sent", description: "Please check your inbox." });
         setStep('verify');
       }
-      setTimer(60);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Authentication Failed", description: error.message });
     } finally {
@@ -248,7 +239,7 @@ export default function LoginPage() {
 
             <div className="mt-10 text-center">
               <p className="text-sm font-medium text-slate-500">
-                Already have an account? <Link href="/login" className="text-primary font-bold">Log In</Link>
+                Don't have an account? <Link href="/signup" className="text-primary font-bold">Sign up</Link>
               </p>
             </div>
           </CardContent>

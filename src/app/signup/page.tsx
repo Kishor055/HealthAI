@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, User, ArrowRight, Loader2, ShieldCheck, Smartphone, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, User, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,6 @@ export default function SignupPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // Initialize profile
       setDocumentNonBlocking(doc(db, 'users', user.uid), {
         id: user.uid,
         email: user.email,
@@ -99,7 +98,7 @@ export default function SignupPage() {
       await dispatchOTP({ identifier: formData.email, type: 'email', otp: eOtp });
       await dispatchOTP({ identifier: formData.phone, type: 'phone', otp: "Verified via SMS" });
 
-      toast({ title: "Verification Codes Dispatched", description: "Check your email and phone." });
+      toast({ title: "Verification Codes Sent", description: "Check your email and phone." });
       setStep('verify');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Enrollment Failed", description: error.message });
@@ -267,7 +266,7 @@ export default function SignupPage() {
 
             <div className="mt-10 text-center">
               <p className="text-sm font-medium text-slate-500">
-                Already have an account? <Link href="/login" className="text-primary font-bold">Log In</Link>
+                Already have an account? <Link href="/login" className="text-primary font-bold">Log in</Link>
               </p>
             </div>
           </CardContent>
