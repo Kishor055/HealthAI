@@ -53,7 +53,6 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
   const [discoveredDevices, setDiscoveredDevices] = React.useState<typeof DISCOVERED_MOCK>([]);
   const { toast } = useToast();
 
-  // Accessibility: Persistent DialogTitle content based on step
   const getTitle = () => {
     switch(step) {
       case 'select': return 'Connect Wearable';
