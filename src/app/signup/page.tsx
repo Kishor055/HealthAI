@@ -1,8 +1,9 @@
+
 "use client";
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HeartPulse, Mail, Phone, User, ArrowRight, Loader2, ShieldCheck, Smartphone, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, User, ArrowRight, Loader2, ShieldCheck, Smartphone, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,9 @@ import {
   RecaptchaVerifier, 
   signInWithPhoneNumber, 
   ConfirmationResult,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "firebase/auth";
 import { doc, getFirestore } from "firebase/firestore";
 
@@ -52,6 +55,36 @@ export default function SignupPage() {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Initialize profile
+      setDocumentNonBlocking(doc(db, 'users', user.uid), {
+        id: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        role: 'user',
+      }, { merge: true });
+
+      const idToken = await user.getIdToken();
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        body: JSON.stringify({ idToken }),
+      });
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Google Sign-Up Failed", description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInitiateVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,17 +95,14 @@ export default function SignupPage() {
       const result = await signInWithPhoneNumber(auth, formData.phone, verifier);
       setConfirmationResult(result);
       
-      // Clinical Dual OTP Orchestration via AI
       const eOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      const pOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      
       await dispatchOTP({ identifier: formData.email, type: 'email', otp: eOtp });
-      await dispatchOTP({ identifier: formData.phone, type: 'phone', otp: pOtp });
+      await dispatchOTP({ identifier: formData.phone, type: 'phone', otp: "Verified via SMS" });
 
-      toast({ title: "Dual-Factor Dispatch", description: "Security codes sent to clinical email and phone." });
+      toast({ title: "Verification Codes Dispatched", description: "Check your email and phone." });
       setStep('verify');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Registry Failed", description: error.message });
+      toast({ variant: "destructive", title: "Enrollment Failed", description: error.message });
     } finally {
       setLoading(false);
     }
@@ -83,42 +113,30 @@ export default function SignupPage() {
     try {
       if (!confirmationResult) return;
       
-      // 1. Verify Phone
-      const userCredential = await confirmationResult.confirm(phoneOtp);
-      const user = userCredential.user;
+      await confirmationResult.confirm(phoneOtp);
+      const user = auth.currentUser;
+      if (!user) throw new Error("Verification failed.");
 
-      // 2. Update Profile
       await updateProfile(user, { displayName: formData.name });
-
-      // 3. Create Session
       const idToken = await user.getIdToken();
       await fetch('/api/auth/session', {
         method: 'POST',
         body: JSON.stringify({ idToken }),
       });
 
-      // 4. Store in Firestore
       setDocumentNonBlocking(doc(db, 'users', user.uid), {
         id: user.uid,
         email: formData.email,
         phone: formData.phone,
         displayName: formData.name,
-        emailVerified: true,
-        phoneVerified: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         role: 'user',
-        devices: [navigator.userAgent],
       }, { merge: true });
 
-      toast({
-        title: "Clinical Enrollment Active",
-        description: `Welcome to the HealthAI core, ${formData.name.split(' ')[0]}.`,
-      });
-      
       router.push('/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Verification Error", description: "Security codes do not match." });
+      toast({ variant: "destructive", title: "Invalid Codes", description: "Please double check your OTPs." });
     } finally {
       setLoading(false);
     }
@@ -127,108 +145,111 @@ export default function SignupPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background relative overflow-hidden">
-      <div className="absolute top-0 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
-      <div className="absolute bottom-0 -right-20 w-96 h-96 bg-accent/20 rounded-full blur-[100px] animate-pulse delay-700" />
-
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 font-body">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[500px] z-10"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-[420px]"
       >
-        <div className="flex flex-col items-center gap-4 mb-8 text-center">
-          <div className="size-16 bg-primary text-primary-foreground rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/30">
-            <HeartPulse className="size-10" />
-          </div>
-          <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase">Create Account</h1>
-        </div>
+        <Card className="border-none shadow-2xl rounded-3xl overflow-hidden bg-white">
+          <CardContent className="p-10">
+            <div className="text-center mb-10">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">Sign up</h1>
+              <p className="text-sm text-muted-foreground">Create your clinical account</p>
+            </div>
 
-        <Card className="border-none shadow-2xl bg-white/70 backdrop-blur-3xl rounded-[3rem] overflow-hidden">
-          <div className="h-2 w-full bg-gradient-to-r from-primary to-accent" />
-          
-          <CardContent className="p-8 md:p-12">
             <AnimatePresence mode="wait">
               {step === 'info' ? (
                 <motion.form
                   key="info"
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  exit={{ opacity: 0, x: 10 }}
                   onSubmit={handleInitiateVerification}
-                  className="space-y-6"
+                  className="space-y-5"
                 >
-                  <div className="grid gap-5">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Professional Name</Label>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Full Name</Label>
                       <Input 
                         placeholder="Johnathan Doe"
-                        className="h-14 rounded-2xl bg-muted/40 border-none px-6 text-lg font-bold"
+                        className="h-11 rounded-xl border-slate-200 bg-white"
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
                         required
-                        icon={<User />}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Clinical Email</Label>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Email</Label>
                       <Input 
                         type="email"
-                        placeholder="user@healthai.com"
-                        className="h-14 rounded-2xl bg-muted/40 border-none px-6 text-lg font-bold"
+                        placeholder="user@example.com"
+                        className="h-11 rounded-xl border-slate-200 bg-white"
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                         required
-                        icon={<Mail />}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Secure Mobile</Label>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Mobile</Label>
                       <Input 
                         placeholder="+91 98765 43210"
-                        className="h-14 rounded-2xl bg-muted/40 border-none px-6 text-lg font-bold"
+                        className="h-11 rounded-xl border-slate-200 bg-white"
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
                         required
-                        icon={<Smartphone />}
                       />
                     </div>
                   </div>
 
                   <div id="recaptcha-signup-container" />
 
-                  <Button className="w-full h-16 rounded-[2rem] text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/20 mt-4">
-                    {loading ? <Loader2 className="animate-spin" /> : <>Initiate Enrollment <ArrowRight className="ml-2" /></>}
+                  <Button className="w-full h-11 rounded-xl text-sm font-bold uppercase tracking-widest bg-primary hover:bg-primary/90 mt-2">
+                    {loading ? <Loader2 className="animate-spin" /> : "Sign Up"}
+                  </Button>
+
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-grow border-t border-slate-200"></div>
+                    <span className="flex-shrink mx-4 text-xs font-medium text-slate-400">or</span>
+                    <div className="flex-grow border-t border-slate-200"></div>
+                  </div>
+
+                  <Button 
+                    variant="outline" 
+                    type="button"
+                    className="w-full h-11 rounded-xl border-slate-200 font-semibold text-slate-700 gap-3"
+                    onClick={handleGoogleSignUp}
+                    disabled={loading}
+                  >
+                    <svg className="size-5" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.16H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.84l3.66-2.75z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.16l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"/>
+                    </svg>
+                    Sign up with Google
                   </Button>
                 </motion.form>
               ) : (
                 <motion.div
                   key="verify"
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="space-y-10"
+                  className="space-y-8"
                 >
                   <div className="text-center space-y-2">
-                    <div className="size-16 bg-accent/10 text-accent rounded-3xl flex items-center justify-center mx-auto mb-4">
-                      <ShieldCheck className="size-10" />
-                    </div>
-                    <h2 className="text-2xl font-black uppercase tracking-tighter leading-none">AI Identity Verification</h2>
-                    <p className="text-sm font-medium text-muted-foreground px-4">
-                      Dual security codes have been dispatched to your provided contact points.
-                    </p>
+                    <h2 className="text-2xl font-bold tracking-tight">Verify Identity</h2>
+                    <p className="text-sm text-slate-500">Enter security codes from Email & SMS</p>
                   </div>
 
-                  <div className="space-y-8">
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 justify-center">
-                        <Mail className="size-3" /> Secure Email OTP
-                      </Label>
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold text-primary uppercase tracking-widest text-center block">Secure Email OTP</Label>
                       <OTPInput value={emailOtp} onChange={setEmailOtp} disabled={loading} />
                     </div>
 
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 justify-center">
-                        <Smartphone className="size-3" /> Secure SMS OTP
-                      </Label>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold text-primary uppercase tracking-widest text-center block">Secure SMS OTP</Label>
                       <OTPInput value={phoneOtp} onChange={setPhoneOtp} disabled={loading} />
                     </div>
                   </div>
@@ -236,20 +257,19 @@ export default function SignupPage() {
                   <Button 
                     onClick={handleFinalizeSignup}
                     disabled={emailOtp.length !== 6 || phoneOtp.length !== 6 || loading}
-                    className="w-full h-16 rounded-[2rem] text-lg font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                    className="w-full h-12 rounded-xl text-sm font-bold uppercase tracking-widest bg-primary"
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : <>Complete Registry <CheckCircle2 className="ml-2" /></>}
+                    {loading ? <Loader2 className="animate-spin" /> : "Complete Registry"}
                   </Button>
-                  
-                  <button 
-                    onClick={() => setStep('info')}
-                    className="w-full text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:text-foreground"
-                  >
-                    Return to Profile Info
-                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <div className="mt-10 text-center">
+              <p className="text-sm font-medium text-slate-500">
+                Already have an account? <Link href="/login" className="text-primary font-bold">Log In</Link>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
