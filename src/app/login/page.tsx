@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { OTPInput } from "@/components/auth/otp-input";
 import { useAuth } from "@/firebase";
+import { cn } from "@/lib/utils";
 import { 
   RecaptchaVerifier, 
   signInWithPhoneNumber, 
@@ -61,7 +62,6 @@ export default function LoginPage() {
         setStep('verify');
       } else {
         // Logic for Email Login (Demo: Simple link logic or custom OTP)
-        // For production, this would trigger a cloud function to send an email OTP
         toast({ title: "Email Verification Sent", description: "A secure code has been sent to your inbox." });
         setStep('verify');
       }
@@ -76,12 +76,10 @@ export default function LoginPage() {
   const handleVerifyOTP = async () => {
     setLoading(true);
     try {
-      let userCredential;
       if (method === 'phone' && confirmationResult) {
-        userCredential = await confirmationResult.confirm(otp);
+        await confirmationResult.confirm(otp);
       } else {
         // Mock verification for custom email OTP logic
-        // In reality, you'd verify against a server-side hash
         toast({ title: "Verification Successful" });
       }
 
