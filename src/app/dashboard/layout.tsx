@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
 /**
- * DashboardLayout with Auth-Bypass enabled.
- * Provides immediate access to the clinical ecosystem without redirecting to login.
+ * DashboardLayout with strict Authentication gating.
  */
 export default function DashboardLayout({
   children,
@@ -16,9 +16,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, isUserLoading } = useUser();
-  
-  // Auth gates are removed to allow rapid prototyping and fix permission issues.
-  // The useUser hook will provide a mock clinical user if no real user is present.
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   if (isUserLoading) {
     return (
@@ -27,6 +31,8 @@ export default function DashboardLayout({
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen w-full bg-background flex flex-col md:flex-row">

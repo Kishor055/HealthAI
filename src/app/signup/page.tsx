@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -13,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { OTPInput } from "@/components/auth/otp-input";
 import { useAuth, setDocumentNonBlocking } from "@/firebase";
+import { dispatchOTP } from "@/ai/flows/dispatch-otp-flow";
 import { 
   RecaptchaVerifier, 
   signInWithPhoneNumber, 
@@ -27,6 +27,7 @@ export default function SignupPage() {
   const db = getFirestore();
   const { toast } = useToast();
   
+  const [mounted, setMounted] = React.useState(false);
   const [step, setStep] = React.useState<'info' | 'verify'>('info');
   const [loading, setLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
@@ -39,8 +40,12 @@ export default function SignupPage() {
   const [phoneOtp, setPhoneOtp] = React.useState("");
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
 
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const setupRecaptcha = () => {
-    if (!(window as any).recaptchaVerifier) {
+    if (typeof window !== "undefined" && !(window as any).recaptchaVerifier) {
       (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-signup-container', {
         size: 'invisible',
       });
@@ -57,8 +62,14 @@ export default function SignupPage() {
       const result = await signInWithPhoneNumber(auth, formData.phone, verifier);
       setConfirmationResult(result);
       
-      // Demo Logic: Email OTP would be triggered here via Cloud Function
-      toast({ title: "Dual OTPs Dispatched", description: "Check your email and SMS for secure access codes." });
+      // Clinical Dual OTP Orchestration via AI
+      const eOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const pOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      await dispatchOTP({ identifier: formData.email, type: 'email', otp: eOtp });
+      await dispatchOTP({ identifier: formData.phone, type: 'phone', otp: pOtp });
+
+      toast({ title: "Dual-Factor Dispatch", description: "Security codes sent to clinical email and phone." });
       setStep('verify');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Registry Failed", description: error.message });
@@ -92,7 +103,7 @@ export default function SignupPage() {
         email: formData.email,
         phone: formData.phone,
         displayName: formData.name,
-        emailVerified: true, // Verification happened in UI step
+        emailVerified: true,
         phoneVerified: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -101,17 +112,19 @@ export default function SignupPage() {
       }, { merge: true });
 
       toast({
-        title: "Registration Complete",
-        description: `Welcome to the HealthAI ecosystem, ${formData.name.split(' ')[0]}.`,
+        title: "Clinical Enrollment Active",
+        description: `Welcome to the HealthAI core, ${formData.name.split(' ')[0]}.`,
       });
       
       router.push('/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Verification Error", description: "The security codes do not match our records." });
+      toast({ variant: "destructive", title: "Verification Error", description: "Security codes do not match." });
     } finally {
       setLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background relative overflow-hidden">
@@ -146,7 +159,7 @@ export default function SignupPage() {
                 >
                   <div className="grid gap-5">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Full Name</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Professional Name</Label>
                       <Input 
                         placeholder="Johnathan Doe"
                         className="h-14 rounded-2xl bg-muted/40 border-none px-6 text-lg font-bold"
@@ -157,10 +170,10 @@ export default function SignupPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Institutional Email</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Clinical Email</Label>
                       <Input 
                         type="email"
-                        placeholder="dr.doe@health.com"
+                        placeholder="user@healthai.com"
                         className="h-14 rounded-2xl bg-muted/40 border-none px-6 text-lg font-bold"
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -169,7 +182,7 @@ export default function SignupPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Mobile Number</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">Secure Mobile</Label>
                       <Input 
                         placeholder="+91 98765 43210"
                         className="h-14 rounded-2xl bg-muted/40 border-none px-6 text-lg font-bold"
@@ -184,7 +197,7 @@ export default function SignupPage() {
                   <div id="recaptcha-signup-container" />
 
                   <Button className="w-full h-16 rounded-[2rem] text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/20 mt-4">
-                    {loading ? <Loader2 className="animate-spin" /> : <>Get Verification Codes <ArrowRight className="ml-2" /></>}
+                    {loading ? <Loader2 className="animate-spin" /> : <>Initiate Enrollment <ArrowRight className="ml-2" /></>}
                   </Button>
                 </motion.form>
               ) : (
@@ -198,23 +211,23 @@ export default function SignupPage() {
                     <div className="size-16 bg-accent/10 text-accent rounded-3xl flex items-center justify-center mx-auto mb-4">
                       <ShieldCheck className="size-10" />
                     </div>
-                    <h2 className="text-2xl font-black uppercase tracking-tighter leading-none">Identity Check</h2>
+                    <h2 className="text-2xl font-black uppercase tracking-tighter leading-none">AI Identity Verification</h2>
                     <p className="text-sm font-medium text-muted-foreground px-4">
-                      We've sent unique security codes to your email and mobile phone.
+                      Dual security codes have been dispatched to your provided contact points.
                     </p>
                   </div>
 
                   <div className="space-y-8">
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 justify-center">
-                        <Mail className="size-3" /> Email OTP
+                        <Mail className="size-3" /> Secure Email OTP
                       </Label>
                       <OTPInput value={emailOtp} onChange={setEmailOtp} disabled={loading} />
                     </div>
 
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 justify-center">
-                        <Smartphone className="size-3" /> SMS OTP
+                        <Smartphone className="size-3" /> Secure SMS OTP
                       </Label>
                       <OTPInput value={phoneOtp} onChange={setPhoneOtp} disabled={loading} />
                     </div>
@@ -223,28 +236,22 @@ export default function SignupPage() {
                   <Button 
                     onClick={handleFinalizeSignup}
                     disabled={emailOtp.length !== 6 || phoneOtp.length !== 6 || loading}
-                    className="w-full h-16 rounded-[2rem] text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/20"
+                    className="w-full h-16 rounded-[2rem] text-lg font-black uppercase tracking-widest shadow-xl shadow-primary/20"
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : <>Complete Enrollment <CheckCircle2 className="ml-2" /></>}
+                    {loading ? <Loader2 className="animate-spin" /> : <>Complete Registry <CheckCircle2 className="ml-2" /></>}
                   </Button>
                   
                   <button 
                     onClick={() => setStep('info')}
                     className="w-full text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:text-foreground"
                   >
-                    Return to Registration
+                    Return to Profile Info
                   </button>
                 </motion.div>
               )}
             </AnimatePresence>
           </CardContent>
         </Card>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm font-medium text-muted-foreground">
-            Already registered? <Link href="/login" className="text-primary font-black uppercase tracking-widest hover:underline">Access Account</Link>
-          </p>
-        </div>
       </motion.div>
     </div>
   );

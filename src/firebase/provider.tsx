@@ -146,8 +146,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 
 /**
  * Hook specifically for accessing the authenticated user's state.
- * PATCHED: Returns a persistent mock clinical user if no real user is detected.
- * This ensures the dashboard always has the correct path context for data fetching.
+ * Updated: Mock bypass removed to enforce real authentication protocols.
  */
 export const useUser = (): UserHookResult => {
   const context = useContext(FirebaseContext);
@@ -156,18 +155,9 @@ export const useUser = (): UserHookResult => {
     throw new Error('useUser must be used within a FirebaseProvider.');
   }
 
-  // Fallback clinical user for rapid prototyping matching your requested UID
-  const mockUser = {
-    uid: '5rkDzqywQvO8RUXgvdGBeqZfTdx1',
-    displayName: 'Kishor Patil',
-    email: 'kishorkakde026@gmail.com',
-    photoURL: 'https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?q=80&w=1080',
-    emailVerified: false,
-  } as any;
-
   return { 
-    user: context.user || mockUser, 
-    isUserLoading: false, 
+    user: context.user, 
+    isUserLoading: context.isUserLoading, 
     userError: context.userError 
   };
 };
