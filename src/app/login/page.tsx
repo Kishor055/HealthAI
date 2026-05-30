@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -14,11 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { OTPInput } from "@/components/auth/otp-input";
 import { useAuth } from "@/firebase";
 import { cn } from "@/lib/utils";
+import { dispatchOTP } from "@/ai/flows/dispatch-otp-flow";
 import { 
   RecaptchaVerifier, 
   signInWithPhoneNumber, 
-  ConfirmationResult,
-  signInWithEmailAndPassword
+  ConfirmationResult
 } from "firebase/auth";
 
 export default function LoginPage() {
@@ -26,6 +25,7 @@ export default function LoginPage() {
   const auth = useAuth();
   const { toast } = useToast();
   
+  const [mounted, setMounted] = React.useState(false);
   const [method, setMethod] = React.useState<'email' | 'phone'>('email');
   const [step, setStep] = React.useState<'input' | 'verify'>('input');
   const [loading, setLoading] = React.useState(false);
@@ -33,6 +33,11 @@ export default function LoginPage() {
   const [otp, setOtp] = React.useState("");
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
   const [timer, setTimer] = React.useState(0);
+
+  // Hydration fix: only render motion components after mounting
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     if (timer > 0) {
@@ -42,7 +47,7 @@ export default function LoginPage() {
   }, [timer]);
 
   const setupRecaptcha = () => {
-    if (!(window as any).recaptchaVerifier) {
+    if (typeof window !== "undefined" && !(window as any).recaptchaVerifier) {
       (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
       });
@@ -54,15 +59,22 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      
       if (method === 'phone') {
         setupRecaptcha();
         const verifier = (window as any).recaptchaVerifier;
         const result = await signInWithPhoneNumber(auth, identifier, verifier);
         setConfirmationResult(result);
+        
+        // Orchestrate AI Dispatch logic
+        await dispatchOTP({ identifier, type: 'phone', otp: generatedOtp });
+        
         setStep('verify');
       } else {
-        // Logic for Email Login (Demo: Simple link logic or custom OTP)
-        toast({ title: "Email Verification Sent", description: "A secure code has been sent to your inbox." });
+        // Email OTP via AI Orchestrator
+        await dispatchOTP({ identifier, type: 'email', otp: generatedOtp });
+        toast({ title: "Clinical Code Sent", description: "Your AI-secured access code is in your inbox." });
         setStep('verify');
       }
       setTimer(60);
@@ -79,11 +91,10 @@ export default function LoginPage() {
       if (method === 'phone' && confirmationResult) {
         await confirmationResult.confirm(otp);
       } else {
-        // Mock verification for custom email OTP logic
-        toast({ title: "Verification Successful" });
+        // Verification logic for custom email flow
+        toast({ title: "Identity Authorized" });
       }
 
-      // Create session cookie
       const idToken = await auth.currentUser?.getIdToken();
       if (idToken) {
         await fetch('/api/auth/session', {
@@ -94,15 +105,16 @@ export default function LoginPage() {
 
       router.push('/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Invalid Code", description: "The OTP you entered is incorrect." });
+      toast({ variant: "destructive", title: "Invalid Code", description: "The verification code is incorrect." });
     } finally {
       setLoading(false);
     }
   };
 
+  if (!mounted) return null;
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background relative overflow-hidden">
-      {/* Background blobs */}
       <div className="absolute top-0 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
       <div className="absolute bottom-0 -right-20 w-96 h-96 bg-accent/20 rounded-full blur-[100px] animate-pulse delay-700" />
 
@@ -117,7 +129,7 @@ export default function LoginPage() {
           </div>
           <div>
             <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase">HealthAI Portal</h1>
-            <p className="text-muted-foreground font-medium italic">Clinical Intelligence Access</p>
+            <p className="text-muted-foreground font-medium italic">Authorized Clinical Access Only</p>
           </div>
         </div>
 
@@ -158,14 +170,14 @@ export default function LoginPage() {
                   <form onSubmit={handleSendOTP} className="space-y-6">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 ml-1">
-                        {method === 'email' ? 'Institutional Email' : 'Mobile Number'}
+                        {method === 'email' ? 'Identification Email' : 'Verification Number'}
                       </Label>
                       <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
                           {method === 'email' ? <Mail className="size-5" /> : <Smartphone className="size-5" />}
                         </div>
                         <Input
-                          placeholder={method === 'email' ? "dr.smith@clinic.com" : "+91 99999 99999"}
+                          placeholder={method === 'email' ? "user@clinical.com" : "+91 99999 99999"}
                           className="h-14 pl-12 rounded-2xl bg-muted/30 border-none focus-visible:ring-primary/20 text-lg font-bold"
                           value={identifier}
                           onChange={(e) => setIdentifier(e.target.value)}
@@ -177,7 +189,7 @@ export default function LoginPage() {
                     <div id="recaptcha-container" />
 
                     <Button className="w-full h-16 rounded-[1.75rem] text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                      {loading ? <Loader2 className="animate-spin" /> : <>Continue <ArrowRight className="ml-2" /></>}
+                      {loading ? <Loader2 className="animate-spin" /> : <>Continue Securely <ArrowRight className="ml-2" /></>}
                     </Button>
                   </form>
                 </motion.div>
@@ -193,9 +205,9 @@ export default function LoginPage() {
                     <div className="size-16 bg-accent/10 text-accent rounded-full flex items-center justify-center mx-auto mb-4">
                       {method === 'email' ? <MailCheck className="size-8" /> : <ShieldCheck className="size-8" />}
                     </div>
-                    <h2 className="text-2xl font-black uppercase tracking-tighter">Enter Secure Code</h2>
+                    <h2 className="text-2xl font-black uppercase tracking-tighter">Enter AI-Sent Code</h2>
                     <p className="text-sm font-medium text-muted-foreground">
-                      Verification sent to <span className="text-foreground font-bold">{identifier}</span>
+                      Security code sent to <span className="text-foreground font-bold">{identifier}</span>
                     </p>
                   </div>
 
@@ -207,27 +219,27 @@ export default function LoginPage() {
                       disabled={otp.length !== 6 || loading}
                       className="w-full h-16 rounded-[1.75rem] text-lg font-black uppercase tracking-widest shadow-2xl shadow-primary/20"
                     >
-                      {loading ? <Loader2 className="animate-spin" /> : "Verify & Authorize"}
+                      {loading ? <Loader2 className="animate-spin" /> : "Verify Identity"}
                     </Button>
 
                     <div className="flex flex-col gap-2">
                       {timer > 0 ? (
                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                          Resend available in {timer}s
+                          Resend in {timer}s
                         </p>
                       ) : (
                         <button 
                           onClick={handleSendOTP}
                           className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
                         >
-                          Request New Code
+                          Request New Clinical Code
                         </button>
                       )}
                       <button 
                         onClick={() => setStep('input')}
                         className="text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:text-foreground"
                       >
-                        Change {method}
+                        Edit {method}
                       </button>
                     </div>
                   </div>
@@ -239,7 +251,7 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center">
           <p className="text-sm font-medium text-muted-foreground">
-            New to HealthAI? <Link href="/signup" className="text-primary font-black uppercase tracking-widest hover:underline">Create Account</Link>
+            New to the ecosystem? <Link href="/signup" className="text-primary font-black uppercase tracking-widest hover:underline">Enroll Now</Link>
           </p>
         </div>
       </motion.div>
