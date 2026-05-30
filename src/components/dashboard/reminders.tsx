@@ -17,21 +17,22 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
- * Isolated Countdown component to prevent parent re-renders and fix hydration mismatches.
- * Uses a double-render safety check for SSR compliance.
+ * Optimized Countdown component.
+ * Uses a double-render safety check to ensure server and client initial HTML are identical.
  */
 const CountdownTimer = React.memo(() => {
-  const [isMounted, setIsMounted] = useState(false);
-  const [time, setTime] = useState<Date | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-    setTime(new Date());
-    const interval = setInterval(() => setTime(new Date()), 1000);
+    setMounted(true);
+    setNow(new Date());
+    const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  if (!isMounted || !time) {
+  // Return a stable placeholder during SSR and initial hydration
+  if (!mounted || !now) {
     return (
       <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest">
         <Timer className="size-3" />
@@ -40,8 +41,8 @@ const CountdownTimer = React.memo(() => {
     );
   }
 
-  const mins = 59 - time.getMinutes();
-  const secs = 59 - time.getSeconds();
+  const mins = 59 - now.getMinutes();
+  const secs = 59 - now.getSeconds();
   
   return (
     <div className="flex items-center gap-1.5 text-[10px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-widest">

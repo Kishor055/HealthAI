@@ -40,7 +40,6 @@ export function ReminderAlarm() {
     setActiveAlarm({ medName, dosage });
     
     try {
-      // Professional hospital-style chime
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
       audio.play().catch(() => {});
     } catch (e) {
@@ -61,11 +60,10 @@ export function ReminderAlarm() {
     });
   }, [hasPermission, toast]);
 
-  // Simulation: Trigger every 5 minutes for demo
   useEffect(() => {
     const checkReminders = () => {
       const now = new Date();
-      if (now.getMinutes() % 5 === 0 && now.getSeconds() === 0 && !activeAlarm) {
+      if (now.getMinutes() % 15 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
     };
@@ -120,9 +118,9 @@ export function ReminderAlarm() {
               <div className="absolute inset-2 border-2 border-dashed border-primary/30 rounded-[2rem] group-hover:rotate-180 transition-transform duration-1000" />
             </div>
             <DialogTitle className="text-4xl font-black tracking-tighter text-foreground uppercase">Dose Protocol</DialogTitle>
-            <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-              <ShieldAlert className="size-3" /> System Intervention Active
-            </div>
+            <DialogDescription className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
+              System Intervention Active • Due Now
+            </DialogDescription>
           </DialogHeader>
 
           <motion.div 

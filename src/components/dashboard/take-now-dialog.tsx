@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -72,13 +71,13 @@ export function TakeNowDialog({ open, onOpenChange }: TakeNowDialogProps) {
             <div className="flex justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : medications?.length === 0 ? (
+          ) : !medications || medications.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
               <AlertCircle className="h-10 w-10 opacity-20" />
               <p>No active medications found.</p>
             </div>
           ) : (
-            medications?.map((med) => (
+            medications.map((med) => (
               <div 
                 key={med.id} 
                 className="flex items-center justify-between p-4 rounded-xl border-2 hover:border-primary/50 transition-all cursor-pointer group"
