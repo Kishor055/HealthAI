@@ -1,9 +1,8 @@
-
 "use client";
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { Mail, Phone, ArrowRight, Loader2, ShieldCheck, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -68,20 +67,22 @@ export default function LoginPage() {
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!identifier.trim()) return;
     setLoading(true);
 
     try {
       const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const cleanIdentifier = identifier.trim();
       
       if (method === 'phone') {
         setupRecaptcha();
         const verifier = (window as any).recaptchaVerifier;
-        const result = await signInWithPhoneNumber(auth, identifier, verifier);
+        const result = await signInWithPhoneNumber(auth, cleanIdentifier, verifier);
         setConfirmationResult(result);
-        await dispatchOTP({ identifier, type: 'phone', otp: generatedOtp });
+        await dispatchOTP({ identifier: cleanIdentifier, type: 'phone', otp: generatedOtp });
         setStep('verify');
       } else {
-        await dispatchOTP({ identifier, type: 'email', otp: generatedOtp });
+        await dispatchOTP({ identifier: cleanIdentifier, type: 'email', otp: generatedOtp });
         toast({ title: "Verification Code Sent", description: "Please check your inbox." });
         setStep('verify');
       }
@@ -116,17 +117,21 @@ export default function LoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 font-body">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-slate-50 font-body">
+      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-primary transition-colors group">
+         <ChevronLeft className="size-4 group-hover:-translate-x-1 transition-transform" /> Back
+      </Link>
+
       <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-[420px]"
       >
-        <Card className="border-none shadow-2xl rounded-3xl overflow-hidden bg-white">
+        <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
           <CardContent className="p-10">
             <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">Log in</h1>
-              <p className="text-sm text-muted-foreground">Sign in to your clinical profile</p>
+              <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">Log in</h1>
+              <p className="text-sm font-medium text-slate-400">Sign in to your clinical profile</p>
             </div>
 
             <AnimatePresence mode="wait">
@@ -136,14 +141,14 @@ export default function LoginPage() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
-                  className="space-y-6"
+                  className="space-y-8"
                 >
-                  <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <div className="flex bg-slate-100/50 p-1.5 rounded-2xl">
                     <button
                       onClick={() => setMethod('email')}
                       className={cn(
-                        "flex-1 h-10 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
-                        method === 'email' ? "bg-white shadow-sm text-primary" : "text-slate-500 hover:text-slate-900"
+                        "flex-1 h-12 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                        method === 'email' ? "bg-white shadow-lg text-primary" : "text-slate-500 hover:text-slate-900"
                       )}
                     >
                       Email
@@ -151,8 +156,8 @@ export default function LoginPage() {
                     <button
                       onClick={() => setMethod('phone')}
                       className={cn(
-                        "flex-1 h-10 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
-                        method === 'phone' ? "bg-white shadow-sm text-primary" : "text-slate-500 hover:text-slate-900"
+                        "flex-1 h-12 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                        method === 'phone' ? "bg-white shadow-lg text-primary" : "text-slate-500 hover:text-slate-900"
                       )}
                     >
                       Phone
@@ -160,13 +165,13 @@ export default function LoginPage() {
                   </div>
 
                   <form onSubmit={handleSendOTP} className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
                         {method === 'email' ? 'Email Address' : 'Phone Number'}
                       </Label>
                       <Input
                         placeholder={method === 'email' ? "user@example.com" : "+91 99999 99999"}
-                        className="h-12 rounded-xl border-slate-200 focus:border-primary focus:ring-primary/10 px-4"
+                        className="h-14 rounded-2xl border-slate-100 bg-slate-50/50 focus:border-primary focus:ring-primary/5 px-6 font-medium"
                         value={identifier}
                         onChange={(e) => setIdentifier(e.target.value)}
                         required
@@ -175,20 +180,20 @@ export default function LoginPage() {
 
                     <div id="recaptcha-container" />
 
-                    <Button className="w-full h-12 rounded-xl text-sm font-bold uppercase tracking-widest bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                    <Button className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02]">
                       {loading ? <Loader2 className="animate-spin" /> : "Sign In"}
                     </Button>
                   </form>
 
                   <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink mx-4 text-xs font-medium text-slate-400">or</span>
-                    <div className="flex-grow border-t border-slate-200"></div>
+                    <div className="flex-grow border-t border-slate-100"></div>
+                    <span className="flex-shrink mx-6 text-[10px] font-black uppercase tracking-widest text-slate-300">or</span>
+                    <div className="flex-grow border-t border-slate-100"></div>
                   </div>
 
                   <Button 
                     variant="outline" 
-                    className="w-full h-12 rounded-xl border-slate-200 font-semibold text-slate-700 gap-3"
+                    className="w-full h-14 rounded-2xl border-slate-100 bg-white font-bold text-slate-700 gap-4 hover:bg-slate-50 transition-all"
                     onClick={handleGoogleSignIn}
                     disabled={loading}
                   >
@@ -207,12 +212,12 @@ export default function LoginPage() {
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  className="space-y-8 text-center"
+                  className="space-y-10 text-center"
                 >
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-bold tracking-tight">Verify Code</h2>
-                    <p className="text-sm text-slate-500">
-                      Code sent to <span className="text-slate-900 font-semibold">{identifier}</span>
+                  <div className="space-y-3">
+                    <h2 className="text-3xl font-black tracking-tighter">Verify Code</h2>
+                    <p className="text-sm font-medium text-slate-400">
+                      Security code sent to <br/> <span className="text-slate-900 font-bold">{identifier}</span>
                     </p>
                   </div>
 
@@ -222,13 +227,13 @@ export default function LoginPage() {
                     <Button 
                       onClick={handleVerifyOTP}
                       disabled={otp.length !== 6 || loading}
-                      className="w-full h-12 rounded-xl text-sm font-bold uppercase tracking-widest bg-primary"
+                      className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-primary"
                     >
                       {loading ? <Loader2 className="animate-spin" /> : "Verify & Log In"}
                     </Button>
                     <button 
                       onClick={() => setStep('input')}
-                      className="text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-primary transition-colors"
+                      className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-primary transition-colors"
                     >
                       Change {method}
                     </button>
@@ -237,9 +242,9 @@ export default function LoginPage() {
               )}
             </AnimatePresence>
 
-            <div className="mt-10 text-center">
-              <p className="text-sm font-medium text-slate-500">
-                Don't have an account? <Link href="/signup" className="text-primary font-bold">Sign up</Link>
+            <div className="mt-12 text-center">
+              <p className="text-sm font-medium text-slate-400">
+                Don't have an account? <Link href="/signup" className="text-primary font-black uppercase tracking-widest ml-1 transition-all hover:underline">Sign up</Link>
               </p>
             </div>
           </CardContent>
