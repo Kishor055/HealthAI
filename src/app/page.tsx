@@ -1,19 +1,50 @@
 "use client";
 
+import * as React from 'react';
 import { motion } from 'framer-motion';
-import { HeartPulse, ShieldCheck, Zap, ArrowRight, Lock } from 'lucide-react';
-import Link from 'next/link';
+import { HeartPulse, ShieldCheck, Zap, ArrowRight, Lock, Loader2 } from 'lucide-react';
+import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { placeholderImages } from '@/lib/placeholder-images';
+import { useAuth } from "@/firebase";
+import { signInAnonymously } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 /**
- * Landing Page for HealthAI.
- * Guest login bypass removed to enforce Enterprise Dual-OTP security protocols.
+ * Enhanced Landing Page for HealthAI.
+ * Features "Instant Portal Access" for rapid clinical prototyping.
  */
 export default function LandingPage() {
+  const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = React.useState(false);
+
+  const handleInstantAccess = async () => {
+    setLoading(true);
+    try {
+      // Direct entrance logic
+      const result = await signInAnonymously(auth);
+      const idToken = await result.user.getIdToken();
+      
+      // Sync session with Next.js middleware
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      toast({ title: "Portal Opening", description: "Identity synchronized. Redirecting to clinical dashboard." });
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Access Failed", description: error.message });
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-background overflow-hidden">
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-background overflow-hidden font-body">
       <div className="hidden bg-muted lg:block relative">
         <Image
           src={placeholderImages.find(img => img.id === "login-hero")?.imageUrl || "/placeholder.svg"}
@@ -64,27 +95,33 @@ export default function LandingPage() {
           <div className="bg-card p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border space-y-8">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black uppercase tracking-tight">Clinical Access</h2>
-              <p className="text-sm text-muted-foreground font-medium">Sign in to your AI-managed health profile.</p>
+              <p className="text-sm text-muted-foreground font-medium">Instantly access your AI-managed health profile.</p>
             </div>
 
             <div className="space-y-4">
-              <Link href="/login" className="block w-full">
-                <Button className="w-full h-16 text-xl font-black shadow-lg shadow-primary/20 rounded-2xl group transition-all hover:scale-105">
-                  Access Portal <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+              <Button 
+                onClick={handleInstantAccess}
+                disabled={loading}
+                className="w-full h-16 text-xl font-black shadow-lg shadow-primary/20 rounded-2xl group transition-all hover:scale-105 bg-primary"
+              >
+                {loading ? <Loader2 className="animate-spin mr-2" /> : "Open Portal"} 
+                {!loading && <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />}
+              </Button>
               
-              <Link href="/signup" className="block w-full">
-                <Button variant="outline" className="w-full h-14 text-sm font-black rounded-2xl border-2 border-primary/20 text-primary hover:bg-primary/5">
-                  <Lock className="mr-2 size-4" /> Create Professional Account
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" className="h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border-2" onClick={() => router.push('/login')}>
+                  Custom Login
                 </Button>
-              </Link>
+                <Button variant="outline" className="h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border-2" onClick={() => router.push('/signup')}>
+                  New Account
+                </Button>
+              </div>
             </div>
 
             <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex items-center gap-3">
               <Zap className="text-primary size-5 fill-primary" />
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 leading-tight">
-                SECURE PROTOCOL: Multi-factor verification required for all clinical profiles.
+                SECURE PROTOCOL: Anonymous sessions are encrypted and data-isolated by default.
               </p>
             </div>
           </div>
