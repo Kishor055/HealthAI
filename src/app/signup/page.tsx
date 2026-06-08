@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, User, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, ChevronLeft, User, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -96,9 +96,8 @@ export default function SignupPage() {
       
       const eOtp = Math.floor(100000 + Math.random() * 900000).toString();
       await dispatchOTP({ identifier: formData.email, type: 'email', otp: eOtp });
-      await dispatchOTP({ identifier: formData.phone, type: 'phone', otp: "Verified via SMS" });
-
-      toast({ title: "Verification Codes Sent", description: "Check your email and phone." });
+      
+      toast({ title: "Dual OTPs Dispatched", description: "Verification codes sent to your email and phone." });
       setStep('verify');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Enrollment Failed", description: error.message });
@@ -135,7 +134,7 @@ export default function SignupPage() {
 
       router.push('/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Invalid Codes", description: "Please double check your OTPs." });
+      toast({ variant: "destructive", title: "Invalid Codes", description: "Please double check your verification codes." });
     } finally {
       setLoading(false);
     }
@@ -144,17 +143,21 @@ export default function SignupPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 font-body">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-slate-50 font-body">
+      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-primary transition-colors group">
+         <ChevronLeft className="size-4 group-hover:-translate-x-1 transition-transform" /> Back
+      </Link>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-[420px]"
       >
-        <Card className="border-none shadow-2xl rounded-3xl overflow-hidden bg-white">
+        <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
           <CardContent className="p-10">
             <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">Sign up</h1>
-              <p className="text-sm text-muted-foreground">Create your clinical account</p>
+              <h1 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">Create Account</h1>
+              <p className="text-sm font-medium text-slate-400">Join the clinical HealthAI platform</p>
             </div>
 
             <AnimatePresence mode="wait">
@@ -165,35 +168,35 @@ export default function SignupPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
                   onSubmit={handleInitiateVerification}
-                  className="space-y-5"
+                  className="space-y-6"
                 >
                   <div className="space-y-4">
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Full Name</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</Label>
                       <Input 
                         placeholder="Johnathan Doe"
-                        className="h-11 rounded-xl border-slate-200 bg-white"
+                        className="h-14 rounded-2xl border-slate-100 bg-slate-50/50 focus:border-primary px-6"
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
                         required
                       />
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Email</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institutional Email</Label>
                       <Input 
                         type="email"
-                        placeholder="user@example.com"
-                        className="h-11 rounded-xl border-slate-200 bg-white"
+                        placeholder="dr.doe@health.com"
+                        className="h-14 rounded-2xl border-slate-100 bg-slate-50/50 focus:border-primary px-6"
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                         required
                       />
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Mobile</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile Number</Label>
                       <Input 
                         placeholder="+91 98765 43210"
-                        className="h-11 rounded-xl border-slate-200 bg-white"
+                        className="h-14 rounded-2xl border-slate-100 bg-slate-50/50 focus:border-primary px-6"
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
                         required
@@ -203,20 +206,20 @@ export default function SignupPage() {
 
                   <div id="recaptcha-signup-container" />
 
-                  <Button className="w-full h-11 rounded-xl text-sm font-bold uppercase tracking-widest bg-primary hover:bg-primary/90 mt-2">
-                    {loading ? <Loader2 className="animate-spin" /> : "Sign Up"}
+                  <Button className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-widest bg-primary hover:bg-primary/90 mt-2 shadow-xl shadow-primary/20">
+                    {loading ? <Loader2 className="animate-spin" /> : "Initiate Verification"}
                   </Button>
 
                   <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink mx-4 text-xs font-medium text-slate-400">or</span>
-                    <div className="flex-grow border-t border-slate-200"></div>
+                    <div className="flex-grow border-t border-slate-100"></div>
+                    <span className="flex-shrink mx-4 text-xs font-medium text-slate-300 uppercase">or</span>
+                    <div className="flex-grow border-t border-slate-100"></div>
                   </div>
 
                   <Button 
                     variant="outline" 
                     type="button"
-                    className="w-full h-11 rounded-xl border-slate-200 font-semibold text-slate-700 gap-3"
+                    className="w-full h-14 rounded-2xl border-slate-100 bg-white font-bold text-slate-700 gap-3"
                     onClick={handleGoogleSignUp}
                     disabled={loading}
                   >
@@ -237,18 +240,18 @@ export default function SignupPage() {
                   className="space-y-8"
                 >
                   <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-bold tracking-tight">Verify Identity</h2>
-                    <p className="text-sm text-slate-500">Enter security codes from Email & SMS</p>
+                    <h2 className="text-2xl font-black tracking-tighter">Dual Verification</h2>
+                    <p className="text-sm font-medium text-slate-500">Enter codes from Email & SMS</p>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-bold text-primary uppercase tracking-widest text-center block">Secure Email OTP</Label>
+                      <Label className="text-[10px] font-black text-primary uppercase tracking-widest text-center block">Secure Email OTP</Label>
                       <OTPInput value={emailOtp} onChange={setEmailOtp} disabled={loading} />
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-bold text-primary uppercase tracking-widest text-center block">Secure SMS OTP</Label>
+                      <Label className="text-[10px] font-black text-primary uppercase tracking-widest text-center block">Secure SMS OTP</Label>
                       <OTPInput value={phoneOtp} onChange={setPhoneOtp} disabled={loading} />
                     </div>
                   </div>
@@ -256,17 +259,17 @@ export default function SignupPage() {
                   <Button 
                     onClick={handleFinalizeSignup}
                     disabled={emailOtp.length !== 6 || phoneOtp.length !== 6 || loading}
-                    className="w-full h-12 rounded-xl text-sm font-bold uppercase tracking-widest bg-primary"
+                    className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-widest bg-primary shadow-xl shadow-primary/20"
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : "Complete Registry"}
+                    {loading ? <Loader2 className="animate-spin" /> : "Finalize Clinical Registry"}
                   </Button>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div className="mt-10 text-center">
-              <p className="text-sm font-medium text-slate-500">
-                Already have an account? <Link href="/login" className="text-primary font-bold">Log in</Link>
+              <p className="text-sm font-medium text-slate-400">
+                Already have an account? <Link href="/login" className="text-primary font-black uppercase tracking-widest hover:underline transition-all">Log in</Link>
               </p>
             </div>
           </CardContent>
