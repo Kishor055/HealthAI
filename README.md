@@ -1,227 +1,522 @@
-# 🩺 Health CoPilot — AI-Powered Medication Safety Assistant
+🩺 Health CoPilot
 
-Health CoPilot is an AI-driven healthcare application designed to reduce medication errors by transforming complex prescriptions into simple, safe, and understandable instructions.
-It combines computer vision, large language models, cloud automation, and real-time notifications to improve medication adherence and patient safety.
+"Next.js" (https://img.shields.io/badge/Next.js-15+-000000?style=for-the-badge&logo=next.js&logoColor=white)
+"TypeScript" (https://img.shields.io/badge/TypeScript-5+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+"Firebase" (https://img.shields.io/badge/Firebase-Cloud_Platform-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+"Google Gemini" (https://img.shields.io/badge/Google-Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
+"Build Status" (https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=for-the-badge)
 
----
+Health CoPilot is an AI-powered medication safety and adherence platform designed to reduce prescription-related errors and improve patient outcomes. By combining Computer Vision, Large Language Models, Cloud Automation, and Smart Notifications, Health CoPilot transforms complex prescriptions into simple, understandable, and actionable medication guidance.
 
-## 🚀 Key Objectives
-
-* Prevent medication errors caused by misinterpretation
-* Improve adherence through smart reminders
-* Detect unsafe drug combinations
-* Provide easy access to nearby healthcare facilities
-* Educate users with AI-powered explanations
+The platform helps patients, caregivers, and healthcare users understand their medications, stay compliant with treatment plans, and receive proactive safety alerts for potential medication risks.
 
 ---
 
-## ✨ Features
+📸 Application Preview
 
-### 🔐 Secure Authentication
+🏠 Smart Medication Dashboard
 
-* Firebase Authentication
-* Email/Password and Google Sign-In support
+"Health CoPilot Dashboard" (dashboard.png)
 
-### 📷 Prescription Digitization
+Centralized dashboard displaying active medications, safety alerts, adherence statistics, reminders, and emergency healthcare contacts.
 
-* Upload prescription images or manual entry
-* OCR using Google ML Kit / Vision API
-* Converts unstructured text into structured medicine data
+📷 Prescription Scanner & AI Explanation
 
-### 🧠 AI-Based Medical Explanation
+"Prescription OCR" (ocr-preview.png)
 
-* Powered by Google Gemini via Genkit
-* Simplifies:
+Upload prescription images and automatically extract medicine details using OCR and AI-powered interpretation.
 
-  * Dosage instructions
-  * Food timing
-  * Precautions
-  * Basic side effects
+💬 AI Medication Assistant
 
-### ⚠ Drug Interaction & Safety Alerts
+"Medication Chatbot" (chatbot-preview.png)
 
-* Detects:
-
-  * Duplicate medicines
-  * Overdose risk
-  * Known interaction patterns
-* Generates prioritized safety alerts
-* Alerts stored and displayed prominently
-
-### ⏰ Smart Reminders & Adherence Tracking
-
-* Auto-generated reminder schedules
-* Push notifications via Firebase Cloud Messaging (FCM)
-* Users can mark doses as Taken or Skipped
-* Tracks adherence history
-
-### 💬 Medication Chat Assistant
-
-* In-app AI chatbot
-* Answers medicine-related questions only
-* Uses active medicine list as context
-* Avoids diagnosis and treatment advice
-
-### 🏥 Nearby Hospital & Doctor Finder
-
-* Google Maps & Places API integration
-* Shows nearby:
-
-  * Hospitals
-  * Clinics
-  * Pharmacies
-* One-tap call and navigation
-* Save favorite hospitals and doctors
-
-### 📞 Emergency Contacts
-
-* Store personal doctor contacts
-* Store hospital emergency numbers
-* Quick access from dashboard
+Interactive AI assistant providing medication guidance, dosage explanations, precautions, and adherence support.
 
 ---
 
-## 🧩 System Architecture
+🧠 AI-Powered Healthcare Workflow
 
-### Frontend
+Health CoPilot uses a multi-stage intelligent processing pipeline to convert prescriptions into actionable healthcare guidance.
 
-* Next.js (React)
-* TypeScript
-* Tailwind CSS
-* Responsive and mobile-first UI
-
-### Backend & Cloud
-
-* Firebase Authentication
-* Cloud Firestore (Database)
-* Cloud Functions (Serverless Backend)
-* Firebase Cloud Messaging (Notifications)
-
-### AI & APIs
-
-* Google ML Kit / Vision API (OCR)
-* Google Gemini API (LLM reasoning & chatbot)
-* Genkit (AI workflow orchestration)
-* Google Maps & Places API (Healthcare discovery)
-
----
-
-## 🗄️ Database Structure (Firestore)
-
-**Collections:**
-
-* `users`
-* `prescriptions`
-* `users/{userId}/medicines`
-* `reminders`
-* `safetyAlerts`
-* `favorites` (doctors / hospitals)
-* `chatbotLogs` (optional)
-
-All records are scoped by `userId` to ensure data privacy.
+graph TD
+    User([Patient/User])
+    
+    User --> Upload[Prescription Upload]
+    Upload --> OCR[OCR Engine - Google Vision API / ML Kit]
+    
+    OCR --> Parser[Medicine Data Parser]
+    
+    Parser --> AIAgent[Gemini AI Explanation Engine]
+    Parser --> SafetyAgent[Drug Safety Agent]
+    Parser --> ReminderAgent[Reminder Scheduler]
+    
+    SafetyAgent --> Alerts[Safety Alerts]
+    ReminderAgent --> FCM[Push Notifications]
+    
+    AIAgent --> Chatbot[Medication Assistant]
+    
+    Chatbot --> Dashboard[Health CoPilot Dashboard]
+    Alerts --> Dashboard
+    FCM --> Dashboard
+    
+    Dashboard --> Maps[Nearby Hospitals & Doctors]
+    Dashboard --> Emergency[Emergency Contacts]
 
 ---
 
-## 🔐 Security & Privacy
+👥 Core Intelligent Modules
 
-* All user data is isolated by Firebase Auth UID
-* Firestore Security Rules enforce access control
-* API keys stored securely in environment variables
-* No public access to medical records
+📷 Prescription Processing Engine
 
-> ⚠ Disclaimer: Health CoPilot does not provide medical diagnosis.
-> It only offers medication guidance and safety awareness. Users are advised to consult qualified healthcare professionals for medical decisions.
+Responsible for converting handwritten or printed prescriptions into structured medicine records.
+
+Features
+
+- Prescription image upload
+- OCR text extraction
+- Medicine identification
+- Dosage recognition
+- Frequency extraction
+- Schedule generation
 
 ---
 
-## 🛠️ Setup & Installation
+🧠 AI Medication Explanation Engine
 
-### 1. Clone Repository
+Powered by Google Gemini AI through Genkit workflows.
 
-```bash
-git clone https://github.com/Kishor055/HealthAI
-```
+Provides easy-to-understand explanations for:
 
-### 2. Install Dependencies
+- Dosage instructions
+- Food timing requirements
+- Medication purpose
+- Precautions
+- Common side effects
+- Storage recommendations
 
-```bash
+The AI simplifies complex medical terminology into patient-friendly language.
+
+---
+
+⚠ Drug Safety & Interaction Engine
+
+Analyzes extracted medication data and identifies:
+
+Safety Checks
+
+- Duplicate medications
+- Potential overdose risks
+- Conflicting schedules
+- Drug interaction warnings
+- Missed medication risks
+
+Alert Levels
+
+- 🔴 High Risk
+- 🟠 Medium Risk
+- 🟢 Informational
+
+Safety alerts are prominently displayed inside the dashboard.
+
+---
+
+⏰ Smart Reminder & Adherence Engine
+
+Automatically generates medication schedules based on prescription instructions.
+
+Capabilities
+
+- Reminder generation
+- Push notifications
+- Dose tracking
+- Missed dose detection
+- Adherence analytics
+
+Users can mark medicines as:
+
+- ✅ Taken
+- ❌ Skipped
+
+---
+
+💬 Medication Chat Assistant
+
+An AI-powered healthcare assistant that answers medication-related questions using the user's active prescription data.
+
+Supported Questions
+
+- When should I take this medicine?
+- Can I take it after food?
+- What are the common side effects?
+- What happens if I miss a dose?
+
+Safety Restrictions
+
+The chatbot:
+
+- Does NOT diagnose diseases
+- Does NOT prescribe treatments
+- Does NOT replace medical professionals
+
+---
+
+🏥 Healthcare Discovery Module
+
+Integrated with Google Maps and Places API.
+
+Search Nearby
+
+- Hospitals
+- Clinics
+- Pharmacies
+- Doctors
+
+Features
+
+- One-tap navigation
+- One-tap calling
+- Save favorites
+- Emergency access
+
+---
+
+🛠️ Technology Stack
+
+💻 Frontend
+
+Framework
+
+- Next.js
+- React
+- TypeScript
+
+UI & Styling
+
+- Tailwind CSS
+- Responsive Mobile-First Design
+- Modern Healthcare UI
+
+---
+
+☁ Backend & Cloud Infrastructure
+
+Firebase Services
+
+- Firebase Authentication
+- Cloud Firestore
+- Cloud Functions
+- Firebase Cloud Messaging
+
+Authentication Methods
+
+- Email & Password
+- Google Sign-In
+
+---
+
+🧠 Artificial Intelligence
+
+Google Gemini
+
+Used for:
+
+- Medication explanation
+- Chat assistant
+- Safety summaries
+
+Genkit
+
+Used for:
+
+- AI workflow orchestration
+- Prompt management
+- Context handling
+
+OCR Services
+
+- Google ML Kit
+- Google Vision API
+
+---
+
+🌍 Maps & Location Services
+
+Google Maps Platform
+
+- Maps API
+- Places API
+- Geocoding API
+
+Used for healthcare facility discovery.
+
+---
+
+🗄️ Firestore Database Architecture
+
+users
+│
+├── prescriptions
+│
+├── reminders
+│
+├── safetyAlerts
+│
+├── favorites
+│
+└── chatbotLogs
+
+Collections
+
+users
+
+Stores:
+
+- Profile Information
+- Preferences
+- Emergency Contacts
+
+prescriptions
+
+Stores:
+
+- Prescription Images
+- OCR Results
+- AI Summaries
+
+users/{userId}/medicines
+
+Stores:
+
+- Medicine Name
+- Dosage
+- Frequency
+- Timing
+
+reminders
+
+Stores:
+
+- Reminder Schedule
+- Notification Status
+
+safetyAlerts
+
+Stores:
+
+- Interaction Warnings
+- Duplicate Medication Alerts
+
+favorites
+
+Stores:
+
+- Doctors
+- Hospitals
+- Pharmacies
+
+chatbotLogs (Optional)
+
+Stores:
+
+- User Conversations
+- AI Responses
+
+---
+
+🔐 Security & Privacy
+
+Health CoPilot prioritizes healthcare data protection.
+
+Security Measures
+
+- Firebase UID-based data isolation
+- Firestore Security Rules
+- Secure API Key Storage
+- Environment Variable Protection
+- Authenticated Access Only
+
+Privacy Principles
+
+- No public medical records
+- User-specific data access
+- Secure cloud communication
+
+«⚠ Medical Disclaimer:
+
+Health CoPilot does not provide medical diagnosis, treatment recommendations, or emergency medical advice.
+The platform is intended solely for medication guidance, adherence support, and safety awareness.
+Always consult qualified healthcare professionals before making medical decisions.»
+
+---
+
+⚙️ Installation & Setup
+
+1️⃣ Clone Repository
+
+git clone https://github.com/Kishor055/HealthAI.git
+
+cd HealthAI
+
+---
+
+2️⃣ Install Dependencies
+
 npm install
-```
 
-### 3. Configure Firebase
+---
+
+3️⃣ Configure Firebase
 
 Create a Firebase project and enable:
 
-* Authentication
-* Firestore
-* Cloud Functions
-* FCM
+- Authentication
+- Firestore Database
+- Cloud Functions
+- Cloud Messaging (FCM)
 
-Add your Firebase config to:
+Create:
 
-```
-.env.local
-```
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 
-### 4. Configure APIs
+---
 
-Enable and add keys for:
+4️⃣ Configure AI & External APIs
 
-* Google Vision API / ML Kit
-* Gemini API
-* Google Maps & Places API
+Enable:
 
-Store all keys securely in environment variables.
+Google Gemini API
 
-### 5. Run Locally
+GEMINI_API_KEY=
 
-```bash
+Google Vision API
+
+VISION_API_KEY=
+
+Google Maps Platform
+
+GOOGLE_MAPS_API_KEY=
+
+Places API
+
+GOOGLE_PLACES_API_KEY=
+
+---
+
+5️⃣ Run Development Server
+
 npm run dev
-```
+
+Open:
+
+http://localhost:3000
 
 ---
 
-## 🧪 MVP Scope
+🚀 MVP Features
 
-Current MVP focuses on:
+Current MVP Includes:
 
-* Authentication
-* Prescription upload
-* OCR extraction
-* AI explanation
-* Reminders
-* Chatbot
-* Nearby hospitals
-
-Future versions will expand to:
-
-* Doctor portal
-* Appointment booking
-* Wearable integration
-* Emergency SOS alerts
+- User Authentication
+- Prescription Upload
+- OCR Extraction
+- AI Medication Explanation
+- Drug Safety Alerts
+- Smart Reminders
+- Medication Chatbot
+- Nearby Hospital Finder
 
 ---
 
-## 📈 Future Enhancements
+🔮 Future Roadmap
 
-* Multilingual AI explanations
-* Offline reminder support
-* Caregiver accounts
-* Hospital EMR integration
-* Voice-based medicine reminders
+Phase 2
+
+- Multilingual AI Explanations
+- Voice-Based Medication Guidance
+- Offline Reminder Support
+- Caregiver Accounts
+
+Phase 3
+
+- Appointment Booking
+- Telemedicine Integration
+- Wearable Device Connectivity
+- Emergency SOS Alerts
+
+Phase 4
+
+- Electronic Medical Record (EMR) Integration
+- Hospital Dashboard
+- Doctor Portal
+- AI Adherence Prediction
 
 ---
-## 🏆 Use Cases
 
-* Elderly patients managing multiple medications
-* Chronic disease patients
-* Caregivers monitoring family members
-* Rural users with limited access to doctors
+📈 Real-World Impact
+
+Health CoPilot benefits:
+
+👵 Elderly Patients
+
+- Medication adherence support
+- Simplified instructions
+
+🩺 Chronic Disease Patients
+
+- Long-term treatment tracking
+- Safety monitoring
+
+👨‍👩‍👧 Caregivers
+
+- Family medication oversight
+- Reminder management
+
+🌍 Rural Communities
+
+- Improved healthcare accessibility
+- AI-assisted medication understanding
 
 ---
 
-## 📜 License
+🤝 Contributions
 
-This project is developed for educational and hackathon purposes.
-All medical guidance should be verified with healthcare professionals.
+Contributions are welcome.
 
+Development Workflow
+
+1. Fork Repository
+2. Create Feature Branch
+3. Commit Changes
+4. Push Branch
+5. Open Pull Request
+
+---
+
+📄 License
+
+This project is developed for educational, research, and hackathon purposes.
+
+Medical guidance generated by AI should always be reviewed and verified by qualified healthcare professionals.
+
+---
+
+👨‍💻 Project Lead
+
+KISHOR KAKDE PATIL
+
+GitHub:
+https://github.com/Kishor055
+
+LinkedIn:
+https://www.linkedin.com/in/kishor-kakde-patil
+
+---
+
+❤️ Built to Improve Medication Safety & Healthcare Accessibility
+
+Health CoPilot — Transforming Prescriptions into Safe, Simple, and Actionable Healthcare Guidance.
