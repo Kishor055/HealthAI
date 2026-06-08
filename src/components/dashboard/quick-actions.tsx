@@ -1,7 +1,8 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Pill, PlusCircle, MessageSquare, Phone, MapPin, Sparkles, ChevronRight } from "lucide-react";
+import { Pill, PlusCircle, MessageSquare, Phone, MapPin, Contact, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -9,13 +10,15 @@ interface QuickActionsProps {
   onAddMed: () => void;
   onTakeNow: () => void;
   onCallDoctor: () => void;
+  onMedicalId: () => void;
 }
 
-export function QuickActions({ onAddMed, onTakeNow, onCallDoctor }: QuickActionsProps) {
+export function QuickActions({ onAddMed, onTakeNow, onCallDoctor, onMedicalId }: QuickActionsProps) {
   const actions = [
     { label: "Register Med", icon: PlusCircle, color: "bg-blue-500", onClick: onAddMed },
     { label: "Take Now", icon: Pill, color: "bg-emerald-500", onClick: onTakeNow },
     { label: "Care Team", icon: Phone, color: "bg-primary", onClick: onCallDoctor },
+    { label: "Medical ID", icon: Contact, color: "bg-slate-900", onClick: onMedicalId },
     { label: "Care Finder", icon: MapPin, color: "bg-orange-500", href: "/dashboard/discover" },
     { label: "AI Assistant", icon: MessageSquare, color: "bg-indigo-600", href: "/dashboard/chat" },
   ];

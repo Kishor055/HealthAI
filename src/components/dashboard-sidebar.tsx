@@ -19,6 +19,7 @@ import {
   CalendarDays,
   Activity,
   Languages,
+  Thermometer,
   Globe
 } from 'lucide-react';
 
@@ -52,6 +53,7 @@ export const DashboardSidebar = React.memo(() => {
     { href: '/dashboard/prescriptions', icon: ClipboardType, label: t.prescriptions },
     { href: '/dashboard/appointments', icon: CalendarDays, label: t.appointments },
     { href: '/dashboard/health-records', icon: Activity, label: t.healthRecords },
+    { href: '/dashboard/symptoms', icon: Thermometer, label: t.symptoms },
     { href: '/dashboard/chat', icon: MessageSquare, label: t.aiAssistant },
     { href: '/dashboard/discover', icon: Map, label: t.discover },
   ];
@@ -118,7 +120,6 @@ export const DashboardSidebar = React.memo(() => {
         </div>
       </div>
       
-      {/* Mobile Header */}
       <header className="flex h-16 items-center gap-4 border-b bg-card/80 backdrop-blur-md px-4 md:hidden sticky top-0 z-50">
          <Sheet>
             <SheetTrigger asChild>
