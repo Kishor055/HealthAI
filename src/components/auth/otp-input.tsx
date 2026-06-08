@@ -20,6 +20,7 @@ export function OTPInput({ value, onChange, length = 6, disabled }: OTPInputProp
     if (isNaN(Number(val))) return;
 
     const newValue = value.split("");
+    // Ensure we only take the last character typed if replacing
     newValue[index] = val.slice(-1);
     const result = newValue.join("");
     onChange(result);
@@ -55,10 +56,11 @@ export function OTPInput({ value, onChange, length = 6, disabled }: OTPInputProp
             onChange={(e) => handleChange(e, i)}
             onKeyDown={(e) => handleKeyDown(e, i)}
             className={cn(
-              "size-12 md:size-14 text-center text-xl font-black rounded-2xl border-2 bg-white/10 backdrop-blur-md transition-all outline-none",
-              value[i] ? "border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]" : "border-white/20 text-foreground",
-              "focus:border-primary focus:ring-4 focus:ring-primary/10"
+              "size-12 md:size-14 text-center text-xl font-black rounded-2xl border-2 bg-slate-50 transition-all outline-none",
+              value[i] ? "border-primary text-primary shadow-lg shadow-primary/10" : "border-slate-200 text-foreground",
+              "focus:border-primary focus:ring-4 focus:ring-primary/5"
             )}
+            suppressHydrationWarning
           />
         </motion.div>
       ))}

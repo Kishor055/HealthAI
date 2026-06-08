@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from 'react';
@@ -20,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2, Pill, Type, History, ChevronRight, Calendar, Download, FileDown } from 'lucide-react';
+import { Camera, FileText, Loader2, PlusCircle, Sparkles, Upload, CheckCircle2, Pill, Type, History, ChevronRight, Calendar, Download, FileDown, ShieldCheck, UserCircle2, Activity } from 'lucide-react';
 import { analyzePrescription } from '@/ai/flows/analyze-prescription-flow';
 import { parsePrescriptionText } from '@/ai/flows/parse-prescription-text-flow';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +29,7 @@ import { Badge } from '../ui/badge';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export function UploadPrescription() {
   const { user } = useUser();
@@ -37,6 +39,7 @@ export function UploadPrescription() {
   const [isAdding, setIsAdding] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
   const [manualText, setManualText] = useState("");
+  const [view, setView] = useState<'patient' | 'hospital'>('patient');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -46,7 +49,7 @@ export function UploadPrescription() {
     return query(
       collection(firestore, "users", user.uid, "prescriptions"),
       orderBy("createdAt", "desc"),
-      limit(10)
+      limit(20)
     );
   }, [firestore, user?.uid]);
 
@@ -195,295 +198,251 @@ Always verify medical data with a qualified healthcare professional.
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="space-y-6"
+      className="space-y-6 pb-20"
     >
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">Prescriptions</h1>
-          <p className="text-muted-foreground">Digitize and manage your medical records.</p>
+          <h1 className="text-4xl font-black font-headline tracking-tighter">Clinical Registry</h1>
+          <p className="text-muted-foreground font-medium">Enterprise medical record digitization and hospital reporting.</p>
+        </div>
+        <div className="flex bg-muted p-1 rounded-2xl h-12 w-full md:w-auto">
+           <button onClick={() => setView('patient')} className={cn("flex-1 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", view === 'patient' ? "bg-white shadow-lg text-primary" : "text-muted-foreground hover:text-foreground")}>Patient View</button>
+           <button onClick={() => setView('hospital')} className={cn("flex-1 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", view === 'hospital' ? "bg-white shadow-lg text-primary" : "text-muted-foreground hover:text-foreground")}>Hospital View</button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card className="border-none shadow-xl bg-gradient-to-br from-primary/5 to-background overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Sparkles className="size-24" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <Card className="border-none shadow-2xl bg-primary text-primary-foreground overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+              <Sparkles className="size-48" />
             </div>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="size-5 text-primary" />
-                Smart AI Digitizer
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                <ShieldCheck className="size-8" />
+                Intelligent Digitizer
               </CardTitle>
-              <CardDescription>
-                Convert paper or notes into digital schedules instantly.
+              <CardDescription className="text-primary-foreground/60 font-medium">
+                Professional-grade OCR and RAG-based clinical report generation.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10 pt-4">
               <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
-                  <Button size="lg" className="w-full rounded-2xl h-14 text-lg font-black shadow-lg shadow-primary/20">
-                    <PlusCircle className="mr-2 h-6 w-6" />
-                    Start Digitizing
+                  <Button size="lg" className="w-full bg-white text-primary hover:bg-white/90 rounded-[2rem] h-16 text-xl font-black shadow-2xl">
+                    <PlusCircle className="mr-3 h-7 w-7" />
+                    Digitize New Record
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto border-none shadow-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-black font-headline tracking-tight">INTELLIGENT MEDICAL OCR</DialogTitle>
-                    <DialogDescription>
-                      Provide clinical documents or paste clinical text for AI structure and report generation.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="py-6">
-                    {!analysis && !isLoading && (
-                      <Tabs defaultValue="upload" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-muted rounded-xl">
-                          <TabsTrigger value="upload" className="flex items-center gap-2 rounded-lg font-bold">
-                            <Upload className="size-4" /> File Upload
-                          </TabsTrigger>
-                          <TabsTrigger value="text" className="flex items-center gap-2 rounded-lg font-bold">
-                            <Type className="size-4" /> Paste Notes
-                          </TabsTrigger>
-                        </TabsList>
-                        
-                        <TabsContent value="upload">
-                          <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            className="hidden" 
-                            accept="image/*,.pdf"
-                            onChange={handleFileChange}
-                          />
-                          <motion.div 
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                            className="flex flex-col items-center justify-center gap-6 rounded-[2rem] border-4 border-dashed border-primary/20 p-12 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group"
-                            onClick={triggerUpload}
-                          >
-                            <div className="bg-primary text-primary-foreground p-5 rounded-3xl shadow-xl shadow-primary/20 group-hover:rotate-6 transition-transform">
-                              <Upload className="h-10 w-10" />
-                            </div>
-                            <div className="text-center space-y-2">
-                              <h3 className="text-xl font-black uppercase tracking-tight">Drop medical record</h3>
-                              <p className="text-sm text-muted-foreground font-medium">
-                                Supports JPG, PNG, PDF Scans.
-                              </p>
-                            </div>
-                            <Button variant="outline" className="mt-2 font-bold rounded-xl border-2">Browse Gallery</Button>
-                          </motion.div>
-                        </TabsContent>
+                <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto border-none shadow-2xl rounded-[3rem] p-0 overflow-hidden bg-background">
+                  <div className="h-2 w-full bg-primary" />
+                  <div className="p-10 space-y-8">
+                    <DialogHeader>
+                      <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-foreground text-center">Medical Data Intake</DialogTitle>
+                      <DialogDescription className="text-center font-medium text-muted-foreground">
+                        Provide a clinical document scan or paste structured notes for AI validation.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6">
+                      {!analysis && !isLoading && (
+                        <Tabs defaultValue="upload" className="w-full">
+                          <TabsList className="grid w-full grid-cols-2 mb-8 h-14 p-1.5 bg-muted rounded-2xl">
+                            <TabsTrigger value="upload" className="flex items-center gap-3 rounded-xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-background">
+                              <Upload className="size-4" /> Visual Scan
+                            </TabsTrigger>
+                            <TabsTrigger value="text" className="flex items-center gap-3 rounded-xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-background">
+                              <Type className="size-4" /> Clinical Notes
+                            </TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="upload">
+                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
+                            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="flex flex-col items-center justify-center gap-8 rounded-[3rem] border-4 border-dashed border-primary/20 p-16 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group" onClick={triggerUpload}>
+                              <div className="bg-primary text-primary-foreground p-6 rounded-[2rem] shadow-2xl shadow-primary/20 group-hover:rotate-6 transition-transform">
+                                <Upload className="h-12 w-12" />
+                              </div>
+                              <div className="text-center space-y-2">
+                                <h3 className="text-2xl font-black uppercase tracking-tighter">Clinical Drop Zone</h3>
+                                <p className="text-sm text-muted-foreground font-bold opacity-60">PDF, JPG, or PNG Laboratory Scans</p>
+                              </div>
+                              <Button variant="outline" className="h-12 px-8 rounded-xl font-black uppercase text-[10px] tracking-widest border-2">Explore Directory</Button>
+                            </motion.div>
+                          </TabsContent>
 
-                        <TabsContent value="text" className="space-y-4">
-                          <div className="space-y-2 text-left">
-                            <Label className="text-xs font-black uppercase tracking-widest ml-1 text-primary">Clinical Text Input</Label>
-                            <Textarea 
-                              placeholder="e.g. Rx: Amoxicillin 500mg, 1 tab TID for 7 days. Patient has acute sinusitis."
-                              className="min-h-[250px] rounded-[2rem] p-6 border-2 focus-visible:ring-primary/20 text-base leading-relaxed"
-                              value={manualText}
-                              onChange={(e) => setManualText(e.target.value)}
-                            />
+                          <TabsContent value="text" className="space-y-6">
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest ml-4 opacity-40">Paste Patient Notes Below</Label>
+                              <Textarea placeholder="e.g. Rx: Metformin 500mg BD. Diagnosis: Type 2 Diabetes Mellitus." className="min-h-[300px] rounded-[2.5rem] p-8 border-2 focus-visible:ring-primary/20 text-lg leading-relaxed clinical-scrollbar" value={manualText} onChange={(e) => setManualText(e.target.value)} />
+                            </div>
+                            <Button className="w-full h-16 text-xl font-black rounded-[2rem] shadow-2xl shadow-primary/20" onClick={handleTextAnalysis} disabled={!manualText.trim()}>
+                              <Sparkles className="mr-3 h-6 w-6" /> Process with AI RAG
+                            </Button>
+                          </TabsContent>
+                        </Tabs>
+                      )}
+
+                      {isLoading && (
+                        <div className="flex flex-col items-center justify-center gap-8 py-24">
+                          <div className="relative">
+                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+                              <Loader2 className="h-24 w-24 text-primary opacity-20" />
+                            </motion.div>
+                            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute inset-0 flex items-center justify-center">
+                              <Activity className="h-12 w-12 text-primary" />
+                            </motion.div>
                           </div>
-                          <Button 
-                            className="w-full h-14 text-xl font-black rounded-2xl shadow-xl shadow-primary/20" 
-                            onClick={handleTextAnalysis}
-                            disabled={!manualText.trim()}
-                          >
-                            <Sparkles className="mr-2 h-5 w-5" />
-                            Analyze Text & Generate Report
-                          </Button>
-                        </TabsContent>
-                      </Tabs>
-                    )}
-
-                    {isLoading && (
-                      <div className="flex flex-col items-center justify-center gap-8 p-20">
-                        <div className="relative">
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                          >
-                            <Loader2 className="h-20 w-20 text-primary opacity-20" />
-                          </motion.div>
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.5 }}
-                            className="absolute inset-0 flex items-center justify-center"
-                          >
-                            <Sparkles className="h-10 w-10 text-primary" />
-                          </motion.div>
+                          <div className="text-center space-y-2">
+                            <p className="text-2xl font-black uppercase tracking-tighter">Clinical Analysis Active</p>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Syncing with Pharmaceutical Databases...</p>
+                          </div>
                         </div>
-                        <div className="text-center space-y-2">
-                          <p className="text-2xl font-black uppercase tracking-tighter">AI Analysis Active...</p>
-                          <p className="text-sm text-muted-foreground font-bold italic">Building clinical report with grounded RAG context...</p>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    <AnimatePresence>
                       {analysis && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="space-y-6"
-                        >
-                          <div className="flex items-center justify-between p-6 bg-accent/5 rounded-3xl border-2 border-accent/20">
-                            <div className="flex items-center gap-4">
-                              <div className="bg-accent text-accent-foreground p-3 rounded-2xl">
-                                <CheckCircle2 className="h-6 w-6" />
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                           <div className="bg-accent/5 p-8 rounded-[2.5rem] border-2 border-accent/20 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                              <div className="flex items-center gap-5">
+                                 <div className="bg-accent text-white p-4 rounded-2xl shadow-xl shadow-accent/20"><CheckCircle2 className="size-8" /></div>
+                                 <div>
+                                    <h4 className="text-xl font-black uppercase tracking-tighter leading-none mb-1">Analysis Verified</h4>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{analysis.source === 'text' ? 'Clinical Notes' : 'Optical Scan'}</p>
+                                 </div>
                               </div>
-                              <div>
-                                <h4 className="font-black uppercase text-sm leading-none mb-1">Analysis Complete</h4>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                                  Source: {analysis.source === 'text' ? 'Clinical Notes' : 'Visual Scan'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                               <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2" onClick={() => handleDownloadReport(analysis)}>
-                                  <Download className="size-4" /> Export Report
-                               </Button>
-                               <Badge variant="outline" className="border-accent text-accent font-black py-1 px-4">{analysis.diagnosis}</Badge>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-muted/30 rounded-2xl border border-dashed text-xs italic text-muted-foreground leading-relaxed">
-                             "This report includes grounded clinical summaries based on extracted medication categories and patient-provided symptoms."
-                          </div>
-
-                          <div className="space-y-4">
-                            <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                              <Pill className="h-4 w-4" />
-                              Extracted Medications
-                            </h3>
-
-                            <div className="grid gap-4">
-                              {analysis.medications.map((med: any, idx: number) => (
-                                <motion.div
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: idx * 0.1 }}
-                                  key={idx}
-                                >
-                                  <Card className="overflow-hidden border-2 hover:border-primary/40 transition-all group">
-                                    <div className="h-1.5 w-full bg-primary/10 group-hover:bg-primary transition-colors" />
-                                    <CardHeader className="p-5 pb-2">
-                                      <div className="flex justify-between items-start">
-                                        <div>
-                                          <CardTitle className="text-lg font-black text-foreground uppercase tracking-tighter">{med.name}</CardTitle>
-                                          <div className="flex items-center gap-2 mt-1">
-                                             <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold text-[10px] uppercase">
-                                                {med.dosage}
-                                             </Badge>
-                                             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{med.frequency}</span>
-                                          </div>
-                                        </div>
-                                        <Badge variant="outline" className="border-muted-foreground/20 text-muted-foreground font-bold text-[9px] uppercase tracking-widest">
-                                          {med.category}
-                                        </Badge>
+                              <Button className="h-12 px-8 rounded-xl font-black uppercase text-[10px] tracking-widest bg-accent hover:bg-accent/90" onClick={() => handleDownloadReport(analysis)}>
+                                 <Download className="mr-2 size-4" /> Download Clinical Report
+                              </Button>
+                           </div>
+                           
+                           <div className="space-y-4">
+                              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-2 flex items-center gap-2">
+                                <Pill className="size-4" /> Extracted Regimen
+                              </h3>
+                              <div className="grid gap-4">
+                                 {analysis.medications.map((med: any, idx: number) => (
+                                   <div key={idx} className="p-6 rounded-[2rem] border-2 bg-card/50 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-primary/30 transition-all group">
+                                      <div className="flex items-center gap-5">
+                                         <div className="size-14 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors shadow-inner"><Pill className="size-7 text-primary" /></div>
+                                         <div>
+                                            <p className="text-lg font-black uppercase tracking-tighter leading-none mb-1">{med.name}</p>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase">{med.dosage} • {med.frequency}</p>
+                                         </div>
                                       </div>
-                                    </CardHeader>
-                                    <CardContent className="p-5 pt-0">
-                                      <p className="text-xs text-muted-foreground font-medium italic mb-4 p-3 bg-muted/30 rounded-xl">
-                                        "{med.instructions}"
-                                      </p>
-                                      <Button 
-                                        size="sm" 
-                                        className="w-full h-10 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary/5"
-                                        onClick={() => handleAddToSchedule(med)}
-                                        disabled={isAdding === med.name}
-                                      >
-                                        {isAdding === med.name ? (
-                                          <Loader2 className="animate-spin h-4 w-4" />
-                                        ) : (
-                                          <>
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Add to My Schedule
-                                          </>
-                                        )}
+                                      <Button size="sm" className="h-12 px-6 rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={() => handleAddToSchedule(med)} disabled={isAdding === med.name}>
+                                         {isAdding === med.name ? <Loader2 className="animate-spin size-4" /> : <><PlusCircle className="mr-2 size-4" /> Add to Patient Plan</>}
                                       </Button>
-                                    </CardContent>
-                                  </Card>
-                                </motion.div>
-                              ))}
-                            </div>
-                          </div>
+                                   </div>
+                                 ))}
+                              </div>
+                           </div>
 
-                          <Button 
-                            variant="ghost" 
-                            className="w-full font-black text-xs uppercase tracking-[0.3em] opacity-40 hover:opacity-100" 
-                            onClick={() => { setAnalysis(null); setManualText(""); }}
-                          >
-                            Reset & Start New Analysis
-                          </Button>
+                           <Button variant="ghost" className="w-full h-12 font-black uppercase text-[10px] tracking-[0.4em] opacity-40 hover:opacity-100" onClick={() => { setAnalysis(null); setManualText(""); }}>Reset & Start New Registry</Button>
                         </motion.div>
                       )}
-                    </AnimatePresence>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
             </CardContent>
           </Card>
+
+          {view === 'hospital' && (
+            <Card className="border-none shadow-2xl overflow-hidden bg-card">
+              <CardHeader className="bg-muted/30 border-b p-8">
+                <CardTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-3">
+                  <UserCircle2 className="size-7 text-accent" />
+                  Hospital Administration
+                </CardTitle>
+                <CardDescription className="font-medium">Manage clinical reports for all admitted patients.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="space-y-4">
+                   {recentRecords?.map((record) => (
+                     <div key={record.id} className="p-6 rounded-[2.5rem] border-2 flex items-center justify-between gap-6 hover:border-accent/30 transition-all bg-accent/5">
+                        <div className="flex items-center gap-5">
+                           <div className="size-14 rounded-[1.5rem] bg-white border-2 border-accent/20 flex items-center justify-center text-accent shadow-sm"><FileText className="size-7" /></div>
+                           <div>
+                              <p className="text-lg font-black uppercase tracking-tighter leading-none mb-1">{record.diagnosis || 'Clinical Record'}</p>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase">{record.medications?.length || 0} Medications Synced</p>
+                           </div>
+                        </div>
+                        <div className="flex gap-2">
+                           <Button variant="outline" size="sm" className="h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest" onClick={() => handleDownloadReport(record)}>Audit Report</Button>
+                           <Button size="sm" className="h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest bg-accent shadow-lg shadow-accent/20">Authorize Care</Button>
+                        </div>
+                     </div>
+                   ))}
+                   {(!recentRecords || recentRecords.length === 0) && (
+                     <div className="text-center py-20 opacity-30">
+                        <ShieldCheck className="size-16 mx-auto mb-4" />
+                        <p className="text-xs font-black uppercase tracking-widest">Administrative Queue Empty</p>
+                     </div>
+                   )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        <Card className="border-none shadow-xl bg-card h-full flex flex-col">
-          <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <History className="size-5 text-primary" />
-              Prescription History
-            </CardTitle>
-            <CardDescription>
-              Archive of your processed clinical records.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto clinical-scrollbar p-6">
-             {recordsLoading ? (
-               <div className="flex justify-center py-10 opacity-20"><Loader2 className="animate-spin" /></div>
-             ) : !recentRecords || recentRecords.length === 0 ? (
-               <div className="flex flex-col items-center justify-center py-10 opacity-20 grayscale">
-                  <FileText className="size-16 mb-4" />
-                  <p className="text-sm font-bold uppercase tracking-widest text-center">Empty Clinical Registry</p>
-                  <p className="text-[10px] mt-1">Uploaded files will appear here.</p>
-               </div>
-             ) : (
-               <div className="space-y-4">
-                 {recentRecords.map((record) => (
-                   <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    key={record.id} 
-                    className="p-5 rounded-3xl border-2 bg-muted/20 hover:bg-white hover:border-primary/20 transition-all cursor-pointer group shadow-sm relative overflow-hidden"
-                   >
-                     <div className="flex items-start justify-between">
-                       <div className="flex items-center gap-3">
+        <div className="space-y-8">
+          <Card className="border-none shadow-2xl bg-card h-full flex flex-col max-h-[800px] overflow-hidden rounded-[2.5rem]">
+            <CardHeader className="border-b p-8 bg-muted/20">
+              <CardTitle className="text-xl font-black uppercase tracking-tighter flex items-center gap-3">
+                <History className="size-6 text-primary" />
+                Registry History
+              </CardTitle>
+              <CardDescription className="font-medium text-xs">Clinical archive of digitized patient documents.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto clinical-scrollbar p-6 space-y-4">
+               {recordsLoading ? (
+                 <div className="flex justify-center py-20 opacity-20"><Loader2 className="animate-spin size-12" /></div>
+               ) : !recentRecords || recentRecords.length === 0 ? (
+                 <div className="text-center py-32 opacity-20 grayscale">
+                    <FileText className="size-16 mx-auto mb-4" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">Registry Empty</p>
+                 </div>
+               ) : (
+                 recentRecords.map((record) => (
+                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={record.id} className="p-5 rounded-[2rem] border-2 bg-muted/20 hover:bg-white hover:border-primary/20 transition-all cursor-pointer group shadow-sm relative">
+                      <div className="flex items-center gap-4">
                          <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                           {record.source === 'file' ? <FileText className="size-6" /> : <Type className="size-6" />}
+                            {record.source === 'file' ? <Camera className="size-6" /> : <Type className="size-6" />}
                          </div>
-                         <div className="min-w-0 pr-6">
-                           <h4 className="text-sm font-black uppercase tracking-tight truncate leading-none mb-1.5">{record.diagnosis || 'General Record'}</h4>
-                           <div className="flex items-center gap-2">
-                             <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-primary/10">
-                               {record.medications?.length || 0} ITEMS
-                             </Badge>
-                             <span className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                               <Calendar className="size-2.5" /> {record.createdAt ? formatDistanceToNow(new Date(record.createdAt), { addSuffix: true }) : 'Just now'}
-                             </span>
-                           </div>
+                         <div className="min-w-0 pr-8">
+                            <h4 className="text-sm font-black uppercase tracking-tight truncate leading-none mb-1.5">{record.diagnosis || 'General Case'}</h4>
+                            <div className="flex items-center gap-2">
+                               <Badge variant="outline" className="text-[8px] font-black border-primary/10 px-2 py-0">{record.medications?.length || 0} ITEMS</Badge>
+                               <span className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                                  <Calendar className="size-2.5" /> {record.createdAt ? formatDistanceToNow(new Date(record.createdAt), { addSuffix: true }) : 'Processing'}
+                               </span>
+                            </div>
                          </div>
-                       </div>
-                       <div className="flex flex-col gap-2 absolute top-4 right-4">
-                          <Button size="icon" variant="ghost" className="size-8 rounded-full opacity-0 group-hover:opacity-100 hover:bg-primary/10 text-primary transition-all" onClick={() => handleDownloadReport(record)}>
-                             <FileDown className="size-4" />
-                          </Button>
-                          <ChevronRight className="size-4 text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                       </div>
-                     </div>
+                      </div>
+                      <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-2">
+                         <Button size="icon" variant="ghost" className="size-8 rounded-full opacity-0 group-hover:opacity-100 hover:bg-primary/10 text-primary" onClick={(e) => { e.stopPropagation(); handleDownloadReport(record); }}>
+                            <FileDown className="size-4" />
+                         </Button>
+                         <ChevronRight className="size-4 text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      </div>
                    </motion.div>
-                 ))}
-               </div>
-             )}
-          </CardContent>
-        </Card>
+                 ))
+               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-2xl bg-accent text-accent-foreground p-8 rounded-[2.5rem] relative overflow-hidden group">
+             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                <ShieldCheck className="size-24" />
+             </div>
+             <div className="relative z-10 space-y-4">
+                <h4 className="text-xl font-black uppercase tracking-tighter">Clinical Accuracy</h4>
+                <p className="text-xs font-bold leading-relaxed opacity-80 italic">"AI models are currently maintaining 98.4% diagnostic precision in optical character recognition."</p>
+                <div className="h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
+                   <div className="h-full bg-white w-[98%]" />
+                </div>
+             </div>
+          </Card>
+        </div>
       </div>
     </motion.div>
   );

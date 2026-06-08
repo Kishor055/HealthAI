@@ -1,8 +1,9 @@
+
 "use client";
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, ArrowRight, Loader2, ShieldCheck, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronLeft, ShieldCheck, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,7 @@ export default function LoginPage() {
       if (method === 'phone' && confirmationResult) {
         await confirmationResult.confirm(otp);
       }
+      // For email simulation, we proceed to dashboard if code matches (simulated check)
       const idToken = await auth.currentUser?.getIdToken();
       if (idToken) {
         await fetch('/api/auth/session', {
@@ -167,7 +169,7 @@ export default function LoginPage() {
                   <form onSubmit={handleSendOTP} className="space-y-6">
                     <div className="space-y-3">
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
-                        {method === 'email' ? 'Email Address' : 'Phone Number'}
+                        {method === 'email' ? 'Institutional Email' : 'Mobile Number'}
                       </Label>
                       <Input
                         placeholder={method === 'email' ? "user@example.com" : "+91 99999 99999"}
@@ -180,8 +182,8 @@ export default function LoginPage() {
 
                     <div id="recaptcha-container" />
 
-                    <Button className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02]">
-                      {loading ? <Loader2 className="animate-spin" /> : "Sign In"}
+                    <Button className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all">
+                      {loading ? <Loader2 className="animate-spin" /> : "Verify Identity"}
                     </Button>
                   </form>
 
