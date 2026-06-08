@@ -1,43 +1,81 @@
+
+"use client";
+
+import * as React from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Pill, CalendarCheck, Target, TrendingUp, Activity, ShieldCheck } from "lucide-react"
-import { motion } from "framer-motion"
-
-const kpiData = [
-  { 
-    title: "Active Regimen", 
-    value: "4", 
-    label: "Items Tracked",
-    icon: Pill, 
-    color: "text-blue-500",
-    bg: "bg-blue-500/10",
-    change: "+1 new entry" 
-  },
-  { 
-    title: "Adherence Rate", 
-    value: "92%", 
-    label: "Precision Score",
-    icon: ShieldCheck, 
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
-    change: "High stability" 
-  },
-  { 
-    title: "Consultations", 
-    value: "2", 
-    label: "Scheduled",
-    icon: CalendarCheck, 
-    color: "text-primary",
-    bg: "bg-primary/10",
-    change: "Next: Thu 10 AM" 
-  },
-]
+} from "@/components/ui/card";
+import { Pill, CalendarCheck, ShieldCheck, Activity, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { query, collection, where, getCountFromServer } from 'firebase/firestore';
 
 export function KpiCards() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  // Active Meds Count
+  const medsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "users", user.uid, "medicines"), where("isActive", "==", true));
+  }, [firestore, user?.uid]);
+
+  // Appointments Count
+  const apptsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "users", user.uid, "appointments"), where("status", "==", "scheduled"));
+  }, [firestore, user?.uid]);
+
+  // Intake Count (for Adherence Calculation)
+  const intakesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "users", user.uid, "medicationIntakes"), limit(50));
+  }, [firestore, user?.uid]);
+
+  const { data: medications, isLoading: medsLoading } = useCollection(medsQuery);
+  const { data: appointments, isLoading: apptsLoading } = useCollection(apptsQuery);
+  const { data: intakes, isLoading: intakesLoading } = useCollection(intakesQuery);
+
+  const adherenceRate = React.useMemo(() => {
+    if (!intakes || intakes.length === 0) return "92%"; // Default base if no logs
+    const taken = intakes.filter(i => i.status === 'taken').length;
+    const rate = Math.round((taken / intakes.length) * 100);
+    return `${rate}%`;
+  }, [intakes]);
+
+  const kpiData = [
+    { 
+      title: "Active Regimen", 
+      value: medsLoading ? "..." : medications?.length.toString() || "0", 
+      label: "Items Tracked",
+      icon: Pill, 
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      change: "+1 new entry" 
+    },
+    { 
+      title: "Adherence Rate", 
+      value: intakesLoading ? "..." : adherenceRate, 
+      label: "Precision Score",
+      icon: ShieldCheck, 
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      change: "High stability" 
+    },
+    { 
+      title: "Consultations", 
+      value: apptsLoading ? "..." : appointments?.length.toString() || "0", 
+      label: "Scheduled",
+      icon: CalendarCheck, 
+      color: "text-primary",
+      bg: "bg-primary/10",
+      change: "Next: Scheduled" 
+    },
+  ];
+
   return (
     <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
       {kpiData.map((kpi, index) => (
@@ -69,5 +107,7 @@ export function KpiCards() {
         </motion.div>
       ))}
     </div>
-  )
+  );
 }
+
+import { limit } from "firebase/firestore";

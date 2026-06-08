@@ -2,13 +2,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Bot, Loader2, Send } from 'lucide-react';
+import { Bot, Loader2, Send, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import { answerMedicationQuestions } from '@/ai/flows/answer-medication-questions';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
@@ -18,6 +18,7 @@ interface Message {
   id: number;
   text: string;
   sender: 'user' | 'ai';
+  audioUrl?: string;
 }
 
 export function ChatClient() {
@@ -32,9 +33,10 @@ export function ChatClient() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVoiceActive, setIsVoiceActive] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Fetch real medication list for context
   const medsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, "users", user.uid, "medicines"));
@@ -56,6 +58,13 @@ export function ChatClient() {
     scrollToBottom();
   }, [messages, isLoading]);
 
+  const playAudio = (dataUri: string) => {
+    if (audioRef.current) {
+      audioRef.current.src = dataUri;
+      audioRef.current.play();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -69,20 +78,27 @@ export function ChatClient() {
       const result = await answerMedicationQuestions({
         medicationList: medString,
         question: input,
+        generateAudio: isVoiceActive
       });
+      
       const aiMessage: Message = {
         id: Date.now() + 1,
         text: result.answer,
         sender: 'ai',
+        audioUrl: result.audioDataUri
       };
+      
       setMessages((prev) => [...prev, aiMessage]);
+      
+      if (result.audioDataUri && isVoiceActive) {
+        playAudio(result.audioDataUri);
+      }
     } catch (error) {
-      const errorMessage: Message = {
+      setMessages((prev) => [...prev, {
         id: Date.now() + 1,
         text: 'Sorry, I encountered an error. Please try again.',
         sender: 'ai',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -92,81 +108,119 @@ export function ChatClient() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      className="flex flex-col h-[calc(100vh-3.5rem)] bg-muted/40"
+      className="flex flex-col h-[calc(100vh-3.5rem)] bg-slate-50/50 font-body"
     >
-      <header className="p-4 border-b bg-background shadow-sm">
-        <h1 className="text-xl font-semibold font-headline flex items-center gap-2">
-          <Bot className="text-primary" />
-          Medication Chat Assistant
-        </h1>
+      <audio ref={audioRef} className="hidden" />
+      
+      <header className="p-6 border-b bg-white flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-4">
+           <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center">
+             <Bot className="text-primary size-6" />
+           </div>
+           <div>
+              <h1 className="text-xl font-black tracking-tighter">AI Care Assistant</h1>
+              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5">
+                <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                Live Adherence Guide
+              </p>
+           </div>
+        </div>
+        <div className="flex items-center gap-2">
+           <Button 
+            variant="outline" 
+            size="sm" 
+            className={cn("rounded-xl font-black uppercase text-[9px] tracking-widest transition-all", isVoiceActive ? "border-primary text-primary bg-primary/5" : "text-slate-400")}
+            onClick={() => setIsVoiceActive(!isVoiceActive)}
+           >
+             {isVoiceActive ? <Volume2 className="size-3 mr-1.5" /> : <VolumeX className="size-3 mr-1.5" />}
+             Voice {isVoiceActive ? 'On' : 'Off'}
+           </Button>
+        </div>
       </header>
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-        <div className="space-y-6 max-w-4xl mx-auto">
+
+      <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
+        <div className="space-y-8 max-w-3xl mx-auto">
           {messages.map((message) => (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               key={message.id}
               className={cn(
-                'flex items-start gap-3',
+                'flex items-start gap-4',
                 message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
               )}
             >
-              <Avatar className="h-8 w-8 border shrink-0">
+              <Avatar className="h-10 w-10 border-2 border-white shadow-md shrink-0">
                 {message.sender === 'ai' ? (
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <Bot className='h-5 w-5' />
-                  </AvatarFallback>
+                  <AvatarFallback className="bg-slate-900 text-white font-black text-xs">AI</AvatarFallback>
                 ) : (
                   <>
                     <AvatarImage src={user?.photoURL || placeholderImages.find(i => i.id === 'user-avatar-1')?.imageUrl} />
-                    <AvatarFallback className="bg-accent text-accent-foreground text-[10px]">
-                      {user?.displayName?.substring(0,2) || 'U'}
+                    <AvatarFallback className="bg-primary/10 text-primary font-black uppercase">
+                      {user?.displayName?.substring(0,1) || 'U'}
                     </AvatarFallback>
                   </>
                 )}
               </Avatar>
-              <div
-                className={cn(
-                  'max-w-[80%] rounded-2xl p-4 shadow-sm text-sm leading-relaxed',
-                  message.sender === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-tr-none'
-                    : 'bg-card border rounded-tl-none'
+              <div className="flex flex-col gap-2 max-w-[80%]">
+                <div
+                  className={cn(
+                    'rounded-3xl p-5 shadow-sm text-sm leading-relaxed border-2',
+                    message.sender === 'user'
+                      ? 'bg-primary text-primary-foreground border-primary rounded-tr-none'
+                      : 'bg-white border-slate-100 rounded-tl-none font-medium text-slate-700'
+                  )}
+                >
+                  {message.text}
+                </div>
+                {message.audioUrl && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="self-start text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary"
+                    onClick={() => playAudio(message.audioUrl!)}
+                  >
+                    <Volume2 className="size-3 mr-1" /> Replay Voice
+                  </Button>
                 )}
-              >
-                {message.text}
               </div>
             </motion.div>
           ))}
           {isLoading && (
-             <div className="flex items-start gap-3 justify-start">
-                <Avatar className="h-8 w-8 border shrink-0">
-                   <AvatarFallback className="bg-primary text-primary-foreground">
-                        <Bot className='h-5 w-5' />
-                    </AvatarFallback>
+             <div className="flex items-start gap-4">
+                <Avatar className="h-10 w-10 border-2 border-white shadow-md shrink-0">
+                   <AvatarFallback className="bg-slate-900 text-white font-black text-xs animate-pulse">...</AvatarFallback>
                 </Avatar>
-                <div className="bg-card border rounded-2xl p-4 rounded-tl-none shadow-sm">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <div className="bg-white border-2 border-slate-100 rounded-3xl p-5 rounded-tl-none shadow-sm flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Synthesizing clinical advice...</span>
                 </div>
             </div>
           )}
         </div>
       </ScrollArea>
-      <div className="p-4 border-t bg-background">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 max-w-4xl mx-auto">
+
+      <div className="p-6 bg-white border-t">
+        <form onSubmit={handleSubmit} className="flex items-center gap-3 max-w-3xl mx-auto relative">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your meds, dosage, or side effects..."
-            className="flex-1 rounded-full h-12 px-6"
+            placeholder="Ask about dosage, interactions, or side effects..."
+            className="flex-1 rounded-[1.5rem] h-14 px-8 border-2 border-slate-100 focus-visible:ring-primary/10 text-base font-medium"
             disabled={isLoading}
-            suppressHydrationWarning
           />
-          <Button type="submit" size="icon" className="h-12 w-12 rounded-full" disabled={isLoading || !input.trim()} suppressHydrationWarning>
-            <Send className="h-5 w-5" />
+          <Button 
+            type="submit" 
+            size="icon" 
+            className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:scale-105 transition-transform" 
+            disabled={isLoading || !input.trim()}
+          >
+            <Send className="h-6 w-6" />
           </Button>
         </form>
+        <p className="text-[9px] font-black uppercase tracking-widest text-center mt-4 text-slate-300">
+           Enterprise Clinical AI • Evidence-Based Protocols Active
+        </p>
       </div>
     </motion.div>
   );
