@@ -13,6 +13,7 @@ import { AddMedicationDialog } from "@/components/medications/add-medication-dia
 import { TakeNowDialog } from "@/components/dashboard/take-now-dialog";
 import { CallDoctorDialog } from "@/components/dashboard/call-doctor-dialog";
 import { WearableSyncDialog } from "@/components/dashboard/wearable-sync-dialog";
+import { MedicalIdDialog } from "@/components/dashboard/medical-id-dialog";
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +33,9 @@ import {
   ClipboardCheck,
   ThumbsUp,
   AlertCircle,
-  ArrowRight
+  Trophy,
+  ShieldCheck,
+  ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -51,6 +54,7 @@ export default function DashboardPage() {
   const [isTakeNowOpen, setIsTakeNowOpen] = useState(false);
   const [isCallDoctorOpen, setIsCallDoctorOpen] = useState(false);
   const [isWearableOpen, setIsWearableOpen] = useState(false);
+  const [isIdOpen, setIsIdOpen] = useState(false);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
   const [connectedDevice, setConnectedDevice] = useState<string | null>(null);
   
@@ -108,41 +112,66 @@ export default function DashboardPage() {
       <TakeNowDialog open={isTakeNowOpen} onOpenChange={setIsTakeNowOpen} />
       <CallDoctorDialog open={isCallDoctorOpen} onOpenChange={setIsCallDoctorOpen} />
       <WearableSyncDialog open={isWearableOpen} onOpenChange={setIsWearableOpen} onConnect={(d) => setConnectedDevice(d)} />
+      <MedicalIdDialog open={isIdOpen} onOpenChange={setIsIdOpen} />
 
       <div className="flex flex-col gap-8 p-4 sm:p-10 max-w-[1400px] mx-auto w-full">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="space-y-6 flex-1 w-full">
             <WelcomeHeader />
-            <Card className="border-none shadow-sm bg-white rounded-3xl">
-              <CardContent className="p-8">
-                <div className="flex flex-col space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Daily Health Check-In</h3>
-                      <p className="text-sm font-semibold text-slate-900">How are you feeling today?</p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <Card className="border-none shadow-sm bg-white rounded-3xl">
+                 <CardContent className="p-8">
+                   <div className="flex flex-col space-y-6">
+                     <div>
+                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Daily Health Check-In</h3>
+                       <p className="text-sm font-semibold text-slate-900">How are you feeling today?</p>
+                     </div>
+                     
+                     <div className="grid grid-cols-5 gap-3">
+                       {checkIns.map((item) => (
+                         <button
+                           key={item.label}
+                           onClick={() => setSelectedVibe(item.label)}
+                           className={cn(
+                             "flex flex-col items-center gap-2 p-4 rounded-2xl transition-all border",
+                             selectedVibe === item.label 
+                               ? "border-primary bg-primary/5 ring-4 ring-primary/5" 
+                               : "border-slate-100 hover:border-slate-200 bg-white"
+                           )}
+                         >
+                           <item.icon className={cn("size-6", item.color.split(' ')[0])} />
+                           <span className="block text-[10px] font-bold uppercase text-slate-500">{item.label}</span>
+                         </button>
+                       ))}
+                     </div>
+                   </div>
+                 </CardContent>
+               </Card>
+
+               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden relative group">
+                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+                     <Trophy className="size-24 text-primary" />
                   </div>
-                  
-                  <div className="grid grid-cols-5 gap-3">
-                    {checkIns.map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={() => setSelectedVibe(item.label)}
-                        className={cn(
-                          "flex flex-col items-center gap-2 p-4 rounded-2xl transition-all border",
-                          selectedVibe === item.label 
-                            ? "border-primary bg-primary/5 ring-4 ring-primary/5" 
-                            : "border-slate-100 hover:border-slate-200 bg-white"
-                        )}
-                      >
-                        <item.icon className={cn("size-6", item.color.split(' ')[0])} />
-                        <span className="block text-[10px] font-bold uppercase text-slate-500">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardContent className="p-8 space-y-6 relative z-10">
+                     <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Consistency Streak</h3>
+                        <p className="text-sm font-semibold text-slate-900">You're on a roll!</p>
+                     </div>
+                     <div className="flex items-end gap-3">
+                        <span className="text-6xl font-black tracking-tighter text-primary">07</span>
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Days Active</span>
+                     </div>
+                     <div className="flex gap-2">
+                        {[1, 1, 1, 1, 1, 1, 0].map((active, i) => (
+                          <div key={i} className={cn("flex-1 h-2 rounded-full", active ? "bg-primary" : "bg-slate-100")} />
+                        ))}
+                     </div>
+                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500">
+                        <ShieldCheck className="size-3" /> Adherence Shield Active
+                     </div>
+                  </CardContent>
+               </Card>
+            </div>
           </div>
           
           <div className="flex flex-col gap-4">
@@ -150,6 +179,7 @@ export default function DashboardPage() {
               onAddMed={() => setIsAddOpen(true)}
               onTakeNow={() => setIsTakeNowOpen(true)}
               onCallDoctor={() => setIsCallDoctorOpen(true)}
+              onMedicalId={() => setIsIdOpen(true)}
             />
           </div>
         </div>

@@ -9,6 +9,7 @@ export const translations = {
     prescriptions: "Prescriptions",
     appointments: "Appointments",
     healthRecords: "Health Records",
+    symptoms: "Symptom Tracker",
     aiAssistant: "AI Assistant",
     discover: "Discover",
     welcomeBack: "Welcome back",
@@ -19,8 +20,11 @@ export const translations = {
     addMed: "Add Med",
     takeNow: "Take Now",
     callDoctor: "Call Doctor",
+    medicalId: "Medical ID",
     sos: "BROADCAST SOS",
     language: "Language",
+    streak: "Adherence Streak",
+    days: "Days"
   },
   hi: {
     dashboard: "डैशबोर्ड",
@@ -29,6 +33,7 @@ export const translations = {
     prescriptions: "नुस्खे (Rx)",
     appointments: "अपॉइंटमेंट",
     healthRecords: "स्वास्थ्य रिकॉर्ड",
+    symptoms: "लक्षण ट्रैकर",
     aiAssistant: "एआई सहायक",
     discover: "खोजें",
     welcomeBack: "आपका स्वागत है",
@@ -39,8 +44,11 @@ export const translations = {
     addMed: "दवा जोड़ें",
     takeNow: "अभी लें",
     callDoctor: "डॉक्टर को बुलाएं",
+    medicalId: "मेडिकल आईडी",
     sos: "आपातकालीन एसओएस",
     language: "भाषा",
+    streak: "निरंतरता",
+    days: "दिन"
   },
   mr: {
     dashboard: "डॅशबोर्ड",
@@ -49,6 +57,7 @@ export const translations = {
     prescriptions: "प्रिस्क्रिप्शन",
     appointments: "भेटी",
     healthRecords: "आरोग्य रेकॉर्ड",
+    symptoms: "लक्षण ट्रॅकर",
     aiAssistant: "एआय सहाय्यक",
     discover: "शोध",
     welcomeBack: "स्वागत आहे",
@@ -59,7 +68,10 @@ export const translations = {
     addMed: "औषध जोडा",
     takeNow: "आता घ्या",
     callDoctor: "डॉक्टरना कॉल करा",
+    medicalId: "वैद्यकीय आयडी",
     sos: "आणीबाणी एसओएस",
     language: "भाषा",
+    streak: "सातत्य",
+    days: "दिवस"
   }
 };
