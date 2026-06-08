@@ -1,4 +1,5 @@
-<<<<<<< HEAD
+git rebase --continue
+X<<<<<<< HEAD
 🩺 Health CoPilot
 
 "Next.js" (https://img.shields.io/badge/Next.js-15+-000000?style=for-the-badge&logo=next.js&logoColor=white)
