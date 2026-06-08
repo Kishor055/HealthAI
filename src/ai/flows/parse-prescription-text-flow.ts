@@ -2,8 +2,7 @@
 
 /**
  * @fileOverview Genkit flow to parse and structure prescription details from raw text.
- * 
- * - parsePrescriptionText - Extracts medicine info from clinical notes or typed text.
+ * Updated to include structured clinical reports for RAG-based downloads.
  */
 
 import { ai } from '@/ai/genkit';
@@ -29,6 +28,7 @@ const ParsePrescriptionTextOutputSchema = z.object({
   patientName: z.string().optional(),
   diagnosis: z.string().describe("The extracted diagnosis or condition mentioned."),
   medications: z.array(MedicationSchema),
+  clinicalReport: z.string().describe("A grounded, detailed clinical summary for the patient report."),
 });
 
 export type ParsePrescriptionTextOutput = z.infer<typeof ParsePrescriptionTextOutputSchema>;
@@ -41,9 +41,12 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert pharmaceutical analyst. 
 Analyze the following prescription text or clinical notes.
 
-Extract all medication details including name, dosage, frequency, and instructions. 
-Identify the condition or diagnosis if mentioned. 
-Categorize each medicine into one of: General, Asthma, BP, Diabetes, Heart, Allergy.
+Extract all medication details. 
+
+In the 'clinicalReport' section, provide a comprehensive summary:
+1. Summarize the treatment plan based on these notes.
+2. Highlight any primary concerns (simulating grounded RAG lookup).
+3. Provide patient-friendly advice for adherence.
 
 Prescription Text:
 {{{text}}}`,
