@@ -12,12 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
-import { signInAnonymously, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInAnonymously } from "firebase/auth";
 import { doc } from "firebase/firestore";
 
 /**
  * Guest Access Login System Gateway.
  * Supports Admin node detection and frictionless Guest entry.
+ * Uses Anonymous Auth to prevent "Email in Use" conflicts during prototyping.
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -37,22 +38,46 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
+  const syncSession = async (user: any, email: string, isAdmin: boolean) => {
+    // 1. Establish Clinical Profile in Firestore
+    const profileRef = doc(firestore, "users", user.uid);
+    setDocumentNonBlocking(profileRef, {
+      id: user.uid,
+      email: email || "guest@healthai.internal",
+      role: isAdmin ? 'admin' : 'user',
+      lastLogin: new Date().toISOString(),
+      hasFullAccess: isAdmin,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    // 2. Sync session with Next.js middleware via API cookie
+    const idToken = await user.getIdToken();
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) throw new Error("Session synchronization failed");
+  };
+
   const handleGuestLogin = async () => {
     setGuestLoading(true);
     try {
       const result = await signInAnonymously(auth);
-      const idToken = await result.user.getIdToken();
-      
-      await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
+      await syncSession(result.user, "guest@healthai.internal", false);
 
-      toast({ title: "Guest Access", description: "Identity synchronized. Welcome." });
+      toast({ 
+        title: "Guest Node Active", 
+        description: "Standard clinical access synchronized." 
+      });
       router.push('/dashboard');
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Guest access unavailable." });
+      toast({ 
+        variant: "destructive", 
+        title: "Access Error", 
+        description: "Guest node unavailable. Please retry." 
+      });
       setGuestLoading(false);
     }
   };
@@ -66,28 +91,7 @@ export default function LoginPage() {
 
     try {
       const result = await signInAnonymously(auth);
-      const user = result.user;
-
-      if (!user) throw new Error("Connection failed");
-
-      const idToken = await user.getIdToken();
-      
-      // Update Clinical Profile in Firestore
-      setDocumentNonBlocking(doc(firestore, "users", user.uid), {
-        id: user.uid,
-        email: formData.email,
-        role: isAdmin ? 'admin' : 'user',
-        lastLogin: new Date().toISOString(),
-        hasFullAccess: isAdmin,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-
-      // Sync session with Next.js middleware
-      await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
+      await syncSession(result.user, formData.email, isAdmin);
 
       toast({ 
         title: isAdmin ? "Admin Access Granted" : "Access Granted", 
@@ -173,13 +177,13 @@ export default function LoginPage() {
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full h-16 rounded-xl border-2 text-[12px] font-black uppercase tracking-widest gap-3 shadow-lg shadow-primary/5"
+                className="w-full h-16 rounded-xl border-2 text-[12px] font-black uppercase tracking-widest gap-3 shadow-lg shadow-primary/5 group"
                 onClick={handleGuestLogin}
                 disabled={guestLoading}
               >
                 {guestLoading ? <Loader2 className="animate-spin" /> : (
                   <>
-                    <UserCircle className="size-6 text-primary" />
+                    <UserCircle className="size-6 text-primary group-hover:scale-110 transition-transform" />
                     Enter as Guest
                   </>
                 )}
