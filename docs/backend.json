@@ -110,6 +110,24 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "diagnosis", "createdAt"]
+    },
+    "LabReport": {
+      "title": "LabReport",
+      "type": "object",
+      "description": "A digitized analysis of a laboratory medical report (Blood, CBC, etc).",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "reportSummary": { "type": "string" },
+        "abnormalFindings": { "type": "array", "items": { "type": "string" } },
+        "healthScore": { "type": "number" },
+        "riskAssessment": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "healthStatus": { "type": "string", "enum": ["Excellent", "Good", "Needs Attention", "High Risk"] },
+        "recommendations": { "type": "array", "items": { "type": "string" } },
+        "doctorSummary": { "type": "string" },
+        "biomarkers": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -151,6 +169,10 @@
     "/users/{userId}/prescriptions/{prescriptionId}": {
       "schema": { "$ref": "#/backend/entities/PrescriptionRecord" },
       "description": "History of digitized medical records."
+    },
+    "/users/{userId}/labReports/{reportId}": {
+      "schema": { "$ref": "#/backend/entities/LabReport" },
+      "description": "History of analyzed lab reports."
     }
   }
 }

@@ -10,3 +10,4 @@ import '@/ai/flows/analyze-prescription-flow.ts';
 import '@/ai/flows/parse-prescription-text-flow.ts';
 import '@/ai/flows/analyze-health-trends.ts';
 import '@/ai/flows/dispatch-otp-flow.ts';
+import '@/ai/flows/analyze-lab-report.ts';

@@ -21,7 +21,8 @@ import {
   Languages,
   Thermometer,
   Globe,
-  ShieldCheck
+  ShieldCheck,
+  FileSearch
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -64,6 +65,7 @@ export const DashboardSidebar = React.memo(() => {
 
   const NAV_ITEMS = [
     { href: '/dashboard', icon: LayoutDashboard, label: t.dashboard },
+    { href: '/dashboard/report-analyzer', icon: FileSearch, label: "Report Analyzer" },
     { href: '/dashboard/reminders-alerts', icon: Bell, label: t.reminders },
     { href: '/dashboard/medications', icon: Pill, label: t.medications },
     { href: '/dashboard/prescriptions', icon: ClipboardType, label: t.prescriptions },
@@ -160,11 +162,11 @@ export const DashboardSidebar = React.memo(() => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0 w-72 border-r">
-                <SheetHeader className="sr-only">
-                  <SheetTitle>Navigation Menu</SheetTitle>
-                  <SheetDescription>Access clinical portal modules and settings.</SheetDescription>
+                <SheetHeader className="px-6 pt-6 text-left">
+                  <SheetTitle className="text-xl font-black tracking-tighter text-primary">HealthAI Menu</SheetTitle>
+                  <SheetDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Clinical Portal Navigation</SheetDescription>
                 </SheetHeader>
-                <div className="flex h-20 items-center border-b px-6">
+                <div className="flex h-20 items-center border-b px-6 sr-only">
                     <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
                        <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center">
                             <HeartPulse className="h-6 w-6" />
