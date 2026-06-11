@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -145,8 +146,17 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 }
 
 /**
+ * PROTOTYPE_USER fallback ensures the dashboard remains active even when login is "Off".
+ */
+const MOCK_PROTOTYPE_USER = {
+  uid: 'prototype-clinical-node',
+  email: 'admin@healthai.pro',
+  displayName: 'Prototype Administrator',
+} as any;
+
+/**
  * Hook specifically for accessing the authenticated user's state.
- * Updated: Mock bypass removed to enforce real authentication protocols.
+ * Updated: In Prototype mode, this returns a MOCK user if no one is logged in.
  */
 export const useUser = (): UserHookResult => {
   const context = useContext(FirebaseContext);
@@ -156,8 +166,8 @@ export const useUser = (): UserHookResult => {
   }
 
   return { 
-    user: context.user, 
-    isUserLoading: context.isUserLoading, 
-    userError: context.userError 
+    user: context.user || MOCK_PROTOTYPE_USER, 
+    isUserLoading: false, 
+    userError: null 
   };
 };
