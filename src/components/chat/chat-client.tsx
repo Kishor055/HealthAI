@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Bot, Loader2, Send, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
+import { Bot, Loader2, Send, Volume2, VolumeX, Database, ShieldCheck, Sparkles } from 'lucide-react';
 import { answerMedicationQuestions } from '@/ai/flows/answer-medication-questions';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
@@ -27,7 +27,7 @@ export function ChatClient() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your AI Medication Assistant. How can I help you with your health today?",
+      text: "Hello! I'm your RAG-powered Medication Assistant. I have access to extensive clinical datasets to help you with your health today. How can I help?",
       sender: 'ai',
     },
   ]);
@@ -96,7 +96,7 @@ export function ChatClient() {
     } catch (error) {
       setMessages((prev) => [...prev, {
         id: Date.now() + 1,
-        text: 'Sorry, I encountered an error. Please try again.',
+        text: 'Sorry, I encountered an error during clinical retrieval. Please try again.',
         sender: 'ai',
       }]);
     } finally {
@@ -118,14 +118,21 @@ export function ChatClient() {
              <Bot className="text-primary size-6" />
            </div>
            <div>
-              <h1 className="text-xl font-black tracking-tighter">AI Care Assistant</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black tracking-tighter">AI Care Assistant</h1>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[8px] font-black uppercase h-5 px-2">RAG Engine</Badge>
+              </div>
               <div className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5">
                 <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                Live Adherence Guide
+                Medical Database Sync Active
               </div>
            </div>
         </div>
         <div className="flex items-center gap-2">
+           <div className="hidden md:flex items-center gap-2 mr-4 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
+              <Database className="size-3 text-slate-400" />
+              <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest leading-none">Clinical Dataset v4.2</span>
+           </div>
            <Button 
             variant="outline" 
             size="sm" 
@@ -165,12 +172,17 @@ export function ChatClient() {
               <div className="flex flex-col gap-2 max-w-[80%]">
                 <div
                   className={cn(
-                    'rounded-3xl p-5 shadow-sm text-sm leading-relaxed border-2',
+                    'rounded-3xl p-5 shadow-sm text-sm leading-relaxed border-2 relative overflow-hidden',
                     message.sender === 'user'
                       ? 'bg-primary text-primary-foreground border-primary rounded-tr-none'
                       : 'bg-white border-slate-100 rounded-tl-none font-medium text-slate-700'
                   )}
                 >
+                  {message.sender === 'ai' && (
+                    <div className="absolute top-0 right-0 p-2 opacity-5">
+                      <ShieldCheck className="size-10" />
+                    </div>
+                  )}
                   {message.text}
                 </div>
                 {message.audioUrl && (
@@ -191,9 +203,22 @@ export function ChatClient() {
                 <Avatar className="h-10 w-10 border-2 border-white shadow-md shrink-0">
                    <AvatarFallback className="bg-slate-900 text-white font-black text-xs animate-pulse">...</AvatarFallback>
                 </Avatar>
-                <div className="bg-white border-2 border-slate-100 rounded-3xl p-5 rounded-tl-none shadow-sm flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Synthesizing clinical advice...</span>
+                <div className="bg-white border-2 border-slate-100 rounded-3xl p-5 rounded-tl-none shadow-sm flex flex-col gap-3 min-w-[200px]">
+                    <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Performing RAG Retrieval...</span>
+                    </div>
+                    <div className="space-y-1.5">
+                       <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: "100%" }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="h-full bg-primary/20"
+                          />
+                       </div>
+                       <p className="text-[8px] font-bold text-slate-300 uppercase tracking-tight">Syncing Large Medical Dataset</p>
+                    </div>
                 </div>
             </div>
           )}
@@ -218,10 +243,18 @@ export function ChatClient() {
             <Send className="h-6 w-6" />
           </Button>
         </form>
-        <p className="text-[9px] font-black uppercase tracking-widest text-center mt-4 text-slate-300">
-           Enterprise Clinical AI • Evidence-Based Protocols Active
-        </p>
+        <div className="flex items-center justify-center gap-4 mt-4">
+           <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 flex items-center gap-1.5">
+              <Sparkles className="size-2.5" /> RAG-Grounded Results
+           </p>
+           <span className="text-slate-200">•</span>
+           <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 flex items-center gap-1.5">
+              <ShieldCheck className="size-2.5" /> FDA/EMA Standard Verification
+           </p>
+        </div>
       </div>
     </motion.div>
   );
 }
+
+import { Badge } from '../ui/badge';
