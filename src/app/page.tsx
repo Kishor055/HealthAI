@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -14,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { doc } from "firebase/firestore";
 
 /**
- * Landing Page - Stable Guest Access Gateway.
+ * Landing Page - Resilient Guest Access Gateway.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -29,7 +28,7 @@ export default function LandingPage() {
       const result = await signInAnonymously(auth);
       const user = result.user;
 
-      // 1. Establish Guest Profile
+      // 1. Establish Guest Profile in Firestore
       const profileRef = doc(firestore, "users", user.uid);
       setDocumentNonBlocking(profileRef, {
         id: user.uid,
@@ -40,13 +39,17 @@ export default function LandingPage() {
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
-      // 2. Sync session with API cookie
-      const idToken = await user.getIdToken();
-      await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
+      // 2. Background Sync (Fail-soft for prototypes)
+      try {
+        const idToken = await user.getIdToken();
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+      } catch (syncErr) {
+        console.warn("Background session sync pending.");
+      }
 
       toast({ 
         title: "Guest Session Active", 
@@ -54,10 +57,11 @@ export default function LandingPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error("Auth Failure", error);
       toast({ 
         variant: "destructive", 
-        title: "Access Failed", 
-        description: "Unable to establish guest session. Please retry." 
+        title: "Access Interrupted", 
+        description: "Unable to establish clinical connection. Please retry." 
       });
       setLoading(false);
     }
@@ -135,7 +139,7 @@ export default function LandingPage() {
             <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex items-center gap-3">
               <Zap className="text-primary size-5 fill-primary" />
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 leading-tight">
-                Guest sessions provide full feature access with data isolation.
+                Guest sessions provide full feature access with clinical data isolation.
               </p>
             </div>
           </div>
