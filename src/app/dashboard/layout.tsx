@@ -1,28 +1,21 @@
+
 "use client";
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
 /**
- * DashboardLayout with strict Authentication gating.
+ * DashboardLayout - AUTH GATING REMOVED for active prototyping.
  */
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
-
-  React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
+  const { isUserLoading } = useUser();
 
   if (isUserLoading) {
     return (
@@ -31,8 +24,6 @@ export default function DashboardLayout({
       </div>
     );
   }
-
-  if (!user) return null;
 
   return (
     <div className="min-h-screen w-full bg-background flex flex-col md:flex-row">
