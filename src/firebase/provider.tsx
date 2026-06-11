@@ -146,17 +146,8 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 }
 
 /**
- * PROTOTYPE_USER fallback ensures the dashboard remains active even when login is "Off".
- */
-const MOCK_PROTOTYPE_USER = {
-  uid: 'prototype-clinical-node',
-  email: 'admin@healthai.pro',
-  displayName: 'Prototype Administrator',
-} as any;
-
-/**
  * Hook specifically for accessing the authenticated user's state.
- * Updated: In Prototype mode, this returns a MOCK user if no one is logged in.
+ * Removed prototype fallback to support explicit Guest Login System.
  */
 export const useUser = (): UserHookResult => {
   const context = useContext(FirebaseContext);
@@ -166,8 +157,8 @@ export const useUser = (): UserHookResult => {
   }
 
   return { 
-    user: context.user || MOCK_PROTOTYPE_USER, 
-    isUserLoading: false, 
-    userError: null 
+    user: context.user, 
+    isUserLoading: context.isUserLoading, 
+    userError: context.userError 
   };
 };
