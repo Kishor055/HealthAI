@@ -35,11 +35,13 @@ import {
   AlertCircle,
   Trophy,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Zap,
+  Lock
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { query, collection, orderBy, limit } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { query, collection, orderBy, limit, doc } from 'firebase/firestore';
 import { analyzeHealthTrends, HealthTrendOutput } from "@/ai/flows/analyze-health-trends";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -64,6 +66,14 @@ export default function DashboardPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "users", user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: profile } = useDoc(profileRef);
+  const isAdmin = profile?.role === 'admin' || user?.email === 'kishorkakde026@gmail.com';
 
   const vitalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -115,6 +125,33 @@ export default function DashboardPage() {
       <MedicalIdDialog open={isIdOpen} onOpenChange={setIsIdOpen} />
 
       <div className="flex flex-col gap-8 p-4 sm:p-10 max-w-[1400px] mx-auto w-full">
+        {isAdmin && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-slate-900 rounded-3xl border-2 border-primary/20 flex items-center justify-between shadow-2xl overflow-hidden relative"
+          >
+             <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+             <div className="flex items-center gap-4 relative z-10">
+                <div className="size-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shadow-inner">
+                   <ShieldCheck className="size-6" />
+                </div>
+                <div>
+                   <h2 className="text-lg font-black text-white uppercase tracking-tighter leading-none mb-1">Administrative Node Active</h2>
+                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Root Authority System Engaged • making changes active</p>
+                </div>
+             </div>
+             <div className="flex gap-2 relative z-10">
+                <Button size="sm" variant="outline" className="rounded-xl border-white/20 text-white font-black text-[10px] uppercase h-10 px-6 bg-white/5 hover:bg-white/10">
+                   <Activity className="size-3 mr-2" /> Global Stats
+                </Button>
+                <Button size="sm" variant="outline" className="rounded-xl border-white/20 text-white font-black text-[10px] uppercase h-10 px-6 bg-white/5 hover:bg-white/10">
+                   <Lock className="size-3 mr-2" /> Security Log
+                </Button>
+             </div>
+          </motion.div>
+        )}
+
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="space-y-6 flex-1 w-full">
             <WelcomeHeader />
