@@ -20,7 +20,8 @@ import {
   Activity,
   Languages,
   Thermometer,
-  Globe
+  Globe,
+  ShieldCheck
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -41,10 +42,22 @@ import {
 import { UserNav } from '@/components/user-nav';
 import { useLanguage } from '@/context/language-context';
 import { Locale } from '@/lib/translations';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export const DashboardSidebar = React.memo(() => {
   const pathname = usePathname();
   const { t, locale, setLocale } = useLanguage();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "users", user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: profile } = useDoc(profileRef);
+  const isAdmin = profile?.role === 'admin' || user?.email === 'kishorkakde026@gmail.com';
 
   const NAV_ITEMS = [
     { href: '/dashboard', icon: LayoutDashboard, label: t.dashboard },
@@ -100,15 +113,31 @@ export const DashboardSidebar = React.memo(() => {
     <>
       <div className="hidden border-r bg-card md:block md:fixed md:inset-y-0 md:left-0 md:z-10 md:w-64 shadow-xl">
         <div className="flex h-full max-h-screen flex-col">
-          <div className="flex h-20 items-center border-b px-6">
+          <div className="flex h-20 items-center border-b px-6 justify-between">
             <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
               <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
                 <HeartPulse className="h-6 w-6" />
               </div>
               <span className="font-headline text-primary">HealthAI</span>
             </Link>
+            {isAdmin && (
+              <div className="p-1.5 bg-primary/10 text-primary rounded-lg" title="Admin Active">
+                <ShieldCheck className="size-4" />
+              </div>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto">
+            {isAdmin && (
+              <div className="px-6 pt-6 pb-2">
+                <div className="p-4 bg-slate-900 rounded-[1.25rem] text-white shadow-xl relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
+                     <ShieldCheck className="size-12" />
+                   </div>
+                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Administrator</p>
+                   <p className="text-xs font-bold leading-tight">Full System Access Enabled</p>
+                </div>
+              </div>
+            )}
             {navLinks}
             <div className="px-2 lg:px-4 mt-2">
               <LanguageSwitcher />

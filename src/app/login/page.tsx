@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Loader2, ChevronLeft, ShieldCheck, Mail, Lock } from "lucide-react";
+import { Loader2, ChevronLeft, ShieldCheck, Mail, Lock, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc } from "firebase/firestore";
 
 /**
- * Proper Login Page.
- * Mandatory authentication gate for the Clinical Portal.
+ * Enhanced Login Page with Admin Detection.
+ * Credentials: kishorkakde026@gmail.com / Kishor@1777
  */
 export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   
   const [mounted, setMounted] = React.useState(false);
@@ -40,10 +42,23 @@ export default function LoginPage() {
     if (!formData.email || !formData.password) return;
     setLoading(true);
 
+    // Specific Admin Check
+    const isAdmin = formData.email === "kishorkakde026@gmail.com" && formData.password === "Kishor@1777";
+
     try {
       const result = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      const idToken = await result.user.getIdToken();
+      const user = result.user;
+      const idToken = await user.getIdToken();
       
+      // If Admin, ensure role is synced in Firestore
+      if (isAdmin) {
+        setDocumentNonBlocking(doc(firestore, "users", user.uid), {
+          role: 'admin',
+          lastAdminLogin: new Date().toISOString(),
+          hasFullAccess: true
+        }, { merge: true });
+      }
+
       // Sync session with Next.js middleware
       await fetch('/api/auth/session', {
         method: 'POST',
@@ -51,7 +66,11 @@ export default function LoginPage() {
         body: JSON.stringify({ idToken }),
       });
 
-      toast({ title: "Access Granted", description: "Identity verified. Opening clinical portal." });
+      toast({ 
+        title: isAdmin ? "Admin Access Granted" : "Access Granted", 
+        description: isAdmin ? "System Administrator verified. Full access active." : "Identity verified. Opening clinical portal." 
+      });
+      
       router.push('/dashboard');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Login Failed", description: error.message || "Invalid credentials." });
@@ -106,7 +125,7 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Email Address</Label>
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Institutional Email</Label>
                   <Input
                     type="email"
                     placeholder="name@healthcare.com"
@@ -118,7 +137,7 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Password</Label>
+                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Security Password</Label>
                     <button type="button" className="text-[9px] font-black text-primary uppercase hover:underline">Forgot?</button>
                   </div>
                   <Input
@@ -135,6 +154,13 @@ export default function LoginPage() {
               <Button className="w-full h-14 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" /> : "Access Portal"}
               </Button>
+
+              {formData.email === "kishorkakde026@gmail.com" && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                   <Zap className="size-4 text-amber-600 animate-pulse" />
+                   <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Admin Credentials Detected</p>
+                </div>
+              )}
 
               <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
