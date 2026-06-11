@@ -1,8 +1,9 @@
+
 "use client";
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { HeartPulse, ShieldCheck, Zap, ArrowRight, Lock, Loader2 } from 'lucide-react';
+import { HeartPulse, ShieldCheck, Zap, ArrowRight, UserCircle, Loader2 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,7 @@ import { signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 /**
- * Enhanced Landing Page for HealthAI.
- * Features "Instant Portal Access" for rapid clinical prototyping.
+ * Landing Page - Guest Access Login System.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -21,10 +21,9 @@ export default function LandingPage() {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
 
-  const handleInstantAccess = async () => {
+  const handleGuestAccess = async () => {
     setLoading(true);
     try {
-      // Direct entrance logic
       const result = await signInAnonymously(auth);
       const idToken = await result.user.getIdToken();
       
@@ -35,10 +34,13 @@ export default function LandingPage() {
         body: JSON.stringify({ idToken }),
       });
 
-      toast({ title: "Portal Opening", description: "Identity synchronized. Redirecting to clinical dashboard." });
+      toast({ 
+        title: "Guest Session Active", 
+        description: "Standard clinical node synchronized. Redirecting." 
+      });
       router.push('/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Access Failed", description: error.message });
+      toast({ variant: "destructive", title: "Access Failed", description: "Unable to establish guest session." });
       setLoading(false);
     }
   };
@@ -94,34 +96,28 @@ export default function LandingPage() {
           
           <div className="bg-card p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black uppercase tracking-tight">Clinical Access</h2>
-              <p className="text-sm text-muted-foreground font-medium">Instantly access your AI-managed health profile.</p>
+              <h2 className="text-2xl font-black uppercase tracking-tight">Clinical Gateway</h2>
+              <p className="text-sm text-muted-foreground font-medium">Choose your access protocol to continue.</p>
             </div>
 
             <div className="space-y-4">
               <Button 
-                onClick={handleInstantAccess}
+                onClick={handleGuestAccess}
                 disabled={loading}
                 className="w-full h-16 text-xl font-black shadow-lg shadow-primary/20 rounded-2xl group transition-all hover:scale-105 bg-primary"
               >
-                {loading ? <Loader2 className="animate-spin mr-2" /> : "Open Portal"} 
-                {!loading && <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />}
+                {loading ? <Loader2 className="animate-spin mr-2" /> : <><UserCircle className="size-6 mr-3" /> Guest Access</>} 
               </Button>
               
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border-2" onClick={() => router.push('/login')}>
-                  Custom Login
-                </Button>
-                <Button variant="outline" className="h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border-2" onClick={() => router.push('/signup')}>
-                  New Account
-                </Button>
-              </div>
+              <Button variant="outline" className="w-full h-14 rounded-xl text-[11px] font-black uppercase tracking-widest border-2" onClick={() => router.push('/login')}>
+                Clinical Node Login
+              </Button>
             </div>
 
             <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex items-center gap-3">
               <Zap className="text-primary size-5 fill-primary" />
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 leading-tight">
-                SECURE PROTOCOL: Anonymous sessions are encrypted and data-isolated by default.
+                Guest sessions are encrypted and data-isolated by default.
               </p>
             </div>
           </div>
