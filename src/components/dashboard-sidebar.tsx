@@ -29,6 +29,9 @@ import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import {
@@ -157,6 +160,10 @@ export const DashboardSidebar = React.memo(() => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0 w-72 border-r">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Navigation Menu</SheetTitle>
+                  <SheetDescription>Access clinical portal modules and settings.</SheetDescription>
+                </SheetHeader>
                 <div className="flex h-20 items-center border-b px-6">
                     <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
                        <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center">
