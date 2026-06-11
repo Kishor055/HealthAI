@@ -1,80 +1,38 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Dependencies
+node_modules/
 
-# testing
-/coverage
+# Next.js
+.next/
+out/
 
-# next.js
-/.next/
-/out/
+# Build
+build/
+dist/
 
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-.genkit/*
-.env*
-
-# firebase
-firebase-debug.log
-firestore-debug.log
-# Environment files
+# Environment Variables (Ignore all API keys)
 .env
 .env.local
 .env.development.local
+.env.test.local
 .env.production.local
 
-# API Keys
-apikeys.txt
-secret.json
-serviceAccountKey.json
-
-# Firebase
-firebase-adminsdk.json
-
-# Python
-__pycache__/
-*.pyc
-venv/
-.venv/
-
-# Node Modules
-node_modules/
-
-# Build Files
-dist/
-build/
+# Firebase Configuration (Security requirement)
+src/firebase/config.ts
+**/config.ts
 
 # Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
 *.log
 
-# OS Files
+# System Files
 .DS_Store
 Thumbs.db
+<<<<<<< HEAD
 
 config.ts
+=======
+>>>>>>> 428d4f4 (In the gitignore file add Ignore all API_KEY AND CONFIG.TS FILE)
