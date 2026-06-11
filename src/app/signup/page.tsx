@@ -16,8 +16,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, getFirestore } from "firebase/firestore";
 
 /**
- * Proper Signup Page.
- * Secure account creation for clinical users.
+ * Proper Signup Page with Admin Auto-Detection.
  */
 export default function SignupPage() {
   const router = useRouter();
@@ -49,14 +48,16 @@ export default function SignupPage() {
       if (user) {
         await updateProfile(user, { displayName: formData.name });
         
-        // Setup initial user profile in Firestore
+        const isAdmin = formData.email === "kishorkakde026@gmail.com";
+
+        // Setup initial user profile in Firestore with proper role assignment
         setDocumentNonBlocking(doc(db, 'users', user.uid), {
           id: user.uid,
           email: formData.email,
           displayName: formData.name,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          role: 'user',
+          role: isAdmin ? 'admin' : 'user',
           bloodType: 'O+',
           allergies: 'None recorded'
         }, { merge: true });
@@ -68,7 +69,7 @@ export default function SignupPage() {
           body: JSON.stringify({ idToken }),
         });
 
-        toast({ title: "Account Secured", description: "Clinical profile established. Opening dashboard." });
+        toast({ title: isAdmin ? "Admin Profile Secured" : "Account Secured", description: "Clinical profile established. Opening dashboard." });
         router.push('/dashboard');
       }
     } catch (error: any) {

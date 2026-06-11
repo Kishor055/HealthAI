@@ -12,11 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc } from "firebase/firestore";
 
 /**
- * Enhanced Login Page with Admin Detection.
+ * Enhanced Login Page with Admin Auto-Provisioning.
  * Credentials: kishorkakde026@gmail.com / Kishor@1777
  */
 export default function LoginPage() {
@@ -42,20 +42,37 @@ export default function LoginPage() {
     if (!formData.email || !formData.password) return;
     setLoading(true);
 
-    // Specific Admin Check
     const isAdmin = formData.email === "kishorkakde026@gmail.com" && formData.password === "Kishor@1777";
 
     try {
-      const result = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = result.user;
+      let user;
+      try {
+        // Attempt standard login
+        const result = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        user = result.user;
+      } catch (loginError: any) {
+        // Auto-provision admin if they haven't registered yet
+        if (isAdmin && (loginError.code === 'auth/invalid-credential' || loginError.code === 'auth/user-not-found')) {
+          const result = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+          user = result.user;
+        } else {
+          throw loginError;
+        }
+      }
+
+      if (!user) throw new Error("Authentication failed");
+
       const idToken = await user.getIdToken();
       
-      // If Admin, ensure role is synced in Firestore
+      // Ensure Admin role is strictly enforced in Firestore
       if (isAdmin) {
         setDocumentNonBlocking(doc(firestore, "users", user.uid), {
+          id: user.uid,
+          email: user.email,
           role: 'admin',
           lastAdminLogin: new Date().toISOString(),
-          hasFullAccess: true
+          hasFullAccess: true,
+          updatedAt: new Date().toISOString()
         }, { merge: true });
       }
 
@@ -73,7 +90,11 @@ export default function LoginPage() {
       
       router.push('/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Login Failed", description: error.message || "Invalid credentials." });
+      toast({ 
+        variant: "destructive", 
+        title: "Login Failed", 
+        description: error.code === 'auth/invalid-credential' ? "Invalid clinical credentials. Please verify your password." : error.message 
+      });
       setLoading(false);
     }
   };
@@ -156,10 +177,10 @@ export default function LoginPage() {
               </Button>
 
               {formData.email === "kishorkakde026@gmail.com" && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
                    <Zap className="size-4 text-amber-600 animate-pulse" />
-                   <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Admin Credentials Detected</p>
-                </div>
+                   <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest text-center flex-1">Administrative Protocol Detected</p>
+                </motion.div>
               )}
 
               <div className="relative py-2">
