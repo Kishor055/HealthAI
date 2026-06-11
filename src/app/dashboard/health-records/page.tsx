@@ -176,7 +176,7 @@ This archive is encrypted and should be handled as sensitive PHI.
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
                     <defs>
-                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorValue" x1="0" x1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
