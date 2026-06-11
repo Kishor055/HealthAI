@@ -8,16 +8,18 @@ import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { placeholderImages } from '@/lib/placeholder-images';
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { doc } from "firebase/firestore";
 
 /**
- * Landing Page - Guest Access Login System.
+ * Landing Page - Stable Guest Access Gateway.
  */
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
 
@@ -25,9 +27,21 @@ export default function LandingPage() {
     setLoading(true);
     try {
       const result = await signInAnonymously(auth);
-      const idToken = await result.user.getIdToken();
-      
-      // Sync session with Next.js middleware
+      const user = result.user;
+
+      // 1. Establish Guest Profile
+      const profileRef = doc(firestore, "users", user.uid);
+      setDocumentNonBlocking(profileRef, {
+        id: user.uid,
+        email: "guest@healthai.internal",
+        role: "user",
+        displayName: "Guest User",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      // 2. Sync session with API cookie
+      const idToken = await user.getIdToken();
       await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,11 +50,15 @@ export default function LandingPage() {
 
       toast({ 
         title: "Guest Session Active", 
-        description: "Standard clinical node synchronized. Redirecting." 
+        description: "Clinical portal established. Redirecting." 
       });
       router.push('/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Access Failed", description: "Unable to establish guest session." });
+      toast({ 
+        variant: "destructive", 
+        title: "Access Failed", 
+        description: "Unable to establish guest session. Please retry." 
+      });
       setLoading(false);
     }
   };
@@ -49,7 +67,7 @@ export default function LandingPage() {
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-background overflow-hidden font-body">
       <div className="hidden bg-muted lg:block relative">
         <Image
-          src={placeholderImages.find(img => img.id === "login-hero")?.imageUrl || "/placeholder.svg"}
+          src={placeholderImages.find(img => img.id === "login-hero")?.imageUrl || "https://images.unsplash.com/photo-1683934808546-cfea6e3d7d56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"}
           alt="Healthcare background"
           fill
           className="object-cover"
@@ -96,17 +114,17 @@ export default function LandingPage() {
           
           <div className="bg-card p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black uppercase tracking-tight">Clinical Gateway</h2>
-              <p className="text-sm text-muted-foreground font-medium">Choose your access protocol to continue.</p>
+              <h2 className="text-2xl font-black uppercase tracking-tight">Portal Access</h2>
+              <p className="text-sm text-muted-foreground font-medium">Select your entry protocol to begin.</p>
             </div>
 
             <div className="space-y-4">
               <Button 
                 onClick={handleGuestAccess}
                 disabled={loading}
-                className="w-full h-16 text-xl font-black shadow-lg shadow-primary/20 rounded-2xl group transition-all hover:scale-105 bg-primary"
+                className="w-full h-16 text-xl font-black shadow-lg shadow-primary/20 rounded-2xl group transition-all hover:scale-[1.02] bg-primary"
               >
-                {loading ? <Loader2 className="animate-spin mr-2" /> : <><UserCircle className="size-6 mr-3" /> Guest Access</>} 
+                {loading ? <Loader2 className="animate-spin mr-2" /> : <><UserCircle className="size-6 mr-3 group-hover:rotate-12 transition-transform" /> Open Portal</>} 
               </Button>
               
               <Button variant="outline" className="w-full h-14 rounded-xl text-[11px] font-black uppercase tracking-widest border-2" onClick={() => router.push('/login')}>
@@ -117,7 +135,7 @@ export default function LandingPage() {
             <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex items-center gap-3">
               <Zap className="text-primary size-5 fill-primary" />
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 leading-tight">
-                Guest sessions are encrypted and data-isolated by default.
+                Guest sessions provide full feature access with data isolation.
               </p>
             </div>
           </div>
