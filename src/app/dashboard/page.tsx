@@ -138,7 +138,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                    <h2 className="text-lg font-black text-white uppercase tracking-tighter leading-none mb-1">Administrative Node Active</h2>
-                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Root Authority System Engaged • making changes active</p>
+                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Root Authority System Engaged • Global Changes Active</p>
                 </div>
              </div>
              <div className="flex gap-2 relative z-10">
