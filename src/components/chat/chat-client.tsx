@@ -119,10 +119,10 @@ export function ChatClient() {
            </div>
            <div>
               <h1 className="text-xl font-black tracking-tighter">AI Care Assistant</h1>
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5">
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5">
                 <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 Live Adherence Guide
-              </p>
+              </div>
            </div>
         </div>
         <div className="flex items-center gap-2">
