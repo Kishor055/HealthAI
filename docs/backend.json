@@ -128,6 +128,21 @@
         "biomarkers": { "type": "array" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "SymptomCheck": {
+      "title": "SymptomCheck",
+      "type": "object",
+      "description": "A record of an AI-driven symptom analysis session.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userInput": { "type": "string" },
+        "identifiedSymptoms": { "type": "array", "items": { "type": "string" } },
+        "possibleConditions": { "type": "array" },
+        "riskLevel": { "type": "string", "enum": ["Low Risk", "Moderate Risk", "High Risk", "Emergency"] },
+        "recommendedActions": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -173,6 +188,10 @@
     "/users/{userId}/labReports/{reportId}": {
       "schema": { "$ref": "#/backend/entities/LabReport" },
       "description": "History of analyzed lab reports."
+    },
+    "/users/{userId}/symptomChecks/{checkId}": {
+      "schema": { "$ref": "#/backend/entities/SymptomCheck" },
+      "description": "History of AI-powered symptom triage."
     }
   }
 }
