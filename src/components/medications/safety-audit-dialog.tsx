@@ -11,9 +11,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Loader2, AlertTriangle, ShieldAlert, CheckCircle2, Pill } from "lucide-react";
+import { ShieldCheck, Loader2, AlertTriangle, ShieldAlert, CheckCircle2, Pill, RefreshCw } from "lucide-react";
 import { detectDrugInteractions, DetectDrugInteractionsOutput } from "@/ai/flows/detect-drug-interactions";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface SafetyAuditDialogProps {
@@ -33,7 +33,7 @@ export function SafetyAuditDialog({ open, onOpenChange, medications }: SafetyAud
 
     try {
       const activeMeds = medications.filter(m => m.isActive).map(m => m.name);
-      // For the audit, we treat all current meds as "new" or check them against each other
+      // For the audit, we check meds against each other
       const result = await detectDrugInteractions({
         currentMedications: activeMeds.slice(0, Math.floor(activeMeds.length / 2)),
         newMedications: activeMeds.slice(Math.floor(activeMeds.length / 2))
@@ -85,7 +85,7 @@ export function SafetyAuditDialog({ open, onOpenChange, medications }: SafetyAud
 
           <DialogFooter className="pt-4">
             <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold" onClick={() => onOpenChange(false)}>Close</Button>
-            <Button className="flex-2 rounded-xl h-12 font-black shadow-lg shadow-primary/20" onClick={runAudit} disabled={isAnalyzing}>
+            <Button className="flex-[2] rounded-xl h-12 font-black shadow-lg shadow-primary/20" onClick={runAudit} disabled={isAnalyzing}>
               {isAnalyzing ? <Loader2 className="animate-spin mr-2" /> : <RefreshCw className="mr-2 h-4 w-4" />}
               Re-Run Audit
             </Button>
@@ -140,5 +140,3 @@ function ScrollResults({ results }: { results: DetectDrugInteractionsOutput }) {
     </div>
   );
 }
-
-import { RefreshCw } from "lucide-react";

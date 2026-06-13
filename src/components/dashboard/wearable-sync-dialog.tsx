@@ -15,12 +15,11 @@ import {
   Bluetooth, 
   CheckCircle2, 
   Loader2, 
-  SmartphoneNfc,
+  Smartphone,
   Activity,
   HeartPulse,
   Zap,
   Search,
-  Rss,
   ShieldCheck,
   Stethoscope,
   Microscope,
@@ -44,16 +43,22 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
   const { toast } = useToast();
 
   React.useEffect(() => {
-    if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
-      // @ts-ignore
-      navigator.bluetooth.getAvailability().then(available => {
-        setIsBluetoothAvailable(available);
-        if (!available) setStep('unsupported');
-      });
-    } else {
-      setIsBluetoothAvailable(false);
-      setStep('unsupported');
-    }
+    const checkBluetooth = async () => {
+      if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
+        try {
+          const available = await (navigator as any).bluetooth.getAvailability();
+          setIsBluetoothAvailable(available);
+          if (!available) setStep('unsupported');
+        } catch (e) {
+          setIsBluetoothAvailable(false);
+          setStep('unsupported');
+        }
+      } else {
+        setIsBluetoothAvailable(false);
+        setStep('unsupported');
+      }
+    };
+    checkBluetooth();
   }, []);
 
   const getTitle = () => {
@@ -76,12 +81,9 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
 
     try {
       setStep('scanning');
-      // Web Bluetooth API Request
-      // We look for heart rate sensors or any generic health device
-      // @ts-ignore
-      const device = await navigator.bluetooth.requestDevice({
+      const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: ['heart_rate', 'battery_service', 'cycling_speed_and_cadence']
+        optionalServices: ['heart_rate', 'battery_service']
       });
 
       if (device) {
@@ -89,15 +91,13 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
       }
     } catch (error: any) {
       console.warn("Bluetooth scan interrupted:", error);
-      if (error.name === 'NotFoundError') {
-        setStep('initial'); // User cancelled the picker
-      } else {
+      setStep('initial');
+      if (error.name !== 'NotFoundError') {
         toast({
           variant: "destructive",
           title: "Hardware Conflict",
           description: "Unable to access local Bluetooth radio. Ensure radio is powered on.",
         });
-        setStep('initial');
       }
     }
   };
@@ -106,7 +106,6 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
     setSelectedDevice(device);
     setStep('pairing');
     
-    // Simulate real clinical telemetry handshake protocol
     setTimeout(() => {
       setStep('diagnosing');
       setTimeout(() => {
@@ -121,16 +120,24 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
   };
 
   const handleClose = () => {
+    if (step === 'pairing' || step === 'diagnosing') return;
     onOpenChange(false);
-    // Reset state after transition
     setTimeout(() => {
       setStep(isBluetoothAvailable ? 'initial' : 'unsupported');
       setSelectedDevice(null);
     }, 300);
   };
 
+  const handleDialogChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      handleClose();
+    } else {
+      onOpenChange(true);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (step !== 'pairing' && step !== 'diagnosing') onOpenChange(v); }}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-[450px] overflow-hidden border-none p-0 bg-background/95 backdrop-blur-3xl shadow-2xl rounded-[2.5rem]">
         <div className="h-1.5 w-full bg-primary/20 absolute top-0 left-0" />
         
@@ -244,7 +251,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                     transition={{ repeat: Infinity, duration: 2 }}
                     className="size-32 bg-primary/10 rounded-full flex items-center justify-center"
                   >
-                    <SmartphoneNfc className="size-12 text-primary" />
+                    <Smartphone className="size-12 text-primary" />
                   </motion.div>
                   <motion.div 
                     animate={{ rotate: 360 }}
@@ -277,11 +284,9 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                   >
                     <Microscope className="size-12 text-accent" />
                   </motion.div>
-                  <motion.div 
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                     <div className="w-48 h-48 border-4 border-accent/20 rounded-full border-t-accent animate-spin-slow" />
-                  </motion.div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                     <div className="w-48 h-48 border-4 border-accent/20 rounded-full border-t-accent animate-spin" style={{ animationDuration: '3s' }} />
+                  </div>
                 </div>
                 <div>
                   <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Sensor Calibration</h3>
