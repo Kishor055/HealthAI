@@ -146,9 +146,9 @@ export function ChatClient() {
                 <h1 className="text-2xl font-black tracking-tighter">HealthAI Copilot</h1>
                 <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[8px] font-black uppercase h-5 px-2">RAG Intelligence</Badge>
               </div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mt-0.5">
-                <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                Personalized Context Sync Active
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personalized Context Sync Active</span>
               </div>
            </div>
         </div>
@@ -339,13 +339,13 @@ export function ChatClient() {
           </Button>
         </form>
         <div className="flex items-center justify-center gap-6 mt-6">
-           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 flex items-center gap-2">
+           <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 flex items-center gap-2">
               <Sparkles className="size-3 text-primary/40" /> RAG Grounded Intelligence
-           </p>
+           </div>
            <span className="text-slate-200">|</span>
-           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 flex items-center gap-2">
+           <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 flex items-center gap-2">
               <ShieldCheck className="size-3 text-emerald-500/40" /> Personalized Context Active
-           </p>
+           </div>
         </div>
       </div>
     </motion.div>

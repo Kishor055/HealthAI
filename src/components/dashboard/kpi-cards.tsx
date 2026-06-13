@@ -11,7 +11,7 @@ import {
 import { Pill, CalendarCheck, ShieldCheck, Activity, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { query, collection, where, getCountFromServer } from 'firebase/firestore';
+import { query, collection, where, limit } from 'firebase/firestore';
 
 export function KpiCards() {
   const { user } = useUser();
@@ -109,5 +109,3 @@ export function KpiCards() {
     </div>
   );
 }
-
-import { limit } from "firebase/firestore";
