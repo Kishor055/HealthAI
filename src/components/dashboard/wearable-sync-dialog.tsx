@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -21,13 +20,11 @@ import {
   Zap,
   Search,
   ShieldCheck,
-  Stethoscope,
   Microscope,
   Wifi,
   AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface WearableSyncDialogProps {
@@ -36,8 +33,10 @@ interface WearableSyncDialogProps {
   onConnect: (device: string) => void;
 }
 
+type SyncStep = 'initial' | 'scanning' | 'pairing' | 'diagnosing' | 'success' | 'unsupported';
+
 export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSyncDialogProps) {
-  const [step, setStep] = React.useState<'initial' | 'scanning' | 'pairing' | 'diagnosing' | 'success' | 'unsupported'>('initial');
+  const [step, setStep] = React.useState<SyncStep>('initial');
   const [selectedDevice, setSelectedDevice] = React.useState<string | null>(null);
   const [isBluetoothAvailable, setIsBluetoothAvailable] = React.useState<boolean | null>(null);
   const { toast } = useToast();
@@ -354,7 +353,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </DialogContent>
     </Dialog>
   );
 }
