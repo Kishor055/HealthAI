@@ -3,12 +3,44 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     /**
-     * GLOBAL PROTOTYPING BYPASS
-     * Forced Deployment Trigger: 2024-06-01T16:00:00Z
-     * This rule ensures unrestricted access to medical collections during active development.
+     * ENTERPRISE SECURITY POLICY
+     * HealthAI PRO - Clinical Isolation Protocol
      */
-    match /{allPaths=**} {
-      allow read, write: if true;
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return request.auth.token.email == 'kishorkakde026@gmail.com' || 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // User Profiles & Roles
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow write: if isSignedIn() && (isOwner(userId) || isAdmin());
+      
+      // Clinical Collections
+      match /healthRecords/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /appointments/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /medicines/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /medicationIntakes/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /emergencyContacts/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /reminders/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /prescriptions/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /labReports/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /symptomChecks/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      match /preferredProviders/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+    }
+
+    // Auth Logs (Internal Use)
+    match /otp_logs/{logId} {
+      allow read, write: if isAdmin();
     }
   }
 }

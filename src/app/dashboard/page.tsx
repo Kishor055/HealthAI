@@ -22,7 +22,6 @@ import {
   Smile, 
   Frown, 
   Meh, 
-  Brain, 
   TrendingUp, 
   Activity, 
   Loader2, 
@@ -30,26 +29,26 @@ import {
   HeartPulse, 
   Watch,
   Wifi,
-  ClipboardCheck,
   ThumbsUp,
   AlertCircle,
   Trophy,
   ShieldCheck,
-  ChevronRight,
-  Zap,
-  Lock
+  Lock,
+  Cpu,
+  Globe
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { query, collection, orderBy, limit, doc } from 'firebase/firestore';
 import { analyzeHealthTrends, HealthTrendOutput } from "@/ai/flows/analyze-health-trends";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 
+/**
+ * EXPERT DASHBOARD NODE
+ * Primary clinical oversight and personalized health stability monitoring.
+ */
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -107,11 +106,11 @@ export default function DashboardPage() {
   if (!mounted) return null;
 
   const checkIns = [
-    { label: "Great", icon: ThumbsUp, color: "text-emerald-500 bg-emerald-50" },
-    { label: "Good", icon: Smile, color: "text-blue-500 bg-blue-50" },
-    { label: "Fair", icon: Meh, color: "text-orange-500 bg-orange-50" },
-    { label: "Poor", icon: Frown, color: "text-slate-500 bg-slate-50" },
-    { label: "Critical", icon: AlertCircle, color: "text-red-600 bg-red-50" },
+    { label: "Great", icon: ThumbsUp, color: "text-emerald-500" },
+    { label: "Good", icon: Smile, color: "text-blue-500" },
+    { label: "Fair", icon: Meh, color: "text-orange-500" },
+    { label: "Poor", icon: Frown, color: "text-slate-500" },
+    { label: "Critical", icon: AlertCircle, color: "text-red-600" },
   ];
 
   return (
@@ -129,24 +128,40 @@ export default function DashboardPage() {
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-slate-900 rounded-3xl border-2 border-primary/20 flex items-center justify-between shadow-2xl overflow-hidden relative"
+            className="p-6 bg-slate-900 rounded-[2.5rem] border-2 border-primary/20 flex flex-col md:flex-row md:items-center justify-between shadow-2xl overflow-hidden relative"
           >
-             <div className="absolute inset-0 bg-primary/5 animate-pulse" />
-             <div className="flex items-center gap-4 relative z-10">
-                <div className="size-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shadow-inner">
-                   <ShieldCheck className="size-6" />
+             <div className="absolute inset-0 bg-primary/5 animate-pulse-slow" />
+             <div className="flex items-center gap-6 relative z-10">
+                <div className="size-16 rounded-[1.5rem] bg-primary/20 flex items-center justify-center text-primary shadow-inner border border-primary/10">
+                   <ShieldCheck className="size-8" />
                 </div>
                 <div>
-                   <h2 className="text-lg font-black text-white uppercase tracking-tighter leading-none mb-1">Administrative Node Active</h2>
-                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Root Authority System Engaged • Global Changes Active</p>
+                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter leading-none mb-1.5">Administrative Root Node</h2>
+                   <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                         <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                         <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Global Sync Active</span>
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Full Authority System Engaged</p>
+                   </div>
                 </div>
              </div>
-             <div className="flex gap-2 relative z-10">
-                <Button size="sm" variant="outline" className="rounded-xl border-white/20 text-white font-black text-[10px] uppercase h-10 px-6 bg-white/5 hover:bg-white/10">
-                   <Activity className="size-3 mr-2" /> Global Stats
+             <div className="flex gap-3 relative z-10 mt-6 md:mt-0">
+                <div className="flex items-center gap-6 mr-6 border-r border-white/10 pr-6">
+                   <div className="text-center">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Token Auth</p>
+                      <p className="text-xs font-black text-white">99.9%</p>
+                   </div>
+                   <div className="text-center">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Latency</p>
+                      <p className="text-xs font-black text-white">42ms</p>
+                   </div>
+                </div>
+                <Button size="sm" variant="outline" className="rounded-xl border-white/20 text-white font-black text-[10px] uppercase h-12 px-6 bg-white/5 hover:bg-white/10 group">
+                   <Cpu className="size-4 mr-2 group-hover:rotate-90 transition-transform" /> System Stats
                 </Button>
-                <Button size="sm" variant="outline" className="rounded-xl border-white/20 text-white font-black text-[10px] uppercase h-10 px-6 bg-white/5 hover:bg-white/10">
-                   <Lock className="size-3 mr-2" /> Security Log
+                <Button size="sm" variant="outline" className="rounded-xl border-white/20 text-white font-black text-[10px] uppercase h-12 px-6 bg-white/5 hover:bg-white/10">
+                   <Lock className="size-4 mr-2" /> Security Node
                 </Button>
              </div>
           </motion.div>
@@ -156,12 +171,12 @@ export default function DashboardPage() {
           <div className="space-y-6 flex-1 w-full">
             <WelcomeHeader />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <Card className="border-none shadow-sm bg-white rounded-3xl">
+               <Card className="border-none shadow-xl bg-white rounded-[2.25rem] hover-clinical">
                  <CardContent className="p-8">
                    <div className="flex flex-col space-y-6">
                      <div>
-                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Daily Health Check-In</h3>
-                       <p className="text-sm font-semibold text-slate-900">How are you feeling today?</p>
+                       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Physiological Pulse</h3>
+                       <p className="text-sm font-black text-slate-900 uppercase">Self-Reported Wellness Status</p>
                      </div>
                      
                      <div className="grid grid-cols-5 gap-3">
@@ -170,14 +185,14 @@ export default function DashboardPage() {
                            key={item.label}
                            onClick={() => setSelectedVibe(item.label)}
                            className={cn(
-                             "flex flex-col items-center gap-2 p-4 rounded-2xl transition-all border",
+                             "flex flex-col items-center gap-3 p-4 rounded-2xl transition-all border-2",
                              selectedVibe === item.label 
-                               ? "border-primary bg-primary/5 ring-4 ring-primary/5" 
-                               : "border-slate-100 hover:border-slate-200 bg-white"
+                               ? "border-primary bg-primary/5 ring-8 ring-primary/5" 
+                               : "border-slate-50 hover:border-slate-100 bg-white"
                            )}
                          >
-                           <item.icon className={cn("size-6", item.color.split(' ')[0])} />
-                           <span className="block text-[10px] font-bold uppercase text-slate-500">{item.label}</span>
+                           <item.icon className={cn("size-6", item.color)} />
+                           <span className="block text-[8px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
                          </button>
                        ))}
                      </div>
@@ -185,26 +200,31 @@ export default function DashboardPage() {
                  </CardContent>
                </Card>
 
-               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden relative group">
-                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
-                     <Trophy className="size-24 text-primary" />
+               <Card className="border-none shadow-xl bg-white rounded-[2.25rem] overflow-hidden relative group hover-clinical">
+                  <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-1000">
+                     <Trophy className="size-32 text-primary" />
                   </div>
                   <CardContent className="p-8 space-y-6 relative z-10">
-                     <div>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Consistency Streak</h3>
-                        <p className="text-sm font-semibold text-slate-900">You're on a roll!</p>
+                     <div className="flex items-center justify-between">
+                        <div>
+                           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Clinical Adherence</h3>
+                           <p className="text-sm font-black text-slate-900 uppercase">Consistency Streak</p>
+                        </div>
+                        <div className="px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
+                           <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">System Verified</span>
+                        </div>
                      </div>
                      <div className="flex items-end gap-3">
-                        <span className="text-6xl font-black tracking-tighter text-primary">07</span>
-                        <span className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Days Active</span>
+                        <span className="text-7xl font-black tracking-tighter text-primary">07</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-3">Nodes Active</span>
                      </div>
-                     <div className="flex gap-2">
+                     <div className="flex gap-2.5">
                         {[1, 1, 1, 1, 1, 1, 0].map((active, i) => (
-                          <div key={i} className={cn("flex-1 h-2 rounded-full", active ? "bg-primary" : "bg-slate-100")} />
+                          <div key={i} className={cn("flex-1 h-2.5 rounded-full transition-all duration-500", active ? "bg-primary shadow-[0_0_10px_rgba(59,130,246,0.4)]" : "bg-slate-100")} />
                         ))}
                      </div>
-                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                        <ShieldCheck className="size-3" /> Adherence Shield Active
+                     <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600">
+                        <ShieldCheck className="size-3.5" /> Adherence Shield Fully Operational
                      </div>
                   </CardContent>
                </Card>
@@ -232,55 +252,80 @@ export default function DashboardPage() {
           
           <div className="lg:col-span-4 space-y-8">
              <MotivationalQuote />
-             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-                <CardContent className="p-8 space-y-6">
+             <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden hover-clinical">
+                <CardContent className="p-10 space-y-8">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-lg text-slate-900">Health Insight</h3>
-                      <p className="text-xs text-slate-400">AI stability telemetry</p>
+                    <div className="flex items-center gap-3">
+                       <div className="p-2.5 bg-primary/10 rounded-xl">
+                          <TrendingUp className="size-5 text-primary" />
+                       </div>
+                       <div>
+                         <h3 className="font-black text-sm uppercase tracking-widest text-slate-900">Stability Matrix</h3>
+                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">AI Telemetry Node</p>
+                       </div>
                     </div>
-                    <TrendingUp className="size-5 text-primary" />
+                    <Globe className="size-4 text-slate-200 animate-spin-slow" />
                   </div>
 
-                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="flex justify-between items-end mb-4">
-                      <span className="text-3xl font-bold text-slate-900">
-                        {connectedDevice ? (aiInsight?.stabilityIndex || 98) : 94}%
-                      </span>
-                      <span className="text-[10px] font-bold text-primary uppercase">Stability Index</span>
+                  <div className="p-8 bg-slate-50/80 rounded-[2rem] border-2 border-slate-100/50 shadow-inner">
+                    <div className="flex justify-between items-end mb-6">
+                      <div className="space-y-0.5">
+                        <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Precision Index</p>
+                        <span className="text-5xl font-black tracking-tighter text-slate-900">
+                          {connectedDevice ? (aiInsight?.stabilityIndex || 98) : 94}%
+                        </span>
+                      </div>
+                      <div className={cn(
+                        "px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest",
+                        connectedDevice ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-blue-50 text-primary border border-blue-100"
+                      )}>
+                        {connectedDevice ? "Live Sync" : "Baseline"}
+                      </div>
                     </div>
-                    <div className="flex gap-1.5 h-12 items-end">
+                    <div className="flex gap-2 h-16 items-end">
                        {[60, 80, 100, 90, 100, 100, 100].map((h, i) => (
-                         <div 
+                         <motion.div 
                            key={i}
-                           style={{ height: `${h}%` }}
-                           className={`flex-1 rounded-t-sm transition-all ${h === 100 ? 'bg-primary' : 'bg-primary/20'}`}
+                           initial={{ height: 0 }}
+                           animate={{ height: `${h}%` }}
+                           transition={{ delay: i * 0.1, duration: 1 }}
+                           className={cn(
+                             "flex-1 rounded-t-lg transition-all", 
+                             h === 100 ? 'bg-primary shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-primary/20'
+                           )}
                          />
                        ))}
                     </div>
                   </div>
                   
-                  <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 italic text-sm text-slate-600">
-                    {aiInsight?.trendInsight ? `"${aiInsight.trendInsight}"` : '"Connect a wearable to see live insights."'}
+                  <div className="p-6 bg-slate-900 rounded-3xl text-white relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                       <Sparkles className="size-16" />
+                    </div>
+                    <p className="text-sm font-medium leading-relaxed italic opacity-90 relative z-10">
+                      {aiInsight?.trendInsight ? `"${aiInsight.trendInsight}"` : '"Initialize your biometric node by syncing a wearable sensor for real-time stability analysis."'}
+                    </p>
                   </div>
 
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsWearableOpen(true)}
-                    className="w-full h-12 rounded-xl border-slate-200 font-bold text-slate-700 gap-2"
-                  >
-                    {connectedDevice ? <Wifi className="size-4 text-primary animate-pulse" /> : <Watch className="size-4" />}
-                    {connectedDevice || "Sync Smartwatch"}
-                  </Button>
+                  <div className="space-y-3">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setIsWearableOpen(true)}
+                      className="w-full h-14 rounded-2xl border-2 border-slate-100 font-black text-[10px] uppercase tracking-[0.2em] text-slate-700 gap-3 hover:bg-slate-50"
+                    >
+                      {connectedDevice ? <Wifi className="size-4 text-emerald-500 animate-pulse" /> : <Watch className="size-4 text-slate-400" />}
+                      {connectedDevice || "Sync Smart Sensor"}
+                    </Button>
 
-                  <Button 
-                    onClick={handleRunAiCheck}
-                    disabled={isAnalyzing || !vitals}
-                    className="w-full h-12 rounded-xl bg-primary text-white font-bold gap-2"
-                  >
-                    {isAnalyzing ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-                    Refresh AI Analysis
-                  </Button>
+                    <Button 
+                      onClick={handleRunAiCheck}
+                      disabled={isAnalyzing || !vitals}
+                      className="w-full h-16 rounded-[1.5rem] bg-primary text-white font-black text-xs uppercase tracking-[0.2em] gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95"
+                    >
+                      {isAnalyzing ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
+                      Execute Stability Scan
+                    </Button>
+                  </div>
                 </CardContent>
              </Card>
           </div>

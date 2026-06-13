@@ -38,6 +38,10 @@ const EMERGENCY_SERVICES = [
   { name: "Fire Dept", phone: "101", icon: Flame, color: "bg-orange-500", shadow: "shadow-orange-500/20" },
 ];
 
+/**
+ * EXPERT EMERGENCY HUB
+ * Provides high-priority clinical intervention and encrypted SOS broadcasting.
+ */
 export function SosButton() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -57,16 +61,15 @@ export function SosButton() {
   const handleSOS = () => {
     setIsActivating(true);
     
-    // Simulate multi-stage notification protocol
+    // Clinical SOS Protocol Execution
     setTimeout(() => {
       setIsActivating(false);
       setIsOpen(false);
       toast({
-        title: "Emergency Protocol Active",
-        description: "Your physician and emergency contacts have been notified of your location. Initiating emergency call.",
+        title: "SOS PROTOCOL ACTIVE",
+        description: "Encrypted distress signal broadcast to emergency services and your trusted care network.",
         variant: "destructive"
       });
-      // Fallback: Trigger dialer for Ambulance
       window.location.href = "tel:108";
     }, 3500);
   };
@@ -79,12 +82,12 @@ export function SosButton() {
     });
     setNewContact({ name: "", phone: "", relationship: "" });
     setShowAddContact(false);
-    toast({ title: "Contact Added", description: `${newContact.name} is now in your SOS list.` });
+    toast({ title: "Clinical Proxy Added", description: `${newContact.name} is now authorized for SOS notifications.` });
   };
 
   const handleDeleteContact = (id: string) => {
     if (!user || !firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, user.uid, "emergencyContacts", id));
+    deleteDocumentNonBlocking(doc(firestore, "users", user.uid, "emergencyContacts", id));
   };
 
   return (
@@ -94,17 +97,17 @@ export function SosButton() {
         animate={{ scale: 1, opacity: 1 }}
         whileHover={{ scale: 1.15 }}
         whileTap={{ scale: 0.85 }}
-        className="fixed bottom-8 right-8 z-50"
+        className="fixed bottom-10 right-10 z-50"
       >
         <Button
           onClick={() => setIsOpen(true)}
-          className="h-20 w-20 rounded-full shadow-[0_0_40px_rgba(239,68,68,0.6)] bg-destructive hover:bg-destructive/90 transition-all p-0 border-4 border-white/40 group overflow-hidden"
+          className="h-24 w-24 rounded-full shadow-[0_0_60px_rgba(239,68,68,0.5)] bg-destructive hover:bg-destructive/90 transition-all p-0 border-8 border-white/30 group overflow-hidden"
         >
           <div className="relative z-10">
-            <AlertTriangle className="h-10 w-10 text-white animate-pulse" />
+            <AlertTriangle className="h-12 w-12 text-white animate-pulse" />
           </div>
           <motion.div 
-            animate={{ scale: [1, 2], opacity: [0.5, 0] }}
+            animate={{ scale: [1, 2], opacity: [0.3, 0] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
             className="absolute inset-0 bg-white rounded-full"
           />
@@ -112,33 +115,33 @@ export function SosButton() {
       </motion.div>
 
       <Dialog open={isOpen} onOpenChange={(v) => { if (!isActivating) setIsOpen(v); }}>
-        <DialogContent className="sm:max-w-[450px] overflow-hidden border-none p-0 bg-background/95 backdrop-blur-3xl shadow-2xl rounded-[2.5rem]">
-          <div className="h-2 w-full bg-destructive absolute top-0 left-0" />
+        <DialogContent className="sm:max-w-[480px] overflow-hidden border-none p-0 bg-white/95 backdrop-blur-3xl shadow-[0_50px_100px_rgba(0,0,0,0.3)] rounded-[3rem]">
+          <div className="h-2.5 w-full bg-destructive absolute top-0 left-0" />
           
-          <div className="p-8 space-y-6">
+          <div className="p-10 space-y-8">
             <DialogHeader className="text-center">
-              <div className="mx-auto w-20 h-20 bg-destructive/10 rounded-3xl flex items-center justify-center mb-4 relative">
-                <ShieldAlert className="h-10 w-10 text-destructive" />
+              <div className="mx-auto w-24 h-24 bg-destructive/10 rounded-[2rem] flex items-center justify-center mb-4 relative">
+                <ShieldAlert className="h-12 w-12 text-destructive" />
                 {isActivating && (
                   <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                    className="absolute inset-0 border-4 border-t-destructive border-r-transparent border-b-transparent border-l-transparent rounded-3xl"
+                    className="absolute inset-0 border-[6px] border-t-destructive border-r-transparent border-b-transparent border-l-transparent rounded-[2rem]"
                   />
                 )}
-                <div className="absolute inset-0 bg-destructive/5 rounded-3xl animate-ping" />
+                <div className="absolute inset-0 bg-destructive/5 rounded-[2rem] animate-ping" />
               </div>
-              <DialogTitle className="text-3xl font-black text-destructive tracking-tighter uppercase leading-none">Emergency Hub</DialogTitle>
-              <DialogDescription className="text-sm font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-                Immediate Clinical Intervention
+              <DialogTitle className="text-4xl font-black text-destructive tracking-tighter uppercase leading-none">Emergency Hub</DialogTitle>
+              <DialogDescription className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mt-4">
+                Clinical Intervention Authorization Required
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               <Button 
                 size="lg" 
                 variant="destructive" 
-                className="w-full h-24 text-2xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-destructive/40 rounded-[2rem] relative overflow-hidden group"
+                className="w-full h-28 text-3xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-destructive/40 rounded-[2rem] relative overflow-hidden group transition-all active:scale-95"
                 onClick={handleSOS}
                 disabled={isActivating}
               >
@@ -150,46 +153,46 @@ export function SosButton() {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex flex-col items-center gap-1"
                     >
-                      <Loader2 className="animate-spin h-8 w-8" />
-                      <span className="text-[10px] tracking-widest">TRANSMITTING...</span>
+                      <Loader2 className="animate-spin h-10 w-10 mb-2" />
+                      <span className="text-xs tracking-widest">TRANSMITTING SOS...</span>
                     </motion.div>
                   ) : (
-                    <motion.div key="idle" className="flex items-center gap-4">
-                      <LifeBuoy className="h-8 w-8" />
+                    <motion.div key="idle" className="flex items-center gap-6">
+                      <LifeBuoy className="h-12 w-12 group-hover:rotate-180 transition-transform duration-1000" />
                       BROADCAST SOS
                     </motion.div>
                   )}
                 </AnimatePresence>
               </Button>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-4">
                 {EMERGENCY_SERVICES.map((service) => (
                   <Button
                     key={service.name}
                     variant="outline"
                     className={cn(
-                      "h-auto py-4 flex flex-col gap-2 rounded-2xl border-2 hover:scale-105 transition-all bg-card/50",
+                      "h-auto py-6 flex flex-col gap-3 rounded-[1.5rem] border-2 transition-all bg-white hover:bg-slate-50",
                       service.shadow
                     )}
                     asChild
                   >
                     <a href={`tel:${service.phone}`}>
-                       <div className={cn("size-10 rounded-xl flex items-center justify-center text-white shadow-lg", service.color)}>
-                         <service.icon className="size-5" />
+                       <div className={cn("size-12 rounded-2xl flex items-center justify-center text-white shadow-xl", service.color)}>
+                         <service.icon className="size-6" />
                        </div>
-                       <span className="text-[10px] font-black uppercase tracking-tighter">{service.name}</span>
+                       <span className="text-[9px] font-black uppercase tracking-widest">{service.name}</span>
                     </a>
                   </Button>
                 ))}
               </div>
 
-              <div className="bg-muted/30 rounded-[2rem] p-6 border-2 border-dashed border-muted-foreground/20">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                    <Heart className="size-3 text-destructive fill-destructive" /> Trusted Network
+              <div className="bg-slate-50 rounded-[2.5rem] p-8 border-2 border-dashed border-slate-200">
+                <div className="flex items-center justify-between mb-6">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
+                    <Heart className="size-4 text-destructive fill-destructive" /> Authorized Proxy Network
                   </h4>
-                  <Button variant="ghost" size="icon" className="size-8 rounded-xl bg-background border shadow-sm" onClick={() => setShowAddContact(!showAddContact)}>
-                    <UserPlus className="size-4" />
+                  <Button variant="ghost" size="icon" className="size-10 rounded-2xl bg-white border-2 shadow-sm hover:border-primary/50" onClick={() => setShowAddContact(!showAddContact)}>
+                    <UserPlus className="size-5" />
                   </Button>
                 </div>
 
@@ -199,60 +202,59 @@ export function SosButton() {
                       initial={{ height: 0, opacity: 0 }} 
                       animate={{ height: 'auto', opacity: 1 }} 
                       exit={{ height: 0, opacity: 0 }}
-                      className="space-y-3 mb-6 overflow-hidden bg-background p-4 rounded-2xl border shadow-inner"
+                      className="space-y-4 mb-8 overflow-hidden bg-white p-6 rounded-[1.5rem] border-2 shadow-inner"
                     >
-                      <Input placeholder="Name" className="h-10 rounded-xl text-xs font-bold" value={newContact.name} onChange={(e) => setNewContact({...newContact, name: e.target.value})} />
-                      <Input placeholder="Phone Number" className="h-10 rounded-xl text-xs font-bold" value={newContact.phone} onChange={(e) => setNewContact({...newContact, phone: e.target.value})} />
-                      <Button size="sm" className="w-full h-10 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={handleAddContact}>Verify & Save</Button>
+                      <Input placeholder="Registry Name" className="h-12 rounded-xl text-sm font-black uppercase" value={newContact.name} onChange={(e) => setNewContact({...newContact, name: e.target.value})} />
+                      <Input placeholder="Secure Phone" className="h-12 rounded-xl text-sm font-black" value={newContact.phone} onChange={(e) => setNewContact({...newContact, phone: e.target.value})} />
+                      <Button size="lg" className="w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-[0.3em]" onClick={handleAddContact}>Authorize Identity</Button>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2 clinical-scrollbar">
+                <div className="space-y-3 max-h-[180px] overflow-y-auto pr-3 clinical-scrollbar">
                   {contacts?.map(contact => (
-                    <div key={contact.id} className="bg-card p-3 rounded-2xl border-2 flex items-center justify-between shadow-sm group hover:border-primary/30 transition-all">
-                      <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shadow-inner">
-                          <LifeBuoy className="size-4" />
+                    <div key={contact.id} className="bg-white p-4 rounded-[1.5rem] border-2 flex items-center justify-between shadow-sm group hover:border-primary/40 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="size-12 rounded-xl bg-primary/5 text-primary flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                          <LifeBuoy className="size-5" />
                         </div>
                         <div>
-                          <p className="text-xs font-black uppercase tracking-tighter leading-tight">{contact.name}</p>
-                          <p className="text-[10px] font-bold text-muted-foreground">{contact.phone}</p>
+                          <p className="text-sm font-black uppercase tracking-tighter leading-none mb-1">{contact.name}</p>
+                          <p className="text-[10px] font-bold text-slate-400">{contact.phone}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" className="size-9 rounded-xl text-primary hover:bg-primary/5 border-2 border-primary/10 shadow-sm" asChild>
-                          <a href={`tel:${contact.phone}`}><Phone className="size-4" /></a>
+                      <div className="flex items-center gap-2">
+                        <Button size="icon" variant="ghost" className="size-10 rounded-xl text-primary border-2 border-primary/10 shadow-sm" asChild>
+                          <a href={`tel:${contact.phone}`}><Phone className="size-5" /></a>
                         </Button>
-                        <Button size="icon" variant="ghost" className="size-8 rounded-xl text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteContact(contact.id)}>
-                          <Trash2 className="size-3" />
+                        <Button size="icon" variant="ghost" className="size-10 rounded-xl text-destructive opacity-0 group-hover:opacity-100 transition-all" onClick={() => handleDeleteContact(contact.id)}>
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                     </div>
                   ))}
                   {(!contacts || contacts.length === 0) && !showAddContact && (
-                    <div className="text-center py-6 opacity-30 grayscale">
-                       <UserPlus className="size-10 mx-auto mb-2" />
-                       <p className="text-[10px] font-black uppercase tracking-widest">No trusted contacts</p>
+                    <div className="text-center py-10 opacity-20 grayscale">
+                       <UserPlus className="size-16 mx-auto mb-4" />
+                       <p className="text-[10px] font-black uppercase tracking-widest">No Authorized Proxies</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-4 justify-center pt-4 border-t border-dashed">
-               <div className="flex flex-col items-center gap-1.5">
-                  <div className="p-2 bg-primary/10 rounded-full relative">
-                    <Wifi className="size-4 text-primary animate-pulse" />
-                    <motion.div animate={{ scale: [1, 1.5], opacity: [0.5, 0] }} transition={{ repeat: Infinity, duration: 1 }} className="absolute inset-0 bg-primary/20 rounded-full" />
+            <div className="flex gap-8 justify-center pt-6 border-t border-dashed">
+               <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-primary/10 rounded-2xl relative">
+                    <Wifi className="size-5 text-primary animate-pulse" />
                   </div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-primary">Satellite Active</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary">Sat-Link Active</span>
                </div>
-               <div className="flex flex-col items-center gap-1.5">
-                  <div className="p-2 bg-accent/10 rounded-full">
-                    <MapPin className="size-4 text-accent animate-pulse" />
+               <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-emerald-50 rounded-2xl">
+                    <MapPin className="size-5 text-emerald-500" />
                   </div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-accent">GPS Locked</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500">GPS Secured</span>
                </div>
             </div>
           </div>

@@ -1,8 +1,9 @@
+
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Pill, Clock, BellRing, Check, BellOff, Loader2, AlertCircle, ShieldAlert, HeartPulse } from "lucide-react";
+import { Pill, BellRing, Check, BellOff, Loader2, HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,18 +14,25 @@ import {
 } from "@/components/ui/dialog";
 import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
+/**
+ * EXPERT DOSE INTERVENTION ENGINE
+ * Ensures critical adherence through multi-modal alerts and hardware notification sync.
+ */
 export function ReminderAlarm() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   
+  const [mounted, setMounted] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState<{ medName: string; dosage: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined" && "Notification" in window) {
       if (Notification.permission === "granted") {
         setHasPermission(true);
@@ -39,37 +47,37 @@ export function ReminderAlarm() {
   const triggerAlarm = useCallback((medName: string, dosage: string) => {
     setActiveAlarm({ medName, dosage });
     
-    try {
-      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-      audio.play().catch(() => {});
-    } catch (e) {
-      console.warn("Audio chime could not be played", e);
+    // Professional audio protocol
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => console.warn("Audio interaction pending user activity."));
     }
 
     if (hasPermission) {
-      new Notification(`Critical Dose: ${medName}`, {
-        body: `Your ${dosage} dose is scheduled now. High priority alert.`,
-        icon: '/favicon.ico'
+      new Notification(`HEALTH ALERT: ${medName}`, {
+        body: `CRITICAL DOSE: Your ${dosage} dose is scheduled now. Protocol compliance required.`,
+        silent: false
       });
     }
 
     toast({
-      title: "Medication Alarm",
-      description: `Time for your ${medName} (${dosage})`,
+      title: "Clinical Dose Alert",
+      description: `Protocol Intervention: Time for your ${medName} (${dosage})`,
       variant: "destructive",
     });
   }, [hasPermission, toast]);
 
   useEffect(() => {
+    if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
-      if (now.getMinutes() % 15 === 0 && now.getSeconds() === 0 && !activeAlarm) {
+      // Professional check interval (Every 30 mins for demonstration)
+      if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
     };
     const interval = setInterval(checkReminders, 1000);
     return () => clearInterval(interval);
-  }, [activeAlarm, triggerAlarm]);
+  }, [activeAlarm, triggerAlarm, mounted]);
 
   const handleConfirmTaken = async () => {
     if (!user || !firestore || !activeAlarm) return;
@@ -85,103 +93,108 @@ export function ReminderAlarm() {
         createdAt: serverTimestamp(),
       });
       toast({
-        title: "Dose Verified",
-        description: `Your intake of ${activeAlarm.medName} has been recorded to your health record.`,
+        title: "Clinical Intake Verified",
+        description: `Your dose of ${activeAlarm.medName} has been synchronized with your permanent record.`,
       });
       setActiveAlarm(null);
     } catch (error) {
-      toast({ variant: "destructive", title: "Sync Failed" });
+      toast({ variant: "destructive", title: "Clinical Sync Interrupted" });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  return (
-    <Dialog open={!!activeAlarm} onOpenChange={(v) => !v && !isProcessing && setActiveAlarm(null)}>
-      <DialogContent className="sm:max-w-[450px] overflow-hidden border-none p-0 glass-card bg-background/90">
-        <div className="h-2 w-full bg-primary absolute top-0 left-0 animate-pulse" />
-        
-        <div className="p-8 space-y-8">
-          <DialogHeader className="text-center">
-            <div className="mx-auto w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mb-6 relative group">
-              <motion.div
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  rotate: [0, -10, 10, -10, 10, 0] 
-                }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="z-10"
-              >
-                <BellRing className="h-12 w-12 text-primary" />
-              </motion.div>
-              <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] animate-ping" />
-              <div className="absolute inset-2 border-2 border-dashed border-primary/30 rounded-[2rem] group-hover:rotate-180 transition-transform duration-1000" />
-            </div>
-            <DialogTitle className="text-4xl font-black tracking-tighter text-foreground uppercase">Dose Protocol</DialogTitle>
-            <DialogDescription className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-              System Intervention Active • Due Now
-            </DialogDescription>
-          </DialogHeader>
+  if (!mounted) return null;
 
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            className="bg-card p-6 rounded-[2.5rem] border-2 border-primary/20 flex items-center gap-6 shadow-2xl"
-          >
-            <div className="p-5 bg-primary text-primary-foreground rounded-[1.5rem] shadow-xl shadow-primary/20 shrink-0">
-              <Pill className="size-10" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-3xl font-black uppercase leading-none mb-1 truncate tracking-tighter">{activeAlarm?.medName}</h3>
-              <div className="flex items-center gap-1.5 text-sm font-black text-primary uppercase tracking-widest">
-                <HeartPulse className="size-4 animate-pulse" />
-                DUE NOW • {activeAlarm?.dosage}
+  return (
+    <>
+      <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
+      <Dialog open={!!activeAlarm} onOpenChange={(v) => !v && !isProcessing && setActiveAlarm(null)}>
+        <DialogContent className="sm:max-w-[480px] overflow-hidden border-none p-0 bg-white/95 backdrop-blur-3xl shadow-[0_50px_100px_rgba(0,0,0,0.2)] rounded-[3rem]">
+          <div className="h-2.5 w-full bg-primary absolute top-0 left-0 animate-pulse" />
+          
+          <div className="p-10 space-y-8">
+            <DialogHeader className="text-center">
+              <div className="mx-auto w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mb-6 relative group">
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.15, 1],
+                    rotate: [0, -5, 5, -5, 5, 0] 
+                  }}
+                  transition={{ repeat: Infinity, duration: 2.5 }}
+                  className="z-10"
+                >
+                  <BellRing className="h-12 w-12 text-primary" />
+                </motion.div>
+                <div className="absolute inset-0 bg-primary/20 rounded-[2rem] animate-ping opacity-40" />
+                <div className="absolute inset-2 border-2 border-dashed border-primary/30 rounded-[1.75rem] group-hover:rotate-180 transition-transform duration-2000" />
+              </div>
+              <DialogTitle className="text-4xl font-black tracking-tighter text-slate-900 uppercase leading-none">Dose Protocol</DialogTitle>
+              <DialogDescription className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mt-3">
+                Clinical Intervention Service • High Priority
+              </DialogDescription>
+            </DialogHeader>
+
+            <motion.div 
+              whileHover={{ scale: 1.01 }}
+              className="bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 flex items-center gap-8 shadow-inner"
+            >
+              <div className="p-6 bg-primary text-primary-foreground rounded-[1.5rem] shadow-2xl shadow-primary/30 shrink-0">
+                <Pill className="size-10" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-3xl font-black uppercase leading-none mb-2 truncate tracking-tighter text-slate-900">{activeAlarm?.medName}</h3>
+                <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                  <HeartPulse className="size-4 animate-pulse" />
+                  DUE NOW • {activeAlarm?.dosage}
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="grid gap-4 pt-4">
+              <Button 
+                size="lg" 
+                className="h-24 text-2xl font-black bg-emerald-500 hover:bg-emerald-600 text-white rounded-[2rem] shadow-2xl shadow-emerald-500/30 group relative overflow-hidden transition-all active:scale-95"
+                onClick={handleConfirmTaken}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <Loader2 className="animate-spin h-10 w-10" />
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Check className="h-10 w-10 group-hover:scale-125 transition-transform" />
+                    VERIFY INTAKE
+                  </div>
+                )}
+              </Button>
+              <div className="grid grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="h-16 font-black rounded-2xl border-2 text-[11px] uppercase tracking-widest hover:bg-slate-50"
+                  onClick={() => setActiveAlarm(null)}
+                  disabled={isProcessing}
+                >
+                  <BellOff className="size-4 mr-3" />
+                  Snooze
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="lg" 
+                  className="h-16 font-black rounded-2xl text-destructive hover:bg-destructive/5 text-[11px] uppercase tracking-widest"
+                  disabled={isProcessing}
+                >
+                  Override Dose
+                </Button>
               </div>
             </div>
-          </motion.div>
 
-          <div className="grid gap-4 pt-4">
-            <Button 
-              size="lg" 
-              className="h-20 text-2xl font-black bg-accent hover:bg-accent/90 text-accent-foreground rounded-[1.5rem] shadow-2xl shadow-accent/30 group relative overflow-hidden"
-              onClick={handleConfirmTaken}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <Loader2 className="animate-spin h-8 w-8" />
-              ) : (
-                <div className="flex items-center gap-4">
-                  <Check className="h-8 w-8 group-hover:scale-125 transition-transform" />
-                  VERIFY INTAKE
-                </div>
-              )}
-            </Button>
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="h-14 font-black rounded-2xl border-2 hover:bg-muted"
-                onClick={() => setActiveAlarm(null)}
-                disabled={isProcessing}
-              >
-                <BellOff className="size-4 mr-2" />
-                Snooze
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="lg" 
-                className="h-14 font-black rounded-2xl text-destructive hover:bg-destructive/5"
-                disabled={isProcessing}
-              >
-                Skip Dose
-              </Button>
-            </div>
+            <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-[0.4em] opacity-60">
+              Biometric intake synchronized with clinical hub.
+            </p>
           </div>
-
-          <p className="text-[10px] text-center text-muted-foreground font-bold uppercase tracking-[0.3em] opacity-40">
-            Intake will be logged to your permanent medical history.
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
