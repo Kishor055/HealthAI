@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -148,7 +147,7 @@ export function ChatClient() {
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personalized Context Sync Active</span>
+                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personalized Context Sync Active</div>
               </div>
            </div>
         </div>
@@ -161,7 +160,7 @@ export function ChatClient() {
             variant="outline" 
             size="sm" 
             className={cn("rounded-xl h-10 font-black uppercase text-[9px] tracking-widest transition-all", isVoiceActive ? "border-primary text-primary bg-primary/5" : "text-slate-400")}
-            onClick={() => setIsVoiceActive(!isVoiceActive)}
+            onClick={() => setIsVoiceActive(!voice => !voice)}
            >
              {isVoiceActive ? <Volume2 className="size-4 mr-2" /> : <VolumeX className="size-4 mr-2" />}
              Voice {isVoiceActive ? 'On' : 'Off'}
