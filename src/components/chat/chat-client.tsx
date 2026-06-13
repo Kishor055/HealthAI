@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Bot, Loader2, Send, Volume2, VolumeX, Database, ShieldCheck, Sparkles, User, Brain, Apple, Activity, Info } from 'lucide-react';
+import { Bot, Loader2, Send, Volume2, VolumeX, Database, ShieldCheck, Sparkles, Brain, Apple, Activity, Info } from 'lucide-react';
 import { healthCopilot, HealthCopilotOutput } from '@/ai/flows/health-copilot-flow';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useCollection, useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
@@ -38,21 +38,18 @@ export function ChatClient() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Fetch User Profile for Context
   const profileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, "users", user.uid);
   }, [firestore, user?.uid]);
   const { data: profile } = useDoc(profileRef);
 
-  // Fetch Meds for Context
   const medsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, "users", user.uid, "medicines"));
   }, [firestore, user?.uid]);
   const { data: medications } = useCollection(medsQuery);
 
-  // Fetch Vitals for Context
   const vitalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, "users", user.uid, "healthRecords"), orderBy("date", "desc"), limit(5));
@@ -61,7 +58,7 @@ export function ChatClient() {
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-        const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
         if (viewport) {
             viewport.scrollTop = viewport.scrollHeight;
         }
@@ -75,7 +72,7 @@ export function ChatClient() {
   const playAudio = (dataUri: string) => {
     if (audioRef.current) {
       audioRef.current.src = dataUri;
-      audioRef.current.play();
+      audioRef.current.play().catch(e => console.warn("Audio play blocked", e));
     }
   };
 
@@ -160,7 +157,7 @@ export function ChatClient() {
             variant="outline" 
             size="sm" 
             className={cn("rounded-xl h-10 font-black uppercase text-[9px] tracking-widest transition-all", isVoiceActive ? "border-primary text-primary bg-primary/5" : "text-slate-400")}
-            onClick={() => setIsVoiceActive(!voice => !voice)}
+            onClick={() => setIsVoiceActive(!isVoiceActive)}
            >
              {isVoiceActive ? <Volume2 className="size-4 mr-2" /> : <VolumeX className="size-4 mr-2" />}
              Voice {isVoiceActive ? 'On' : 'Off'}
@@ -201,17 +198,17 @@ export function ChatClient() {
                       </div>
                       <div className="space-y-6 relative z-10">
                         <div className="space-y-2">
-                           <h5 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+                           <div className="text-[10px] font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
                              <Bot className="size-3" /> Health Insight
-                           </h5>
+                           </div>
                            <p className="text-lg font-medium text-slate-700 leading-relaxed italic">"{message.structured.insight}"</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-50">
                            <div className="space-y-3">
-                              <h6 className="text-[9px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+                              <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2">
                                 <Sparkles className="size-3" /> Recommendations
-                              </h6>
+                              </div>
                               <ul className="space-y-2">
                                  {message.structured.recommendations.map((r, i) => (
                                    <li key={i} className="text-xs font-bold text-slate-600 flex gap-2">
@@ -221,9 +218,9 @@ export function ChatClient() {
                               </ul>
                            </div>
                            <div className="space-y-3">
-                              <h6 className="text-[9px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-2">
+                              <div className="text-[9px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-2">
                                 <Apple className="size-3" /> Lifestyle
-                              </h6>
+                              </div>
                               <ul className="space-y-2">
                                  {message.structured.lifestyleSuggestions.map((s, i) => (
                                    <li key={i} className="text-xs font-bold text-slate-600 flex gap-2">
@@ -235,9 +232,9 @@ export function ChatClient() {
                         </div>
 
                         <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                           <h6 className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                           <div className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                              <Activity className="size-3" /> Next Steps
-                           </h6>
+                           </div>
                            <div className="flex flex-wrap gap-2">
                               {message.structured.followUpActions.map((a, i) => (
                                 <Badge key={i} variant="outline" className="bg-white text-[9px] font-black uppercase tracking-tighter py-1 px-3 border-slate-200">{a}</Badge>
@@ -308,8 +305,8 @@ export function ChatClient() {
                           />
                        </div>
                        <div className="flex justify-between">
-                          <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Polling Medical Registry</p>
-                          <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Applying Personalized Filter</p>
+                          <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Polling Medical Registry</div>
+                          <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Applying Personalized Filter</div>
                        </div>
                     </div>
                 </div>
@@ -325,16 +322,16 @@ export function ChatClient() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask Copilot about lifestyle, diet, or reports..."
-            className="flex-1 rounded-[2rem] h-18 px-10 border-2 border-slate-100 focus-visible:ring-primary/20 text-lg font-medium bg-white relative z-10 transition-all"
+            className="flex-1 rounded-[2rem] h-14 px-10 border-2 border-slate-100 focus-visible:ring-primary/20 text-lg font-medium bg-white relative z-10 transition-all"
             disabled={isLoading}
           />
           <Button 
             type="submit" 
             size="icon" 
-            className="h-18 w-18 rounded-[1.5rem] shadow-2xl shadow-primary/20 bg-primary hover:scale-105 active:scale-95 transition-all relative z-10" 
+            className="h-14 w-14 rounded-[1.5rem] shadow-2xl shadow-primary/20 bg-primary hover:scale-105 active:scale-95 transition-all relative z-10" 
             disabled={isLoading || !input.trim()}
           >
-            <Send className="h-8 w-8" />
+            <Send className="h-6 w-6" />
           </Button>
         </form>
         <div className="flex items-center justify-center gap-6 mt-6">

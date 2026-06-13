@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -16,10 +15,6 @@ import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
 import { motion } from "framer-motion";
 
-/**
- * EXPERT DOSE INTERVENTION ENGINE
- * Ensures critical adherence through multi-modal alerts and hardware notification sync.
- */
 export function ReminderAlarm() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -46,8 +41,6 @@ export function ReminderAlarm() {
 
   const triggerAlarm = useCallback((medName: string, dosage: string) => {
     setActiveAlarm({ medName, dosage });
-    
-    // Professional audio protocol
     if (audioRef.current) {
       audioRef.current.play().catch(() => console.warn("Audio interaction pending user activity."));
     }
@@ -70,7 +63,6 @@ export function ReminderAlarm() {
     if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
-      // Professional check interval (Every 30 mins for demonstration)
       if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
@@ -94,7 +86,7 @@ export function ReminderAlarm() {
       });
       toast({
         title: "Clinical Intake Verified",
-        description: `Your dose of ${activeAlarm.medName} has been synchronized with your permanent record.`,
+        description: `Your dose of ${activeAlarm.medName} has been synchronized.`,
       });
       setActiveAlarm(null);
     } catch (error) {
@@ -127,7 +119,6 @@ export function ReminderAlarm() {
                   <BellRing className="h-12 w-12 text-primary" />
                 </motion.div>
                 <div className="absolute inset-0 bg-primary/20 rounded-[2rem] animate-ping opacity-40" />
-                <div className="absolute inset-2 border-2 border-dashed border-primary/30 rounded-[1.75rem] group-hover:rotate-180 transition-transform duration-2000" />
               </div>
               <DialogTitle className="text-4xl font-black tracking-tighter text-slate-900 uppercase leading-none">Dose Protocol</DialogTitle>
               <DialogDescription className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mt-3">
@@ -135,10 +126,7 @@ export function ReminderAlarm() {
               </DialogDescription>
             </DialogHeader>
 
-            <motion.div 
-              whileHover={{ scale: 1.01 }}
-              className="bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 flex items-center gap-8 shadow-inner"
-            >
+            <div className="bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 flex items-center gap-8 shadow-inner">
               <div className="p-6 bg-primary text-primary-foreground rounded-[1.5rem] shadow-2xl shadow-primary/30 shrink-0">
                 <Pill className="size-10" />
               </div>
@@ -149,7 +137,7 @@ export function ReminderAlarm() {
                   DUE NOW • {activeAlarm?.dosage}
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             <div className="grid gap-4 pt-4">
               <Button 
@@ -175,8 +163,7 @@ export function ReminderAlarm() {
                   onClick={() => setActiveAlarm(null)}
                   disabled={isProcessing}
                 >
-                  <BellOff className="size-4 mr-3" />
-                  Snooze
+                  <BellOff className="size-4 mr-3" /> Snooze
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -184,14 +171,10 @@ export function ReminderAlarm() {
                   className="h-16 font-black rounded-2xl text-destructive hover:bg-destructive/5 text-[11px] uppercase tracking-widest"
                   disabled={isProcessing}
                 >
-                  Override Dose
+                  Skip Dose
                 </Button>
               </div>
             </div>
-
-            <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-[0.4em] opacity-60">
-              Biometric intake synchronized with clinical hub.
-            </p>
           </div>
         </DialogContent>
       </Dialog>
