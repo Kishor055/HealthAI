@@ -22,7 +22,9 @@ import {
   Thermometer,
   Globe,
   ShieldCheck,
-  FileSearch
+  FileSearch,
+  Bot,
+  Stethoscope
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -66,6 +68,7 @@ export const DashboardSidebar = React.memo(() => {
   const NAV_ITEMS = [
     { href: '/dashboard', icon: LayoutDashboard, label: t.dashboard },
     { href: '/dashboard/report-analyzer', icon: FileSearch, label: "Report Analyzer" },
+    { href: '/dashboard/symptom-checker', icon: Stethoscope, label: "Symptom Checker" },
     { href: '/dashboard/reminders-alerts', icon: Bell, label: t.reminders },
     { href: '/dashboard/medications', icon: Pill, label: t.medications },
     { href: '/dashboard/prescriptions', icon: ClipboardType, label: t.prescriptions },
