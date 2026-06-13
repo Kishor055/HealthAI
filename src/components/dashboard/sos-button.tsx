@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -38,10 +37,6 @@ const EMERGENCY_SERVICES = [
   { name: "Fire Dept", phone: "101", icon: Flame, color: "bg-orange-500", shadow: "shadow-orange-500/20" },
 ];
 
-/**
- * EXPERT EMERGENCY HUB
- * Provides high-priority clinical intervention and encrypted SOS broadcasting.
- */
 export function SosButton() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -60,14 +55,12 @@ export function SosButton() {
 
   const handleSOS = () => {
     setIsActivating(true);
-    
-    // Clinical SOS Protocol Execution
     setTimeout(() => {
       setIsActivating(false);
       setIsOpen(false);
       toast({
         title: "SOS PROTOCOL ACTIVE",
-        description: "Encrypted distress signal broadcast to emergency services and your trusted care network.",
+        description: "Encrypted distress signal broadcast to emergency services and your care network.",
         variant: "destructive"
       });
       window.location.href = "tel:108";
@@ -188,9 +181,9 @@ export function SosButton() {
 
               <div className="bg-slate-50 rounded-[2.5rem] p-8 border-2 border-dashed border-slate-200">
                 <div className="flex items-center justify-between mb-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
+                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                     <Heart className="size-4 text-destructive fill-destructive" /> Authorized Proxy Network
-                  </h4>
+                  </div>
                   <Button variant="ghost" size="icon" className="size-10 rounded-2xl bg-white border-2 shadow-sm hover:border-primary/50" onClick={() => setShowAddContact(!showAddContact)}>
                     <UserPlus className="size-5" />
                   </Button>

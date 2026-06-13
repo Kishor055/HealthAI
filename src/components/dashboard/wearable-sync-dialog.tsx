@@ -118,18 +118,15 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
     }, 2500);
   };
 
-  const handleClose = () => {
-    if (step === 'pairing' || step === 'diagnosing') return;
-    onOpenChange(false);
-    setTimeout(() => {
-      setStep(isBluetoothAvailable ? 'initial' : 'unsupported');
-      setSelectedDevice(null);
-    }, 300);
-  };
-
   const handleDialogChange = (isOpen: boolean) => {
     if (!isOpen) {
-      handleClose();
+      if (step !== 'pairing' && step !== 'diagnosing') {
+        onOpenChange(false);
+        setTimeout(() => {
+          setStep(isBluetoothAvailable ? 'initial' : 'unsupported');
+          setSelectedDevice(null);
+        }, 300);
+      }
     } else {
       onOpenChange(true);
     }
@@ -206,7 +203,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                       Real-time scanning requires a browser with Web Bluetooth support (Chrome/Edge) and an active Bluetooth radio.
                    </p>
                 </div>
-                <Button variant="outline" className="w-full rounded-xl" onClick={handleClose}>Dismiss</Button>
+                <Button variant="outline" className="w-full rounded-xl" onClick={() => onOpenChange(false)}>Dismiss</Button>
               </motion.div>
             )}
 
@@ -345,7 +342,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                 </div>
                 <Button 
                   className="w-full h-16 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90"
-                  onClick={handleClose}
+                  onClick={() => onOpenChange(false)}
                 >
                   Activate Live Feed
                 </Button>
