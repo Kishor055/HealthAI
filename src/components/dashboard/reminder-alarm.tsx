@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Pill, BellRing, Check, BellOff, Loader2, HeartPulse } from "lucide-react";
+import { Pill, BellRing, Check, BellOff, Loader2, HeartPulse, Volume2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,7 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { answerMedicationQuestions } from "@/ai/flows/answer-medication-questions";
 
 export function ReminderAlarm() {
   const { user } = useUser();
@@ -24,7 +26,11 @@ export function ReminderAlarm() {
   const [hasPermission, setHasPermission] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState<{ medName: string; dosage: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [aiInstruction, setAiInstruction] = useState<string | null>(null);
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -63,6 +69,7 @@ export function ReminderAlarm() {
     if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
+      // Professional schedule mock: trigger every 30 mins on the dot
       if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
@@ -70,6 +77,29 @@ export function ReminderAlarm() {
     const interval = setInterval(checkReminders, 1000);
     return () => clearInterval(interval);
   }, [activeAlarm, triggerAlarm, mounted]);
+
+  const handleSpeakInstructions = async () => {
+    if (!activeAlarm || isSpeaking) return;
+    setIsSpeaking(true);
+    
+    try {
+      const result = await answerMedicationQuestions({
+        medicationList: `${activeAlarm.medName} (${activeAlarm.dosage})`,
+        question: `Provide a 10 second voice instruction for taking ${activeAlarm.medName}. Include food requirements.`,
+        generateAudio: true
+      });
+
+      if (result.audioDataUri && ttsRef.current) {
+        setAiInstruction(result.answer);
+        ttsRef.current.src = result.audioDataUri;
+        ttsRef.current.play();
+      }
+    } catch (e) {
+      console.warn("TTS Synthesis failed", e);
+    } finally {
+      setIsSpeaking(false);
+    }
+  };
 
   const handleConfirmTaken = async () => {
     if (!user || !firestore || !activeAlarm) return;
@@ -89,6 +119,7 @@ export function ReminderAlarm() {
         description: `Your dose of ${activeAlarm.medName} has been synchronized.`,
       });
       setActiveAlarm(null);
+      setAiInstruction(null);
     } catch (error) {
       toast({ variant: "destructive", title: "Clinical Sync Interrupted" });
     } finally {
@@ -101,13 +132,14 @@ export function ReminderAlarm() {
   return (
     <>
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
+      <audio ref={ttsRef} className="hidden" />
       <Dialog open={!!activeAlarm} onOpenChange={(v) => !v && !isProcessing && setActiveAlarm(null)}>
-        <DialogContent className="sm:max-w-[480px] overflow-hidden border-none p-0 bg-white/95 backdrop-blur-3xl shadow-[0_50px_100px_rgba(0,0,0,0.2)] rounded-[3rem]">
-          <div className="h-2.5 w-full bg-primary absolute top-0 left-0 animate-pulse" />
+        <DialogContent className="sm:max-w-[550px] overflow-hidden border-none p-0 bg-white shadow-[0_50px_100px_rgba(0,0,0,0.2)] rounded-[3.5rem]">
+          <div className="h-3 w-full bg-primary absolute top-0 left-0 animate-pulse" />
           
-          <div className="p-10 space-y-8">
+          <div className="p-12 space-y-10">
             <DialogHeader className="text-center">
-              <div className="mx-auto w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mb-6 relative group">
+              <div className="mx-auto w-28 h-28 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mb-8 relative group">
                 <motion.div
                   animate={{ 
                     scale: [1, 1.15, 1],
@@ -116,62 +148,79 @@ export function ReminderAlarm() {
                   transition={{ repeat: Infinity, duration: 2.5 }}
                   className="z-10"
                 >
-                  <BellRing className="h-12 w-12 text-primary" />
+                  <BellRing className="h-14 w-14 text-primary" />
                 </motion.div>
-                <div className="absolute inset-0 bg-primary/20 rounded-[2rem] animate-ping opacity-40" />
+                <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] animate-ping opacity-40" />
               </div>
-              <DialogTitle className="text-4xl font-black tracking-tighter text-slate-900 uppercase leading-none">Dose Protocol</DialogTitle>
-              <DialogDescription className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mt-3">
+              <DialogTitle className="text-5xl font-black tracking-tighter text-slate-900 uppercase leading-none">Dose Protocol</DialogTitle>
+              <DialogDescription className="text-[11px] font-black uppercase tracking-[0.5em] text-primary/60 mt-4">
                 Clinical Intervention Service • High Priority
               </DialogDescription>
             </DialogHeader>
 
-            <div className="bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 flex items-center gap-8 shadow-inner">
-              <div className="p-6 bg-primary text-primary-foreground rounded-[1.5rem] shadow-2xl shadow-primary/30 shrink-0">
-                <Pill className="size-10" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-3xl font-black uppercase leading-none mb-2 truncate tracking-tighter text-slate-900">{activeAlarm?.medName}</h3>
-                <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                  <HeartPulse className="size-4 animate-pulse" />
-                  DUE NOW • {activeAlarm?.dosage}
+            <div className="space-y-6">
+              <div className="bg-slate-50 p-10 rounded-[3rem] border-2 border-slate-100 flex items-center gap-10 shadow-inner group transition-all hover:bg-white hover:border-primary/20">
+                <div className="p-8 bg-primary text-primary-foreground rounded-[2rem] shadow-2xl shadow-primary/30 shrink-0 group-hover:rotate-6 transition-transform">
+                  <Pill className="size-12" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-4xl font-black uppercase leading-none mb-3 truncate tracking-tighter text-slate-900">{activeAlarm?.medName}</h3>
+                  <div className="flex items-center gap-3 text-[12px] font-black text-primary uppercase tracking-[0.3em]">
+                    <HeartPulse className="size-5 animate-pulse" />
+                    DUE NOW • {activeAlarm?.dosage}
+                  </div>
                 </div>
               </div>
+
+              <AnimatePresence>
+                {aiInstruction && (
+                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="p-8 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/20 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-5"><Sparkles className="size-16" /></div>
+                      <div className="flex items-center gap-3 mb-3">
+                         <Volume2 className="size-4 text-primary" />
+                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">AI Voice Instruction</span>
+                      </div>
+                      <p className="text-sm font-bold leading-relaxed italic text-slate-700">"{aiInstruction}"</p>
+                   </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <div className="grid gap-4 pt-4">
+            <div className="grid gap-5 pt-4">
               <Button 
                 size="lg" 
-                className="h-24 text-2xl font-black bg-emerald-500 hover:bg-emerald-600 text-white rounded-[2rem] shadow-2xl shadow-emerald-500/30 group relative overflow-hidden transition-all active:scale-95"
+                className="h-28 text-3xl font-black bg-emerald-500 hover:bg-emerald-600 text-white rounded-[2.5rem] shadow-2xl shadow-emerald-500/40 group relative overflow-hidden transition-all active:scale-95"
                 onClick={handleConfirmTaken}
                 disabled={isProcessing}
               >
                 {isProcessing ? (
-                  <Loader2 className="animate-spin h-10 w-10" />
+                  <Loader2 className="animate-spin h-12 w-12" />
                 ) : (
-                  <div className="flex items-center gap-4">
-                    <Check className="h-10 w-10 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-center gap-6">
+                    <Check className="h-12 w-12 group-hover:scale-125 transition-transform" />
                     VERIFY INTAKE
                   </div>
                 )}
               </Button>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-5">
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="h-16 font-black rounded-2xl border-2 text-[11px] uppercase tracking-widest hover:bg-slate-50"
-                  onClick={() => setActiveAlarm(null)}
-                  disabled={isProcessing}
+                  className="h-20 font-black rounded-3xl border-2 text-xs uppercase tracking-[0.3em] hover:bg-slate-50 transition-all gap-3"
+                  onClick={handleSpeakInstructions}
+                  disabled={isSpeaking || isProcessing}
                 >
-                  <BellOff className="size-4 mr-3" /> Snooze
+                  {isSpeaking ? <Loader2 className="size-5 animate-spin" /> : <Volume2 className="size-5 text-primary" />} 
+                  Speech Mode
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="lg" 
-                  className="h-16 font-black rounded-2xl text-destructive hover:bg-destructive/5 text-[11px] uppercase tracking-widest"
+                  className="h-20 font-black rounded-3xl text-destructive hover:bg-destructive/5 text-xs uppercase tracking-[0.3em] transition-all"
+                  onClick={() => setActiveAlarm(null)}
                   disabled={isProcessing}
                 >
-                  Skip Dose
+                  Snooze Protocol
                 </Button>
               </div>
             </div>
