@@ -1,15 +1,13 @@
-
 "use client";
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Hospital, MapPin, Navigation, Info, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Hospital, MapPin, Navigation, Phone, ShieldCheck, Microscope, Droplets, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-// Fix Leaflet Default Icon issue
 const DefaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -18,18 +16,30 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Custom static icons to avoid recreation during render
 const HOSPITAL_ICON = L.divIcon({
-  className: 'custom-clinical-marker',
-  html: `<div style="background-color: #3b82f6;" class="size-8 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-  popupAnchor: [0, -16],
+  className: 'marker-hospital',
+  html: `<div style="background-color: #3b82f6;" class="size-10 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div>`,
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
+
+const BLOOD_BANK_ICON = L.divIcon({
+  className: 'marker-blood',
+  html: `<div style="background-color: #ef4444;" class="size-10 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>`,
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
+
+const DIAGNOSTIC_ICON = L.divIcon({
+  className: 'marker-diagnostic',
+  html: `<div style="background-color: #8b5cf6;" class="size-10 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="14.31" y1="8" x2="20.05" y2="17.94"/><line x1="9.69" y1="8" x2="21.17" y2="8"/><line x1="7.38" y1="12" x2="13.12" y2="2.06"/><line x1="9.69" y1="16" x2="3.95" y2="6.06"/><line x1="14.31" y1="16" x2="2.83" y2="16"/><line x1="16.62" y1="12" x2="10.88" y2="21.94"/></svg></div>`,
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
 
 const USER_ICON = L.divIcon({
   className: 'user-marker',
-  html: `<div class="size-6 bg-accent rounded-full border-4 border-white shadow-lg animate-pulse"></div>`,
+  html: `<div class="size-6 bg-primary rounded-full border-4 border-white shadow-lg animate-pulse"></div>`,
   iconSize: [24, 24],
   iconAnchor: [12, 12],
 });
@@ -39,6 +49,7 @@ interface Facility {
   name: string;
   address: string;
   type: string;
+  category: 'hospital' | 'blood_bank' | 'diagnostic' | 'clinic';
   position: [number, number];
   phone?: string;
 }
@@ -65,58 +76,48 @@ export default function ClinicalMap({ facilities, center, onFacilitySelect, sele
     setIsClient(true);
   }, []);
 
-  const handleNavigate = (facility: Facility) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.position[0]},${facility.position[1]}&travelmode=driving`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+  const getIcon = (category: string) => {
+    if (category === 'blood_bank') return BLOOD_BANK_ICON;
+    if (category === 'diagnostic') return DIAGNOSTIC_ICON;
+    return HOSPITAL_ICON;
   };
 
-  // Memoize markers to prevent leaflet from re-rendering them unnecessarily
   const markers = useMemo(() => facilities.map((facility) => (
     <Marker 
       key={facility.id} 
       position={facility.position} 
-      icon={HOSPITAL_ICON}
+      icon={getIcon(facility.category)}
       eventHandlers={{
         click: () => onFacilitySelect(facility)
       }}
     >
       <Popup className="clinical-popup">
-        <div className="w-64 p-0">
-          <div className="bg-primary p-4 text-white">
+        <div className="w-64 p-0 overflow-hidden rounded-2xl">
+          <div className={cn(
+            "p-4 text-white",
+            facility.category === 'blood_bank' ? 'bg-red-500' : 
+            facility.category === 'diagnostic' ? 'bg-purple-600' : 'bg-primary'
+          )}>
             <div className="flex items-center gap-2 mb-2">
-               <Hospital className="size-4" />
-               <span className="text-[9px] font-black uppercase tracking-widest opacity-80">Clinical Facility</span>
+               {facility.category === 'blood_bank' ? <Droplets className="size-4" /> : 
+                facility.category === 'diagnostic' ? <Microscope className="size-4" /> : <Hospital className="size-4" />}
+               <span className="text-[9px] font-black uppercase tracking-widest opacity-80">{facility.type}</span>
             </div>
             <h3 className="font-black text-sm uppercase leading-tight tracking-tighter">{facility.name}</h3>
           </div>
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-4 bg-white">
             <div className="flex items-start gap-2 text-muted-foreground">
               <MapPin className="size-3 shrink-0 mt-0.5" />
               <p className="text-[10px] font-medium leading-relaxed">{facility.address}</p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20" 
-                onClick={() => handleNavigate(facility)}
-              >
-                <Navigation className="size-3 mr-1.5" /> Nav
+              <Button size="icon" variant="outline" className="size-9 rounded-xl border-2" asChild>
+                 <a href={`tel:${facility.phone}`}><Phone className="size-4" /></a>
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest" 
-                onClick={() => onFacilitySelect(facility)}
-              >
-                <Info className="size-3 mr-1.5" /> Details
+              <Button size="sm" className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${facility.position[0]},${facility.position[1]}`)}>
+                <Navigation className="size-3 mr-1.5" /> Route
               </Button>
             </div>
-          </div>
-          <div className="px-4 pb-4">
-             <div className="p-2 bg-accent/10 rounded-xl border border-accent/20 flex items-center gap-2">
-                <ShieldCheck className="size-3 text-accent" />
-                <span className="text-[8px] font-black text-accent uppercase tracking-widest">Verified Healthcare Provider</span>
-             </div>
           </div>
         </div>
       </Popup>
@@ -131,29 +132,14 @@ export default function ClinicalMap({ facilities, center, onFacilitySelect, sele
   );
 
   return (
-    <MapContainer 
-      center={center} 
-      zoom={13} 
-      scrollWheelZoom={true} 
-      zoomControl={false}
-      className="h-full w-full"
-    >
+    <MapContainer center={center} zoom={13} scrollWheelZoom={true} zoomControl={false} className="h-full w-full">
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <ZoomControl position="topleft" />
       <ChangeView center={center} />
-      
-      <Marker position={center} icon={USER_ICON}>
-        <Popup>
-          <div className="p-3 text-center">
-            <Badge variant="outline" className="mb-2 text-[9px] font-black uppercase tracking-widest">Your Location</Badge>
-            <p className="text-xs font-bold">Scanning for nearby clinics...</p>
-          </div>
-        </Popup>
-      </Marker>
-
+      <Marker position={center} icon={USER_ICON} />
       {markers}
     </MapContainer>
   );
