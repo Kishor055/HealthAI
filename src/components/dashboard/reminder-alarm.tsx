@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Pill, BellRing, Check, BellOff, Loader2, HeartPulse, Volume2, Sparkles } from "lucide-react";
+import { Pill, BellRing, Check, Loader2, HeartPulse, Volume2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -225,8 +224,9 @@ export function ReminderAlarm() {
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
   );
 }
