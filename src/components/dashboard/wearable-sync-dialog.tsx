@@ -17,7 +17,6 @@ import {
   Smartphone,
   Activity,
   HeartPulse,
-  Zap,
   Search,
   ShieldCheck,
   Microscope,
@@ -336,7 +335,7 @@ export function WearableSyncDialog({ open, onOpenChange, onConnect }: WearableSy
                     <span className="text-[8px] font-black uppercase tracking-widest">Vitals Sync</span>
                   </div>
                   <div className="flex flex-col items-center gap-1.5 opacity-60">
-                    <div className="p-3 bg-muted rounded-2xl"><Zap className="size-5 text-accent" /></div>
+                    <div className="p-3 bg-muted rounded-2xl"><Wifi className="size-5 text-accent" /></div>
                     <span className="text-[8px] font-black uppercase tracking-widest">Adherence</span>
                   </div>
                 </div>

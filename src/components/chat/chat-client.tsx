@@ -144,7 +144,7 @@ export function ChatClient() {
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personalized Context Sync Active</div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personalized Context Sync Active</span>
               </div>
            </div>
         </div>
@@ -305,8 +305,8 @@ export function ChatClient() {
                           />
                        </div>
                        <div className="flex justify-between">
-                          <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Polling Medical Registry</div>
-                          <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Applying Personalized Filter</div>
+                          <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Polling Medical Registry</span>
+                          <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Applying Personalized Filter</span>
                        </div>
                     </div>
                 </div>
