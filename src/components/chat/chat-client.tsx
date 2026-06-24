@@ -139,7 +139,7 @@ export function ChatClient() {
            </div>
            <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black tracking-tighter">HealthAI Copilot</h1>
+                <h2 className="text-2xl font-black tracking-tighter">HealthAI Copilot</h2>
                 <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[8px] font-black uppercase h-5 px-2">RAG Intelligence</Badge>
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">

@@ -129,10 +129,17 @@ export function ReminderAlarm() {
   if (!mounted) return null;
 
   return (
-    <>
+    <div className="contents">
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
       <audio ref={ttsRef} className="hidden" />
-      <Dialog open={!!activeAlarm} onOpenChange={(v) => !v && !isProcessing && setActiveAlarm(null)}>
+      <Dialog 
+        open={!!activeAlarm} 
+        onOpenChange={(v) => { 
+          if (!v && !isProcessing) {
+            setActiveAlarm(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[550px] overflow-hidden border-none p-0 bg-white shadow-[0_50px_100px_rgba(0,0,0,0.2)] rounded-[3.5rem]">
           <div className="h-3 w-full bg-primary absolute top-0 left-0 animate-pulse" />
           
@@ -216,7 +223,7 @@ export function ReminderAlarm() {
                   variant="ghost" 
                   size="lg" 
                   className="h-20 font-black rounded-3xl text-destructive hover:bg-destructive/5 text-xs uppercase tracking-[0.3em] transition-all"
-                  onClick={() => setActiveAlarm(null)}
+                  onClick={() => { setActiveAlarm(null); }}
                   disabled={isProcessing}
                 >
                   Snooze Protocol
@@ -224,9 +231,8 @@ export function ReminderAlarm() {
               </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  </>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
