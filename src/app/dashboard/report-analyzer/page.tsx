@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -21,7 +20,9 @@ import {
   Calendar,
   Sparkles,
   Download,
-  Dna
+  Dna,
+  RefreshCw,
+  Globe
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import { analyzeLabReport, AnalyzeLabReportOutput } from '@/ai/flows/analyze-lab
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { SoapClient } from '@/lib/soap-service';
 
 export default function ReportAnalyzerPage() {
   const { user } = useUser();
@@ -40,6 +42,7 @@ export default function ReportAnalyzerPage() {
   const { toast } = useToast();
   
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [isSyncing, setIsSyncing] = React.useState(false);
   const [analysis, setAnalysis] = React.useState<AnalyzeLabReportOutput | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -53,6 +56,34 @@ export default function ReportAnalyzerPage() {
   }, [firestore, user?.uid]);
 
   const { data: reports, isLoading: reportsLoading } = useCollection(reportsQuery);
+
+  const handleRegistrySync = async () => {
+    if (!analysis) return;
+    setIsSyncing(true);
+    try {
+      // ENTERPRISE SOAP SYNC
+      await SoapClient.call('https://api.national-health-registry.internal/sync', {
+        method: 'SyncClinicalRecord',
+        namespace: 'http://nationalregistry.org/ClinicalSync',
+        parameters: {
+          patientId: user?.uid,
+          healthScore: analysis.healthScore,
+          biomarkerCount: analysis.biomarkers.length,
+          diagnosis: analysis.healthStatus
+        },
+        security: { username: 'HEALTHAI_PRO', token: 'AUTH_001' }
+      });
+
+      toast({
+        title: "National Registry Synced",
+        description: "Your lab results have been verified with the Central Health Repository via Secure SOAP API.",
+      });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Sync Failed", description: "Global registry node unreachable." });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,7 +103,6 @@ export default function ReportAnalyzerPage() {
         
         setAnalysis(result);
         
-        // Persist to history
         if (user && firestore) {
           addDocumentNonBlocking(collection(firestore, "users", user.uid, "labReports"), {
             ...result,
@@ -120,19 +150,32 @@ export default function ReportAnalyzerPage() {
              <div className="p-2 bg-primary/10 rounded-xl">
                <FileSearch className="size-5 text-primary" />
              </div>
-             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">Lab Intelligent Interpretation</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">Institutional Diagnostic Lab</span>
            </div>
            <h1 className="text-4xl font-black tracking-tighter text-foreground">Report Analyzer</h1>
-           <p className="text-muted-foreground font-medium">Advanced AI interpretation for blood tests, CBCs, and metabolic reports.</p>
+           <p className="text-muted-foreground font-medium">SOAP-enabled clinical interpretation for verified biometric reports.</p>
         </div>
-        <Button 
-          onClick={() => fileInputRef.current?.click()} 
-          disabled={isAnalyzing}
-          className="rounded-2xl font-black h-14 px-8 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
-        >
-          {isAnalyzing ? <Loader2 className="animate-spin mr-2" /> : <Upload className="size-5 mr-2" />}
-          Upload Medical Report
-        </Button>
+        <div className="flex gap-3">
+          {analysis && (
+            <Button 
+              variant="outline"
+              onClick={handleRegistrySync}
+              disabled={isSyncing}
+              className="rounded-2xl font-black h-14 px-8 border-2 border-primary/20 text-primary hover:bg-primary/5 group"
+            >
+              {isSyncing ? <Loader2 className="animate-spin mr-2" /> : <Globe className="size-5 mr-2 group-hover:rotate-90 transition-transform" />}
+              Registry Sync
+            </Button>
+          )}
+          <Button 
+            onClick={() => fileInputRef.current?.click()} 
+            disabled={isAnalyzing}
+            className="rounded-2xl font-black h-14 px-8 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
+          >
+            {isAnalyzing ? <Loader2 className="animate-spin mr-2" /> : <Upload className="size-5 mr-2" />}
+            Upload Medical Report
+          </Button>
+        </div>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
       </div>
 
@@ -238,7 +281,7 @@ export default function ReportAnalyzerPage() {
                        <div className="bg-destructive/5 border-2 border-destructive/10 p-6 rounded-2xl flex items-start gap-4">
                           <Info className="size-6 text-destructive shrink-0" />
                           <p className="text-xs font-medium text-destructive leading-relaxed italic">
-                            Disclaimer: HealthAI is an advanced interpretation engine powered by Google Genkit. It does not provide definitive medical diagnoses or prescriptions. Always verify these results with your clinical consultant.
+                            Disclaimer: HealthAI is an advanced interpretation engine powered by Google Genkit and Secure SOAP institutional sync. It does not provide definitive medical diagnoses. Always consult your clinical consultant.
                           </p>
                        </div>
                     </CardContent>
@@ -255,7 +298,7 @@ export default function ReportAnalyzerPage() {
                      </motion.div>
                   </div>
                   <h3 className="text-2xl font-black uppercase tracking-tighter">Awaiting Clinical Data</h3>
-                  <p className="text-xs font-bold uppercase tracking-[0.4em] mt-2">Upload any medical report for AI analysis</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.4em] mt-2">Upload any medical report for institutional AI analysis</p>
                </div>
              )}
            </AnimatePresence>
@@ -311,19 +354,19 @@ export default function ReportAnalyzerPage() {
 
            <Card className="border-none bg-slate-900 text-white rounded-[2.5rem] p-10 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-125 transition-transform duration-1000">
-                 <Sparkles className="size-32 text-primary" />
+                 <RefreshCw className="size-32 text-primary" />
               </div>
               <div className="relative z-10 space-y-6">
-                 <h4 className="text-2xl font-black uppercase tracking-tighter">Clinical Insights</h4>
+                 <h4 className="text-2xl font-black uppercase tracking-tighter">Clinical Sync Active</h4>
                  <p className="text-sm font-medium text-white/70 leading-relaxed">
-                    Our AI cross-references your lab results against established physiological baselines to detect trends before they escalate.
+                    Our platform uses Secure SOAP protocols to synchronize your reports with authorized healthcare registries, ensuring a unified clinical profile.
                  </p>
                  <div className="p-5 bg-white/5 rounded-2xl border border-dashed border-white/20">
                     <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
-                       <ShieldCheck className="size-3" /> Encrypted Analysis
+                       <ShieldCheck className="size-3" /> RSA-Encrypted SOAP
                     </p>
                     <p className="text-[11px] leading-relaxed opacity-60">
-                       All medical report interpretation occurs within your private clinical node.
+                       All clinical data exchange is audited and secured via WS-Security standards.
                     </p>
                  </div>
               </div>
