@@ -1,19 +1,15 @@
-
 "use client";
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Stethoscope, 
-  Send, 
   Loader2, 
   Activity, 
   CheckCircle2, 
   AlertTriangle, 
   AlertCircle,
-  Plus, 
   History, 
-  ArrowRight,
   ShieldCheck,
   ChevronDown,
   Info,
@@ -26,7 +22,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
@@ -67,7 +62,6 @@ export default function SymptomCheckerPage() {
       const result = await checkSymptoms({ symptoms: input });
       setAnalysis(result);
       
-      // Persist to history
       if (user && firestore) {
         addDocumentNonBlocking(collection(firestore, "users", user.uid, "symptomChecks"), {
           ...result,
@@ -164,7 +158,7 @@ export default function SymptomCheckerPage() {
 
            <AnimatePresence mode="wait">
              {isAnalyzing && (
-               <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="p-20 bg-white border-2 border-dashed border-primary/20 rounded-[3rem] text-center space-y-8 shadow-2xl">
+               <motion.div key="processing" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="p-20 bg-white border-2 border-dashed border-primary/20 rounded-[3rem] text-center space-y-8 shadow-2xl">
                   <div className="relative mx-auto size-32">
                      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full opacity-20" />
                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute inset-0 flex items-center justify-center">

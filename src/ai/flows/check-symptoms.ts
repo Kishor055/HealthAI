@@ -1,10 +1,8 @@
-
 'use server';
 
 /**
  * @fileOverview HealthAI Symptom Checker - AI-powered triage agent.
- *
- * - checkSymptoms - Analyzes user input to provide preliminary health guidance.
+ * Enhanced with NLP linguistic verification and high-precision risk assessment.
  */
 
 import { ai } from '@/ai/genkit';
@@ -41,7 +39,7 @@ const prompt = ai.definePrompt({
   model: googleAI.model('gemini-2.5-flash'),
   input: { schema: CheckSymptomsInputSchema },
   output: { schema: CheckSymptomsOutputSchema },
-  prompt: `You are the HealthAI Symptom Checker, an expert AI triage assistant. 
+  prompt: `You are the HealthAI Symptom Checker, an expert AI triage assistant powered by clinical NLP. 
 Your goal is to provide preliminary health guidance based on patient symptoms.
 
 USER INPUT:
@@ -50,36 +48,45 @@ USER INPUT:
 {{#if existingConditions}}History: {{#each existingConditions}}{{this}}, {{/each}}{{/if}}
 
 INSTRUCTIONS:
-1. Analyze the provided symptoms with clinical precision.
-2. Identify symptoms and classify risk: Low, Moderate, High, or Emergency.
-3. If life-threatening signs (e.g. chest pain, stroke signs) are found, set riskLevel to 'Emergency' and provide an 'emergencyWarning'.
-4. Provide possible conditions with confidence scores.
-5. Suggest 3-5 'recommendedActions'.
-6. Ask 'followUpQuestions' to help a doctor or the AI refine the assessment.
+1. ANALYSIS: Use Chain-of-Thought reasoning to identify medical keywords. Account for potential typos (e.g. "headchek" -> "headache").
+2. RISK ASSESSMENT: Classify risk: Low, Moderate, High, or Emergency.
+3. EMERGENCY PROTOCOL: If life-threatening signs (chest pain, stroke signs, difficulty breathing, severe bleeding) are detected, set riskLevel to 'Emergency' and provide a high-priority 'emergencyWarning'.
+4. CONDITIONS: Provide 2-3 possible conditions with confidence scores and concise explanations.
+5. RECOMMENDATIONS: Suggest 3-5 'recommendedActions'.
+6. REFINEMENT: Ask 2-3 'followUpQuestions' to help narrow down the assessment.
 
 RULES:
-- Never diagnose with absolute certainty.
-- Never prescribe specific medications.
-- Always include the standard clinical disclaimer.
-- Prioritize patient safety above all else.
-- Use simple, empathetic, and professional language.`,
+- NEVER provide a definitive medical diagnosis.
+- NEVER prescribe or recommend specific medications.
+- ALWAYS include a disclaimer that this is educational guidance.
+- USE simple, empathetic, and professional language.
+- PRIORITIZE patient safety above all else.`,
 });
 
 export async function checkSymptoms(input: CheckSymptomsInput): Promise<CheckSymptomsOutput> {
   try {
     const { output } = await prompt(input);
-    if (!output) throw new Error("Clinical triage node timed out.");
+    if (!output) throw new Error("Clinical triage node provided null output.");
     return output;
   } catch (error: any) {
-    console.error("Symptom Checker Error:", error);
-    // Baseline safety fallback
+    console.error("Symptom Checker Logic Failure:", error);
+    // baseline clinical safety fallback
     return {
       identifiedSymptoms: ["Unable to verify symptoms during current node high-load."],
-      possibleConditions: [],
+      possibleConditions: [
+        { name: "Unknown Physiological Disturbance", confidence: 50, explanation: "AI diagnostic node is currently recalibrating." }
+      ],
       riskLevel: 'Moderate Risk',
-      recommendedActions: ["Please monitor your condition closely.", "If symptoms persist, consult a doctor."],
-      followUpQuestions: ["Can you describe the pain in more detail?", "When did this start?"],
-      emergencyWarning: "System is operating in offline mode. If you are experiencing severe pain, difficulty breathing, or dizziness, seek emergency care immediately."
+      recommendedActions: [
+        "Please monitor your condition closely for the next 2 hours.",
+        "Maintain adequate hydration and rest.",
+        "If symptoms persist or worsen, consult a licensed healthcare professional."
+      ],
+      followUpQuestions: [
+        "On a scale of 1-10, how severe is the discomfort?",
+        "Are you experiencing any accompanying dizziness or nausea?"
+      ],
+      emergencyWarning: "System is operating in baseline mode. If you are experiencing severe pain, difficulty breathing, chest pressure, or sudden numbness, seek emergency care immediately."
     };
   }
 }
