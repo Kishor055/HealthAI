@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -270,7 +269,6 @@ This archive is encrypted and should be handled as sensitive PHI.
               </Card>
             </TabsContent>
 
-            {/* Other tabs follow similar premium styling... */}
             <TabsContent value="biometric" className="space-y-8">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {recordsLoading ? (
