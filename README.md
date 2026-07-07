@@ -4,8 +4,7 @@
 [![React Version](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-11.3+-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com)
 [![Genkit AI](https://img.shields.io/badge/Genkit-1.0+-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://firebase.google.com/docs/genkit)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=for-the-badge)](#)
-[![SOAP Protocol](https://img.shields.io/badge/SOAP-WS--Security-blue?style=for-the-badge)](https://en.wikipedia.org/wiki/SOAP)
+[![Python Analytics](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 
 **HealthAI PRO** is an enterprise-grade, AI-driven medication safety and clinical intelligence platform. By orchestrating a **Multi-Agent Architecture** via Google Genkit, real-time biometric telemetry via Web Bluetooth, and RAG-powered clinical analysis, HealthAI PRO provides patients and clinical administrators with actionable medical insights, dual-factor security, and personalized adherence protocols.
 
@@ -26,7 +25,7 @@ HealthAI PRO bridges these gaps by digitizing prescriptions, auditing drug inter
 ### 🧠 1. Multi-Agent Intelligence (Genkit v1.x)
 - **HealthAI Copilot (RAG)**: A personalized assistant grounded in a Large Medical Records Dataset. It provides evidence-based guidance on diet, exercise, and pharmacological queries using Retrieval-Augmented Generation.
 - **ML-Powered OCR (Precision v6)**: High-fidelity extraction of handwritten prescriptions and lab reports with 98% precision using NLP linguistic verification and Chain-of-Thought reasoning.
-- **Symptom Triage (v4.1)**: High-precision AI triage node that assesses clinical risk (Low to Emergency) based on medical keyword correlation and physiological pattern matching.
+- **Symptom Triage (v4.1)**: High-precision AI triage node that assesses clinical risk (Low to Emergency) based on medical keyword correlation.
 
 ### 🫀 2. Biometric Command Center
 - **Clinical Stability Matrix (CSI)**: A real-time engine that correlates telemetry (BP, Heart Rate, SpO2) with medication intake to detect and predict physiological skews.
@@ -45,9 +44,20 @@ HealthAI PRO bridges these gaps by digitizing prescriptions, auditing drug inter
 
 ---
 
-## 🧠 Multi-Agent Architecture
+## 🧬 Expert Analytics (Python Utility)
 
-HealthAI PRO leverages a cooperative multi-agent team to digitize, safety-audit, and report clinical data:
+HealthAI PRO includes a professional Python-based analytics node for deep clinical data processing:
+
+```bash
+# Analyze a PHI archive export
+python scripts/clinical_analyzer.py exports/HealthAI_Archive_001.txt
+```
+- **Stability Correlation**: Advanced statistical processing of telemetry logs.
+- **Anonymization Node**: RSA-4096 redaction for institutional research compliance.
+
+---
+
+## 🧠 Multi-Agent Architecture
 
 ```mermaid
 graph TD
@@ -69,29 +79,14 @@ graph TD
     ChatAgent -->|Gemini 2.5 Flash| Advice[Interactive Guidance]
 ```
 
-### 👥 Meet the Agents
-1. **Prescription Agent (`analyzePrescriptionFlow`)**: Performs multimodal OCR on laboratory scans and clinical notes with 98%+ precision.
-2. **Safety Agent (`detectDrugInteractionsFlow`)**: Audits regimens to detect high-risk interactions or duplicate therapies.
-3. **Stability Agent (`analyzeHealthTrendsFlow`)**: Calculates the real-time "Stability Index" by correlating biometrics with adherence.
-4. **Medication Assistant (`answerMedicationQuestionsFlow`)**: Powered by **Gemini 2.5 Flash**, providing empathetic, grounded guidance with voice synthesis.
-
 ---
 
 ## 🛠️ Technical Stack
-
-### 💻 Frontend
-- **Framework**: Next.js 15 (App Router / Turbopack)
-- **UI System**: ShadCN UI + Premium Glassmorphic Design
-- **Animations**: Framer Motion (Clinical Handshakes & Telemetry)
-- **Charts**: Recharts (Physiological Trends)
-- **Mapping**: React-Leaflet (Regional Discovery)
-
-### ⚙️ Backend & AI
-- **Authentication**: Firebase Auth (Admin/Guest/User Roles)
-- **Database**: Cloud Firestore (Hardened Security Rules)
+- **Frontend**: Next.js 15 (App Router / Turbopack)
 - **AI Orchestration**: Google Genkit v1.x
-- **LLM**: Gemini 2.5 Flash (Optimized for Clinical Reasoning)
+- **Database**: Cloud Firestore (Hardened Rules)
 - **Protocols**: Secure SOAP XML (WS-Security) + Web Bluetooth API
+- **Analytics**: Python 3.10 (Clinical Node)
 
 ---
 
@@ -104,17 +99,7 @@ cd HealthAI
 npm install
 ```
 
-### 2️⃣ Environment Configuration
-Create a `.env.local` file with institutional credentials:
-```ini
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
-GOOGLE_GENAI_API_KEY=...
-SECURE_GATEWAY_TOKEN=...
-FIREBASE_PRIVATE_KEY=...
-FIREBASE_CLIENT_EMAIL=...
-```
-
-### 3️⃣ Run Platform
+### 2️⃣ Run Platform
 ```bash
 npm run dev
 ```
@@ -122,14 +107,6 @@ Open **`http://localhost:9002/`** to access the clinical portal.
 
 ---
 
-## 🛡️ Security & Compliance
-- **Data Isolation**: Strict Firestore rules ensure patient data is only accessible to the owner and authorized administrators.
-- **WS-Security**: SOAP communications are signed and encrypted for institutional integrity.
-- **RSA-4096 Encryption**: All PHI exports utilize RSA protocols (simulated for prototype) to secure sensitive history.
-
 ### 📌 Development Lead
 **KISHOR KAKDE PATIL**  
-[GitHub Profile](https://github.com/Kishor055)
-
----
 *Developed with ❤️ for a safer, AI-powered healthcare future.*
