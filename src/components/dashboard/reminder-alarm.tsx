@@ -126,6 +126,12 @@ export function ReminderAlarm() {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open && !isProcessing) {
+      setActiveAlarm(null);
+    }
+  };
+
   if (!mounted) return null;
 
   return (
@@ -134,11 +140,7 @@ export function ReminderAlarm() {
       <audio ref={ttsRef} className="hidden" />
       <Dialog 
         open={!!activeAlarm} 
-        onOpenChange={(v) => { 
-          if (!v && !isProcessing) {
-            setActiveAlarm(null);
-          }
-        }}
+        onOpenChange={handleOpenChange}
       >
         <DialogContent className="sm:max-w-[550px] overflow-hidden border-none p-0 bg-white shadow-[0_50px_100px_rgba(0,0,0,0.2)] rounded-[3.5rem]">
           <div className="h-3 w-full bg-primary absolute top-0 left-0 animate-pulse" />
