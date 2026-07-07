@@ -16,6 +16,10 @@ import { collection, serverTimestamp } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import { answerMedicationQuestions } from "@/ai/flows/answer-medication-questions";
 
+/**
+ * EXPERT DOSE PROTOCOL COMPONENT
+ * Handles real-time medication alerts, TTS instructions, and adherence logging.
+ */
 export function ReminderAlarm() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -68,6 +72,7 @@ export function ReminderAlarm() {
     if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
+      // Professional schedule mock: trigger every 30 mins on the dot
       if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
@@ -125,7 +130,7 @@ export function ReminderAlarm() {
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
+  const handleDialogChange = (open: boolean) => {
     if (!open && !isProcessing) {
       setActiveAlarm(null);
     }
@@ -139,7 +144,7 @@ export function ReminderAlarm() {
       <audio ref={ttsRef} className="hidden" />
       <Dialog 
         open={!!activeAlarm} 
-        onOpenChange={handleOpenChange}
+        onOpenChange={handleDialogChange}
       >
         <DialogContent className="sm:max-w-[550px] overflow-hidden border-none p-0 bg-white shadow-[0_50px_100px_rgba(0,0,0,0.2)] rounded-[3.5rem]">
           <div className="h-3 w-full bg-primary absolute top-0 left-0 animate-pulse" />
