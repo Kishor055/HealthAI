@@ -7,6 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { Hospital, MapPin, Navigation, Phone, ShieldCheck, Microscope, Droplets, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from "@/lib/utils";
 
 const DefaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
