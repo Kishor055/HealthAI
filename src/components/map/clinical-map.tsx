@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Hospital, MapPin, Navigation, Phone, Microscope, Droplets, Stethoscope } from 'lucide-react';
+import { Hospital, MapPin, Navigation, Phone, Microscope, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
 

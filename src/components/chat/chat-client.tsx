@@ -22,6 +22,10 @@ interface Message {
   audioUrl?: string;
 }
 
+/**
+ * EXPERT AI ASSISTANT CLIENT
+ * Personalized health coaching with RAG-grounded insights and TTS.
+ */
 export function ChatClient() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -246,9 +250,9 @@ export function ChatClient() {
                     
                     <div className="bg-destructive/5 border border-destructive/10 p-4 rounded-2xl flex items-start gap-3">
                        <Info className="size-4 text-destructive shrink-0 mt-0.5" />
-                       <p className="text-[9px] font-bold text-destructive/80 leading-relaxed uppercase tracking-tight">
+                       <div className="text-[9px] font-bold text-destructive/80 leading-relaxed uppercase tracking-tight">
                          Educational guidance only. Does not replace professional medical advice or treatment.
-                       </p>
+                       </div>
                     </div>
                   </div>
                 ) : (
