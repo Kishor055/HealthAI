@@ -68,7 +68,6 @@ export function ReminderAlarm() {
     if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
-      // Logic to trigger every 30 mins for prototype demo
       if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
@@ -127,7 +126,6 @@ export function ReminderAlarm() {
   };
 
   const handleOpenChange = (open: boolean) => {
-    // Only allow manual closing if not currently submitting data
     if (!open && !isProcessing) {
       setActiveAlarm(null);
     }
@@ -136,7 +134,7 @@ export function ReminderAlarm() {
   if (!mounted) return null;
 
   return (
-    <div className="contents">
+    <>
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
       <audio ref={ttsRef} className="hidden" />
       <Dialog 
@@ -235,6 +233,6 @@ export function ReminderAlarm() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

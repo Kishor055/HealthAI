@@ -81,7 +81,6 @@
   50% { opacity: .5; }
 }
 
-/* Optimization for Expert UI */
 .hover-clinical {
   @apply transition-all duration-300 hover:scale-[1.01] hover:shadow-xl hover:border-primary/20;
 }
