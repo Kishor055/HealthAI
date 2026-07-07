@@ -16,10 +16,6 @@ import { collection, serverTimestamp } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import { answerMedicationQuestions } from "@/ai/flows/answer-medication-questions";
 
-/**
- * EXPERT DOSE PROTOCOL COMPONENT
- * Handles real-time medication alerts, TTS instructions, and adherence logging.
- */
 export function ReminderAlarm() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -72,7 +68,6 @@ export function ReminderAlarm() {
     if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
-      // Professional schedule mock: trigger every 30 mins on the dot
       if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
@@ -108,7 +103,7 @@ export function ReminderAlarm() {
     if (!user || !firestore || !activeAlarm) return;
     setIsProcessing(true);
     try {
-      addDocumentNonBlocking(collection(firestore, "users", user.uid, "medicationIntakes"), {
+      await addDocumentNonBlocking(collection(firestore, "users", user.uid, "medicationIntakes"), {
         userId: user.uid,
         medicineName: activeAlarm.medName,
         dosage: activeAlarm.dosage,
@@ -130,7 +125,7 @@ export function ReminderAlarm() {
     }
   };
 
-  const handleDialogChange = (open: boolean) => {
+  const handleOpenChange = (open: boolean) => {
     if (!open && !isProcessing) {
       setActiveAlarm(null);
     }
@@ -144,11 +139,10 @@ export function ReminderAlarm() {
       <audio ref={ttsRef} className="hidden" />
       <Dialog 
         open={!!activeAlarm} 
-        onOpenChange={handleDialogChange}
+        onOpenChange={handleOpenChange}
       >
         <DialogContent className="sm:max-w-[550px] overflow-hidden border-none p-0 bg-white shadow-[0_50px_100px_rgba(0,0,0,0.2)] rounded-[3.5rem]">
           <div className="h-3 w-full bg-primary absolute top-0 left-0 animate-pulse" />
-          
           <div className="p-12 space-y-10">
             <DialogHeader className="text-center">
               <div className="mx-auto w-28 h-28 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mb-8 relative group">
@@ -229,7 +223,7 @@ export function ReminderAlarm() {
                   variant="ghost" 
                   size="lg" 
                   className="h-20 font-black rounded-3xl text-destructive hover:bg-destructive/5 text-xs uppercase tracking-[0.3em] transition-all"
-                  onClick={() => { setActiveAlarm(null); }}
+                  onClick={() => setActiveAlarm(null)}
                   disabled={isProcessing}
                 >
                   Snooze Protocol

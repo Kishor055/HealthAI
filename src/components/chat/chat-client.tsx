@@ -22,10 +22,6 @@ interface Message {
   audioUrl?: string;
 }
 
-/**
- * EXPERT AI ASSISTANT CLIENT
- * Personalized health coaching with RAG-grounded insights and TTS.
- */
 export function ChatClient() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -141,7 +137,7 @@ export function ChatClient() {
            <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center shadow-inner">
              <Brain className="text-primary size-7" />
            </div>
-           <div>
+           <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h2 className="text-2xl font-black tracking-tighter">HealthAI Copilot</h2>
                 <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[8px] font-black uppercase h-5 px-2">RAG Intelligence</Badge>
@@ -250,9 +246,9 @@ export function ChatClient() {
                     
                     <div className="bg-destructive/5 border border-destructive/10 p-4 rounded-2xl flex items-start gap-3">
                        <Info className="size-4 text-destructive shrink-0 mt-0.5" />
-                       <div className="text-[9px] font-bold text-destructive/80 leading-relaxed uppercase tracking-tight">
+                       <p className="text-[9px] font-bold text-destructive/80 leading-relaxed uppercase tracking-tight">
                          Educational guidance only. Does not replace professional medical advice or treatment.
-                       </div>
+                       </p>
                     </div>
                   </div>
                 ) : (
