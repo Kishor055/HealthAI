@@ -86,7 +86,7 @@
 }
 
 .adherence-node {
-  @apply relative p-6 rounded-[2rem] border-2 border-slate-100 bg-white shadow-lg transition-all hover:border-primary/30;
+  @apply relative p-6 rounded-[2rem] border-2 border-slate-100 bg-white shadow-lg transition-all;
 }
 
 .stability-matrix {

@@ -69,12 +69,12 @@ export function ChatClient() {
     scrollToBottom();
   }, [messages, isLoading, scrollToBottom]);
 
-  const playAudio = (dataUri: string) => {
+  const playAudio = useCallback((dataUri: string) => {
     if (audioRef.current) {
       audioRef.current.src = dataUri;
       audioRef.current.play().catch(e => console.warn("Audio play blocked", e));
     }
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +201,7 @@ export function ChatClient() {
                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
                              <Bot className="size-3" /> Health Insight
                            </div>
-                           <p className="text-lg font-medium text-slate-700 leading-relaxed italic">"{message.structured.insight}"</p>
+                           <div className="text-lg font-medium text-slate-700 leading-relaxed italic">"{message.structured.insight}"</div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-50">
