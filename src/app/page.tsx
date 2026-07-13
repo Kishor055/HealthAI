@@ -74,8 +74,10 @@ export default function LandingPage() {
           src={placeholderImages.find(img => img.id === "login-hero")?.imageUrl || "https://images.unsplash.com/photo-1683934808546-cfea6e3d7d56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"}
           alt="Healthcare background"
           fill
+          sizes="50vw"
           className="object-cover"
           priority
+          data-ai-hint="medicine health"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
         <motion.div 
