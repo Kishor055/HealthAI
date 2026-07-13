@@ -68,6 +68,7 @@ export function ReminderAlarm() {
     if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
+      // Simulation: trigger every 30 mins
       if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
@@ -90,7 +91,7 @@ export function ReminderAlarm() {
       if (result.audioDataUri && ttsRef.current) {
         setAiInstruction(result.answer);
         ttsRef.current.src = result.audioDataUri;
-        ttsRef.current.play();
+        ttsRef.current.play().catch(e => console.warn("Speech play failed", e));
       }
     } catch (e) {
       console.warn("TTS Synthesis failed", e);
@@ -126,8 +127,10 @@ export function ReminderAlarm() {
   };
 
   const handleOpenChange = (open: boolean) => {
+    // Only allow manual close if not currently logging the intake
     if (!open && !isProcessing) {
       setActiveAlarm(null);
+      setAiInstruction(null);
     }
   };
 
