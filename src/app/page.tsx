@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { HeartPulse, ShieldCheck, Zap, ArrowRight, UserCircle, Loader2 } from 'lucide-react';
+import { HeartPulse, ShieldCheck, Zap, UserCircle, Loader2 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';

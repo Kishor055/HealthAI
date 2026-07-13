@@ -6,7 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Hospital, MapPin, Navigation, Phone, Microscope, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from "@/lib/utils"; // Corrected cn utility import
+import { cn } from "@/lib/utils";
 
 const DefaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',

@@ -17,7 +17,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { answerMedicationQuestions } from "@/ai/flows/answer-medication-questions";
 
 /**
- * Dose Protocol Component - Refactored for build stability and accessibility.
+ * Dose Protocol Component - Refactored for build stability and performance.
+ * Corrected ambiguous JSX callbacks causing parsing failures.
  */
 export function ReminderAlarm() {
   const { user } = useUser();
@@ -71,7 +72,7 @@ export function ReminderAlarm() {
     if (!mounted) return;
     const checkReminders = () => {
       const now = new Date();
-      // Simulation: trigger every 30 mins
+      // Simulation: trigger every 30 mins for prototype visibility
       if (now.getMinutes() % 30 === 0 && now.getSeconds() === 0 && !activeAlarm) {
         triggerAlarm("Lisinopril", "10mg");
       }
@@ -130,7 +131,6 @@ export function ReminderAlarm() {
   };
 
   const handleOpenChange = (open: boolean) => {
-    // Corrected handler for build stability
     if (!open && !isProcessing) {
       setActiveAlarm(null);
       setAiInstruction(null);
