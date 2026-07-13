@@ -127,7 +127,6 @@ export function ReminderAlarm() {
   };
 
   const handleOpenChange = (open: boolean) => {
-    // Only allow manual close if not currently logging the intake
     if (!open && !isProcessing) {
       setActiveAlarm(null);
       setAiInstruction(null);
@@ -226,7 +225,7 @@ export function ReminderAlarm() {
                   variant="ghost" 
                   size="lg" 
                   className="h-20 font-black rounded-3xl text-destructive hover:bg-destructive/5 text-xs uppercase tracking-[0.3em] transition-all"
-                  onClick={() => setActiveAlarm(null)}
+                  onClick={() => handleOpenChange(false)}
                   disabled={isProcessing}
                 >
                   Snooze Protocol
