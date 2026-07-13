@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  // Lighthouse recommendation: allow users to scale for better accessibility
+  // Accessible scaling allows users to zoom if needed
   maximumScale: 5,
 };
 

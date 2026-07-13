@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * CountdownTimer - Uses useEffect to prevent hydration mismatches.
+ * This ensures the main-thread is not blocked by discrepancies between server/client HTML.
  */
 const CountdownTimer = React.memo(() => {
   const [mounted, setMounted] = useState(false);
@@ -100,10 +101,10 @@ export const Reminders = React.memo(() => {
     <Card className="border-none shadow-xl bg-card/60 backdrop-blur-xl">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Schedule</CardTitle>
+          <CardTitle className="text-xl font-black uppercase tracking-tight">Schedule</CardTitle>
           <CountdownTimer />
         </div>
-        <CardDescription>
+        <CardDescription className="font-medium">
           Real-time tracking of your active medication plan.
         </CardDescription>
       </CardHeader>
