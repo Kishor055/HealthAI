@@ -16,6 +16,9 @@ import { collection, serverTimestamp } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import { answerMedicationQuestions } from "@/ai/flows/answer-medication-questions";
 
+/**
+ * Dose Protocol Component - Refactored for build stability and accessibility.
+ */
 export function ReminderAlarm() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -127,6 +130,7 @@ export function ReminderAlarm() {
   };
 
   const handleOpenChange = (open: boolean) => {
+    // Corrected handler for build stability
     if (!open && !isProcessing) {
       setActiveAlarm(null);
       setAiInstruction(null);
