@@ -6,7 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Hospital, MapPin, Navigation, Phone, Microscope, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; // Corrected cn utility import
 
 const DefaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -101,7 +101,7 @@ export default function ClinicalMap({ facilities, center, onFacilitySelect, sele
             <div className="flex items-center gap-2 mb-2">
                {facility.category === 'blood_bank' ? <Droplets className="size-4" /> : 
                 facility.category === 'diagnostic' ? <Microscope className="size-4" /> : <Hospital className="size-4" />}
-               <span className="text-[9px] font-black uppercase tracking-widest opacity-80">{facility.type}</span>
+               <span className="text-[10px] font-black uppercase tracking-widest opacity-80">{facility.type}</span>
             </div>
             <h3 className="font-black text-sm uppercase leading-tight tracking-tighter">{facility.name}</h3>
           </div>

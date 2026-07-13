@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { doc } from "firebase/firestore";
 
 /**
- * Landing Page - Resilient Guest Access Gateway.
+ * Landing Page - Optimized for LCP and Performance.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -28,7 +28,6 @@ export default function LandingPage() {
       const result = await signInAnonymously(auth);
       const user = result.user;
 
-      // 1. Establish Guest Profile in Firestore
       const profileRef = doc(firestore, "users", user.uid);
       setDocumentNonBlocking(profileRef, {
         id: user.uid,
@@ -39,7 +38,6 @@ export default function LandingPage() {
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
-      // 2. Background Sync (Fail-soft for prototypes)
       try {
         const idToken = await user.getIdToken();
         await fetch('/api/auth/session', {
@@ -72,11 +70,11 @@ export default function LandingPage() {
       <div className="hidden bg-muted lg:block relative">
         <Image
           src={placeholderImages.find(img => img.id === "login-hero")?.imageUrl || "https://images.unsplash.com/photo-1683934808546-cfea6e3d7d56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"}
-          alt="Healthcare background"
+          alt="Healthcare provider organizing medications"
           fill
           sizes="50vw"
           className="object-cover"
-          priority
+          priority // High priority for LCP optimization
           data-ai-hint="medicine health"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />

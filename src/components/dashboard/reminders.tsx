@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,18 +16,29 @@ import { query, collection, where, limit, serverTimestamp } from "firebase/fires
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
+/**
+ * CountdownTimer - Uses useEffect to prevent hydration mismatches.
+ */
 const CountdownTimer = React.memo(() => {
   const [mounted, setMounted] = useState(false);
-  const [now, setNow] = useState<Date | null>(null);
+  const [timeLeft, setTimeLeft] = useState<{ mins: number; secs: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    setNow(new Date());
-    const interval = setInterval(() => setNow(new Date()), 1000);
+    const updateTime = () => {
+      const now = new Date();
+      setTimeLeft({
+        mins: 59 - now.getMinutes(),
+        secs: 59 - now.getSeconds(),
+      });
+    };
+    
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  if (!mounted || !now) {
+  if (!mounted || !timeLeft) {
     return (
       <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest">
         <Timer className="size-3" />
@@ -36,13 +47,10 @@ const CountdownTimer = React.memo(() => {
     );
   }
 
-  const mins = 59 - now.getMinutes();
-  const secs = 59 - now.getSeconds();
-  
   return (
     <div className="flex items-center gap-1.5 text-[10px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-widest">
       <Timer className="size-3" />
-      Next Sync: {mins}m {secs}s
+      Next Sync: {timeLeft.mins}m {timeLeft.secs}s
     </div>
   );
 });
