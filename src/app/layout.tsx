@@ -13,8 +13,10 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'HealthAI | Modern Medication Management',
-  description: 'Your premium AI-powered healthcare assistant for medication tracking and prescription analysis.',
+  title: 'HealthAI PRO | Enterprise Clinical Intelligence',
+  description: 'AI-driven medication safety, real-time biometric telemetry, and RAG-powered clinical analysis platform.',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  robots: 'index, follow',
 };
 
 export default function RootLayout({

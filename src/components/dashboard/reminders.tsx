@@ -16,10 +16,6 @@ import { query, collection, where, limit, serverTimestamp } from "firebase/fires
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-/**
- * Optimized Countdown component.
- * Uses a double-render safety check to ensure server and client initial HTML are identical.
- */
 const CountdownTimer = React.memo(() => {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
@@ -31,7 +27,6 @@ const CountdownTimer = React.memo(() => {
     return () => clearInterval(interval);
   }, []);
 
-  // Return a stable placeholder during SSR and initial hydration
   if (!mounted || !now) {
     return (
       <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest">
@@ -70,7 +65,7 @@ export const Reminders = React.memo(() => {
 
   const { data: medications, isLoading } = useCollection(activeMedsQuery);
 
-  const handleTakeMedication = (med: any) => {
+  const handleTakeMedication = useCallback((med: any) => {
     if (!user || !firestore) return;
     setProcessingId(med.id);
     
@@ -91,7 +86,7 @@ export const Reminders = React.memo(() => {
     });
     
     setTimeout(() => setProcessingId(null), 800);
-  };
+  }, [user, firestore, toast]);
 
   return (
     <Card className="border-none shadow-xl bg-card/60 backdrop-blur-xl">
