@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
@@ -15,8 +15,13 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'HealthAI PRO | Enterprise Clinical Intelligence',
   description: 'AI-driven medication safety, real-time biometric telemetry, and RAG-powered clinical analysis platform.',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
   robots: 'index, follow',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
