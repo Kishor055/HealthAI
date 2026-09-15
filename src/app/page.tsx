@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { HeartPulse, ShieldCheck, Zap, UserCircle, Loader2 } from 'lucide-react';
+import { ShieldCheck, Zap, UserCircle, Loader2 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { doc } from "firebase/firestore";
+import { HealthAILogo } from '@/components/healthai-logo';
 
 /**
  * Landing Page - Optimized for LCP and Performance.
@@ -104,13 +105,17 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
           className="mx-auto grid w-full max-w-[420px] gap-10"
         >
-          <div className="grid gap-4 text-center">
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-14 h-14 bg-primary text-primary-foreground rounded-[1.25rem] flex items-center justify-center shadow-2xl shadow-primary/30">
-                <HeartPulse className="h-8 w-8" />
-              </div>
-              <h1 className="text-5xl font-black font-headline tracking-tighter text-primary">HealthAI</h1>
+          <div className="grid gap-6 text-center">
+            <div className="flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              >
+                <HealthAILogo size={120} color="hsl(var(--primary))" variant="full" />
+              </motion.div>
             </div>
+            <h1 className="text-4xl font-black font-headline tracking-tighter text-primary sr-only">HealthAI</h1>
             <p className="text-muted-foreground text-xl font-medium">
               Intelligence in your care.
             </p>

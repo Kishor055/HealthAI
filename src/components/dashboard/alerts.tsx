@@ -8,7 +8,12 @@ import {
 } from "@/components/ui/card"
 import { AlertTriangle, ShieldCheck, Info } from "lucide-react"
 
-const alerts = [
+interface SafetyAlert {
+  priority: "high" | "medium" | "low";
+  message: string;
+}
+
+const alerts: SafetyAlert[] = [
   {
     priority: "high",
     message: "High risk of serotonin syndrome when combining Sertraline with a newly added medication. Consult your doctor immediately.",
@@ -21,7 +26,7 @@ const alerts = [
     priority: "low",
     message: "Lisinopril may cause a dry cough. This is a common side effect but report if it becomes severe.",
   },
-]
+];
 
 const priorityIcons = {
   high: <AlertTriangle className="h-4 w-4" />,

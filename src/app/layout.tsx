@@ -4,13 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { LanguageProvider } from '@/context/language-context';
-import { PT_Sans } from 'next/font/google';
 
-const ptSans = PT_Sans({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-pt-sans',
-});
 
 export const metadata: Metadata = {
   title: 'HealthAI PRO | Enterprise Clinical Intelligence',
@@ -32,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(ptSans.variable, 'font-body antialiased', 'min-h-screen bg-background')}>
+      <body className={cn('font-body antialiased min-h-screen bg-background')}>
         <FirebaseClientProvider>
           <LanguageProvider>
             {children}

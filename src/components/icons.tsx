@@ -1,7 +1,12 @@
-import { HeartPulse } from 'lucide-react';
+import { HealthAILogo, HealthAIIcon, HealthAIWordmark } from './healthai-logo';
+
+export { HealthAILogo, HealthAIIcon, HealthAIWordmark };
 
 export const Icons = {
-  logo: (props: React.SVGProps<SVGSVGElement>) => (
-    <HeartPulse {...props} />
-  ),
+  /** Full circular badge logo */
+  logo: HealthAILogo,
+  /** Compact caduceus icon */
+  logoIcon: HealthAIIcon,
+  /** Inline icon + wordmark */
+  logoWordmark: HealthAIWordmark,
 };

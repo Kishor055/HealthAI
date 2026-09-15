@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Bell,
-  HeartPulse,
   ClipboardType,
   LayoutDashboard,
   Map,
@@ -26,6 +25,7 @@ import {
   Bot,
   Stethoscope
 } from 'lucide-react';
+import { HealthAILogo, HealthAIIcon } from '@/components/healthai-logo';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -122,11 +122,9 @@ export const DashboardSidebar = React.memo(() => {
       <div className="hidden border-r bg-card md:block md:fixed md:inset-y-0 md:left-0 md:z-10 md:w-64 shadow-xl">
         <div className="flex h-full max-h-screen flex-col">
           <div className="flex h-20 items-center border-b px-6 justify-between">
-            <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
-              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
-                <HeartPulse className="h-6 w-6" />
-              </div>
-              <span className="font-headline text-primary">HealthAI</span>
+            <Link href="/dashboard" className="flex items-center gap-2.5 group">
+              <HealthAILogo size={44} color="hsl(var(--primary))" variant="full" className="transition-transform group-hover:scale-105" />
+              <span className="font-headline text-primary text-lg font-black tracking-tight sr-only">HealthAI</span>
             </Link>
             {isAdmin && (
               <div className="p-1.5 bg-primary/10 text-primary rounded-lg" title="Admin Active">
@@ -170,11 +168,9 @@ export const DashboardSidebar = React.memo(() => {
                   <SheetDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Clinical Portal Navigation</SheetDescription>
                 </SheetHeader>
                 <div className="flex h-20 items-center border-b px-6 sr-only">
-                    <Link href="/dashboard" className="flex items-center gap-3 font-black text-xl tracking-tighter">
-                       <div className="w-10 h-10 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center">
-                            <HeartPulse className="h-6 w-6" />
-                        </div>
-                        <span className="font-headline">HealthAI</span>
+                    <Link href="/dashboard" className="flex items-center gap-2 font-black text-xl tracking-tighter">
+                       <HealthAIIcon size={28} color="hsl(var(--primary))" />
+                        <span className="font-headline text-primary">HealthAI</span>
                     </Link>
                 </div>
                 <div className="flex-1 overflow-y-auto py-4">
