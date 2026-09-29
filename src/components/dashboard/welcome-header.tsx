@@ -34,14 +34,14 @@ export function WelcomeHeader() {
         <h1 className="text-4xl font-black tracking-tighter text-foreground">
           {t.welcomeBack}, <span className="text-primary">{firstName}</span>.
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 pt-2">
           <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            {t.healthCheckIn} — <span className="text-accent flex items-center gap-1 font-bold"><ShieldCheck className="size-3" /> System Verified</span>
+            {t.healthCheckIn} — <span className="text-emerald-600 flex items-center gap-1 font-bold"><ShieldCheck className="size-3" /> System Verified</span>
           </p>
           {isGuest && (
-             <div className="flex items-center gap-1.5 px-3 py-1 bg-muted rounded-full border border-border">
-                <UserCircle className="size-3 text-muted-foreground" />
-                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Guest Node</span>
+             <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
+                <UserCircle className="size-3 text-slate-500" />
+                <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Guest Node</span>
              </div>
           )}
         </div>

@@ -166,77 +166,81 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-          <div className="space-y-6 flex-1 w-full">
-            <WelcomeHeader />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <Card className="border-none shadow-xl bg-white rounded-[2.25rem] hover-clinical">
-                 <CardContent className="p-8">
-                   <div className="flex flex-col space-y-6">
-                     <div>
-                       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Physiological Pulse</h3>
-                       <p className="text-sm font-black text-slate-900 uppercase">Self-Reported Wellness Status</p>
-                     </div>
-                     
-                     <div className="grid grid-cols-5 gap-3">
-                       {checkIns.map((item) => (
-                         <button
-                           key={item.label}
-                           onClick={() => setSelectedVibe(item.label)}
-                           className={cn(
-                             "flex flex-col items-center gap-3 p-4 rounded-2xl transition-all border-2",
-                             selectedVibe === item.label 
-                               ? "border-primary bg-primary/5 ring-8 ring-primary/5" 
-                               : "border-slate-50 hover:border-slate-100 bg-white"
-                           )}
-                         >
-                           <item.icon className={cn("size-6", item.color)} />
-                           <span className="block text-[8px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
-                         </button>
-                       ))}
-                     </div>
+        <div className="flex flex-col gap-8 w-full">
+          <WelcomeHeader />
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+               <Card className="border-none shadow-xl bg-white rounded-[2.25rem] hover-clinical flex flex-col justify-between">
+                 <CardContent className="p-8 flex flex-col h-full justify-between gap-6">
+                   <div>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Physiological Pulse</h3>
+                     <p className="text-sm font-black text-slate-900 uppercase">Self-Reported Wellness Status</p>
+                   </div>
+                   
+                   <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                     {checkIns.map((item) => (
+                       <button
+                         key={item.label}
+                         onClick={() => setSelectedVibe(item.label)}
+                         className={cn(
+                           "flex flex-col items-center justify-center gap-2 p-2 sm:p-3 rounded-2xl transition-all border-2",
+                           selectedVibe === item.label 
+                             ? "border-primary bg-primary/5 ring-4 ring-primary/10" 
+                             : "border-slate-50 hover:border-slate-200 bg-white"
+                         )}
+                       >
+                         <item.icon className={cn("size-5 sm:size-6", item.color)} />
+                         <span className="block text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-slate-500 truncate w-full text-center">{item.label}</span>
+                       </button>
+                     ))}
                    </div>
                  </CardContent>
                </Card>
 
-               <Card className="border-none shadow-xl bg-white rounded-[2.25rem] overflow-hidden relative group hover-clinical">
+               <Card className="border-none shadow-xl bg-white rounded-[2.25rem] overflow-hidden relative group hover-clinical flex flex-col justify-between">
                   <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-1000">
                      <Trophy className="size-32 text-primary" />
                   </div>
-                  <CardContent className="p-8 space-y-6 relative z-10">
+                  <CardContent className="p-8 space-y-6 relative z-10 flex flex-col h-full justify-between gap-4">
                      <div className="flex items-center justify-between">
                         <div>
                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Clinical Adherence</h3>
                            <p className="text-sm font-black text-slate-900 uppercase">Consistency Streak</p>
                         </div>
-                        <div className="px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
-                           <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">System Verified</span>
+                        <div className="px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 shrink-0 ml-2">
+                           <span className="text-[7px] sm:text-[8px] font-black text-emerald-600 uppercase tracking-widest whitespace-nowrap">System Verified</span>
                         </div>
                      </div>
-                     <div className="flex items-end gap-3">
-                        <span className="text-7xl font-black tracking-tighter text-primary">07</span>
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-3">Nodes Active</span>
+                     <div className="flex items-end gap-3 mt-auto">
+                        <span className="text-6xl sm:text-7xl font-black tracking-tighter text-primary leading-none">07</span>
+                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1 sm:mb-2">Nodes Active</span>
                      </div>
-                     <div className="flex gap-2.5">
+                     <div className="flex gap-1.5 sm:gap-2.5">
                         {[1, 1, 1, 1, 1, 1, 0].map((active, i) => (
-                          <div key={i} className={cn("flex-1 h-2.5 rounded-full transition-all duration-500", active ? "bg-primary shadow-[0_0_10px_rgba(59,130,246,0.4)]" : "bg-slate-100")} />
+                          <div key={i} className={cn("flex-1 h-2 sm:h-2.5 rounded-full transition-all duration-500", active ? "bg-primary shadow-[0_0_10px_rgba(59,130,246,0.4)]" : "bg-slate-100")} />
                         ))}
                      </div>
-                     <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600">
-                        <ShieldCheck className="size-3.5" /> Adherence Shield Fully Operational
+                     <div className="flex items-center gap-2 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600">
+                        <ShieldCheck className="size-3 sm:size-3.5 shrink-0" /> Adherence Shield Operational
                      </div>
                   </CardContent>
                </Card>
             </div>
-          </div>
-          
-          <div className="flex flex-col gap-4">
-            <QuickActions 
-              onAddMed={() => setIsAddOpen(true)}
-              onTakeNow={() => setIsTakeNowOpen(true)}
-              onCallDoctor={() => setIsCallDoctorOpen(true)}
-              onMedicalId={() => setIsIdOpen(true)}
-            />
+            
+            <div className="xl:col-span-1 bg-white/40 backdrop-blur-md rounded-[2.5rem] p-6 sm:p-8 border border-white shadow-xl flex flex-col justify-center">
+              <div className="mb-6 flex items-center justify-between">
+                 <div>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-1">Command Center</h3>
+                    <p className="text-sm font-black text-slate-900 uppercase">Quick Actions</p>
+                 </div>
+              </div>
+              <QuickActions 
+                onAddMed={() => setIsAddOpen(true)}
+                onTakeNow={() => setIsTakeNowOpen(true)}
+                onCallDoctor={() => setIsCallDoctorOpen(true)}
+                onMedicalId={() => setIsIdOpen(true)}
+              />
+            </div>
           </div>
         </div>
         

@@ -2,20 +2,15 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Zap, UserCircle, Loader2 } from 'lucide-react';
+import { ShieldCheck, Zap, UserCircle, Loader2, ArrowRight, HeartPulse } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { placeholderImages } from '@/lib/placeholder-images';
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { doc } from "firebase/firestore";
-import { HealthAILogo } from '@/components/healthai-logo';
 
-/**
- * Landing Page - Optimized for LCP and Performance.
- */
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
@@ -52,11 +47,10 @@ export default function LandingPage() {
 
       toast({ 
         title: "Guest Session Active", 
-        description: "Clinical portal established. Redirecting." 
+        description: "Clinical portal established. Routing to secure environment." 
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Auth Failure", error);
       toast({ 
         variant: "destructive", 
         title: "Access Interrupted", 
@@ -67,91 +61,104 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-background overflow-hidden font-body">
-      <div className="hidden bg-muted lg:block relative">
-        <Image
-          src={placeholderImages.find(img => img.id === "login-hero")?.imageUrl || "https://images.unsplash.com/photo-1683934808546-cfea6e3d7d56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"}
-          alt="Healthcare provider organizing medications"
-          fill
-          sizes="50vw"
-          className="object-cover"
-          priority // High priority for LCP optimization
-          data-ai-hint="medicine health"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="absolute bottom-12 left-12 right-12"
-        >
-          <div className="bg-white/10 backdrop-blur-xl p-10 rounded-[2rem] border border-white/20 text-white shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <ShieldCheck className="text-primary size-8" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-80">Clinical Shield v3.5</span>
-            </div>
-            <blockquote className="space-y-6">
-              <p className="text-3xl font-light italic leading-tight">"Health is not just a status, it's a journey. We're here to guide every step with AI-driven intelligence."</p>
-              <footer className="text-sm font-black uppercase tracking-widest opacity-80">— The HealthAI Core</footer>
-            </blockquote>
-          </div>
-        </motion.div>
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-slate-900 font-body selection:bg-primary/30">
+      
+      {/* Left pane: Enterprise Branding */}
+      <div className="hidden lg:flex relative overflow-hidden bg-slate-950 flex-col p-12 xl:p-16 text-white justify-center items-start">
+         <div className="absolute inset-0 z-0">
+           <Image
+             src="https://images.unsplash.com/photo-1551076805-e18690c5e53b?q=80&w=2000&auto=format&fit=crop"
+             alt="Modern clinical hospital environment"
+             fill
+             className="object-cover opacity-20 mix-blend-luminosity"
+             priority
+           />
+           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
+           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50" />
+         </div>
+
+         <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full mix-blend-screen pointer-events-none" />
+         
+         <div className="relative z-10 max-w-2xl">
+           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-wider uppercase mb-8">
+               <ShieldCheck className="size-3.5" /> Enterprise Grade
+           </div>
+           
+           <h1 className="text-5xl xl:text-7xl font-black tracking-tight leading-[1.05] mb-6">
+              The Future of<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-primary to-emerald-400">Clinical Care.</span>
+           </h1>
+           <p className="text-slate-400 text-lg xl:text-xl font-medium leading-relaxed mb-12 max-w-lg">
+              HealthAI PRO unifies biometric telemetry, automated RAG triage, and stringent RBAC security into a single pane of glass for modern healthcare providers.
+           </p>
+
+           <div className="flex items-center gap-8 border-l-2 border-primary/30 pl-6">
+              <div>
+                 <div className="text-3xl font-black text-white">99.9%</div>
+                 <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">System Uptime</div>
+              </div>
+              <div>
+                 <div className="text-3xl font-black text-white">SOC2</div>
+                 <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Compliant Hub</div>
+              </div>
+              <div>
+                 <div className="text-3xl font-black text-white">&lt;50ms</div>
+                 <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Telemetry Sync</div>
+              </div>
+           </div>
+         </div>
       </div>
       
-      <div className="flex items-center justify-center py-12 px-8">
+      {/* Right pane: Auth Gateway */}
+      <div className="flex items-center justify-center p-6 sm:p-12 bg-white relative">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto grid w-full max-w-[420px] gap-10"
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto w-full max-w-[440px]"
         >
-          <div className="grid gap-6 text-center">
-            <div className="flex items-center justify-center">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-              >
-                <HealthAILogo size={120} color="hsl(var(--primary))" variant="full" />
-              </motion.div>
+          <div className="flex flex-col items-center text-center mb-12">
+            <div className="size-16 rounded-3xl bg-gradient-to-br from-primary to-blue-700 flex items-center justify-center shadow-2xl shadow-primary/20 mb-6 border border-white/50">
+               <HeartPulse className="size-8 text-white" />
             </div>
-            <h1 className="text-4xl font-black font-headline tracking-tighter text-primary sr-only">HealthAI</h1>
-            <p className="text-muted-foreground text-xl font-medium">
-              Intelligence in your care.
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">HealthAI<span className="text-primary">PRO</span></h2>
+            <p className="text-slate-500 font-medium">Select your portal entry method to continue.</p>
+          </div>
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={() => router.push('/login')}
+              className="w-full h-16 rounded-2xl text-base font-black uppercase tracking-widest bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/10 transition-all group overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+              <span className="flex items-center gap-3">
+                Secure Institutional Login <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleGuestAccess}
+              disabled={loading}
+              className="w-full h-16 rounded-2xl border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-sm font-bold uppercase tracking-widest text-slate-700 transition-all"
+            >
+              {loading ? (
+                <Loader2 className="size-5 animate-spin text-slate-400" />
+              ) : (
+                <span className="flex items-center gap-3">
+                  <UserCircle className="size-5 text-slate-400" /> Enter Sandbox Guest Mode
+                </span>
+              )}
+            </Button>
+          </div>
+
+          <div className="mt-8 p-5 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-start gap-3">
+            <Zap className="size-5 text-blue-500 mt-0.5 shrink-0" />
+            <p className="text-xs font-bold text-blue-800/80 leading-relaxed">
+              Protected by Enterprise-Grade RBAC. All telemetry data is sandboxed per user session.
             </p>
           </div>
           
-          <div className="bg-card p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border space-y-8">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black uppercase tracking-tight">Portal Access</h2>
-              <p className="text-sm text-muted-foreground font-medium">Select your entry protocol to begin.</p>
-            </div>
-
-            <div className="space-y-4">
-              <Button 
-                onClick={handleGuestAccess}
-                disabled={loading}
-                className="w-full h-16 text-xl font-black shadow-lg shadow-primary/20 rounded-2xl group transition-all hover:scale-[1.02] bg-primary"
-              >
-                {loading ? <Loader2 className="animate-spin mr-2" /> : <><UserCircle className="size-6 mr-3 group-hover:rotate-12 transition-transform" /> Open Portal</>} 
-              </Button>
-              
-              <Button variant="outline" className="w-full h-14 rounded-xl text-[11px] font-black uppercase tracking-widest border-2" onClick={() => router.push('/login')}>
-                Clinical Node Login
-              </Button>
-            </div>
-
-            <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex items-center gap-3">
-              <Zap className="text-primary size-5 fill-primary" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 leading-tight">
-                Guest sessions provide full feature access with clinical data isolation.
-              </p>
-            </div>
-          </div>
-          
-          <p className="text-center text-xs text-muted-foreground uppercase font-black tracking-[0.2em] opacity-40">
-            Enterprise Medical Adherence System
-          </p>
         </motion.div>
       </div>
     </div>

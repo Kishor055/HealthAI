@@ -1,0 +1,48 @@
+services:
+  # ── Python FastAPI Clinical Microservice ─────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: healthai-fastapi
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - FIREBASE_PROJECT_ID=studio-5305454790-ef005
+      - JWT_SECRET_KEY=healthai_pro_clinical_secure_enterprise_key_2026_x77
+    networks:
+      - healthai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # ── Next.js 15 Frontend Web Application ───────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healthai-nextjs
+    restart: unless-stopped
+    ports:
+      - "9002:9002"
+    environment:
+      - PORT=9002
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=studio-5305454790-ef005
+      - NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyCIflNdccppOsW39hrxXrItREC3Je05RCI
+      - NEXT_PUBLIC_FIREBASE_APP_ID=1:717964187913:web:0f05a09f86ab3ee836dbd8
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=studio-5305454790-ef005.firebaseapp.com
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - healthai-network
+
+networks:
+  healthai-network:
+    driver: bridge

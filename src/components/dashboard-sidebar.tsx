@@ -77,6 +77,7 @@ export const DashboardSidebar = React.memo(() => {
     { href: '/dashboard/symptoms', icon: Thermometer, label: t.symptoms },
     { href: '/dashboard/chat', icon: MessageSquare, label: t.aiAssistant },
     { href: '/dashboard/discover', icon: Map, label: t.discover },
+    { href: '/dashboard/settings', icon: Settings, label: "Settings" },
   ];
 
   const navLinks = React.useMemo(() => (

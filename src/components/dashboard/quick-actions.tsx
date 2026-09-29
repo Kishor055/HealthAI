@@ -24,33 +24,30 @@ export function QuickActions({ onAddMed, onTakeNow, onCallDoctor, onMedicalId }:
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
+    <div className="grid grid-cols-2 gap-4 w-full">
       {actions.map((action, idx) => {
         const Content = (
           <Button 
             variant="outline" 
-            className="h-16 px-5 flex items-center justify-between gap-4 rounded-[1.25rem] border-2 border-white bg-white hover:bg-slate-50 hover:border-primary/20 transition-all shadow-[0_10px_30px_rgba(0,0,0,0.03)] group min-w-[160px]"
+            className="h-[4.5rem] px-4 flex items-center justify-start gap-4 rounded-2xl border-2 border-slate-100 bg-white hover:bg-slate-50 hover:border-primary/30 transition-all shadow-sm hover:shadow-md group w-full"
             onClick={action.onClick}
           >
-            <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl ${action.color} text-white shadow-lg shadow-current/20 group-hover:scale-110 transition-transform`}>
-                <action.icon className="size-4" />
-              </div>
-              <span className="font-black text-xs uppercase tracking-tighter">{action.label}</span>
+            <div className={`p-2.5 rounded-xl ${action.color} text-white shadow-lg shadow-current/20 group-hover:scale-110 transition-transform shrink-0`}>
+              <action.icon className="size-5" />
             </div>
-            <ChevronRight className="size-3 opacity-0 group-hover:opacity-30 transition-all -translate-x-2 group-hover:translate-x-0" />
+            <span className="font-black text-xs uppercase tracking-tight text-slate-700 text-left whitespace-normal leading-tight">{action.label}</span>
           </Button>
         );
 
         if (action.href) {
           return (
-            <Link key={idx} href={action.href} className="block">
+            <Link key={idx} href={action.href} className="block w-full">
               {Content}
             </Link>
           );
         }
 
-        return <div key={idx}>{Content}</div>;
+        return <div key={idx} className="w-full">{Content}</div>;
       })}
     </div>
   );

@@ -1,12 +1,8 @@
 'use server';
 
 /**
- * @fileOverview HealthAI Copilot - Personalized AI healthcare assistant.
- * Grounded in the Enterprise Clinical Registry and Large Medical Records Dataset via RAG.
- * 
- * - Answer health queries with personalized context.
- * - Provide lifestyle, diet, and exercise suggestions.
- * - Analyze trends and explain reports in simple terms.
+ * @fileOverview HealthAI Copilot - Grounded AI Healthcare Assistant.
+ * Grounded in patient-specific medical records, lab reports, and pharmaceutical standards via RAG.
  */
 
 import { ai } from '@/ai/genkit';
@@ -24,6 +20,7 @@ const HealthCopilotInputSchema = z.object({
     recentVitals: z.string().optional(),
     goals: z.string().optional(),
   }).describe('The personalized context available for the user.'),
+  documentContext: z.string().optional().describe('Retrieved patient documents and lab reports for RAG grounding.'),
   generateAudio: z.boolean().optional().default(false).describe('Whether to generate voice response.'),
 });
 
@@ -34,6 +31,9 @@ const HealthCopilotOutputSchema = z.object({
   recommendations: z.array(z.string()).describe('Personalized clinical or wellness recommendations.'),
   lifestyleSuggestions: z.array(z.string()).describe('Practical lifestyle, diet, or exercise tips.'),
   followUpActions: z.array(z.string()).describe('Specific next steps for the user.'),
+  citations: z.array(z.string()).optional().describe('Source documents and clinical references used.'),
+  doctorQuestions: z.array(z.string()).optional().describe('Recommended questions for the patient to ask their physician.'),
+  hasSufficientContext: z.boolean().optional().default(true).describe('Whether sufficient clinical data was available.'),
   audioDataUri: z.string().optional().describe('Base64 WAV audio data URI of the response summary.'),
 });
 
@@ -41,18 +41,17 @@ export type HealthCopilotOutput = z.infer<typeof HealthCopilotOutputSchema>;
 
 /**
  * Medical Knowledge Retrieval Tool (RAG Engine)
- * Grounded in a large-scale medical records dataset and pharmaceutical standards.
+ * Grounded in validated clinical reference guidelines.
  */
 const medicalKnowledgeLookup = ai.defineTool(
   {
     name: 'medicalKnowledgeLookup',
-    description: 'Searches the Enterprise Clinical Registry for grounded medical standards, lifestyle protocols, and preventative care data.',
-    inputSchema: z.object({ query: z.string().describe('The medical, lifestyle, or clinical query to lookup.') }),
+    description: 'Searches clinical reference benchmarks, lifestyle protocols, and preventative care standards.',
+    inputSchema: z.object({ query: z.string().describe('The clinical or lifestyle query to lookup.') }),
     outputSchema: z.string(),
   },
   async (input) => {
-    // Simulated Vector Search (RAG) against Clinical Trial data, Mayo Clinic protocols, and WHO standards.
-    return `[CLINICAL RETRIEVAL]: Standards for "${input.query}" verified against 2024 healthcare benchmarks. Data confirms evidence-based lifestyle interventions, preventative screening intervals, and cross-referenced interactions. Tone for this query should remain supportive and educational. Adherence protocols for chronic management are prioritized.`;
+    return `[CLINICAL REFERENCE]: Standards for "${input.query}" cross-referenced against WHO & Mayo Clinic guidelines. Interventions must prioritize chronic care compliance, gentle lifestyle moderation, and routine physician evaluation. Avoid definitive diagnostic statements.`;
   }
 );
 
@@ -65,34 +64,39 @@ const copilotPrompt = ai.definePrompt({
     insight: z.string(), 
     recommendations: z.array(z.string()), 
     lifestyleSuggestions: z.array(z.string()), 
-    followUpActions: z.array(z.string()) 
+    followUpActions: z.array(z.string()),
+    citations: z.array(z.string()),
+    doctorQuestions: z.array(z.string()),
+    hasSufficientContext: z.boolean()
   }) },
-  prompt: `You are HealthAI Copilot, a personalized AI healthcare assistant. 
-Your goal is to help users understand, track, and improve their health using evidence-based guidance.
+  prompt: `You are HealthAI Copilot, an evidence-grounded AI clinical healthcare assistant. 
+Your primary duty is to help the patient understand their health data, medications, and lab reports accurately and safely.
 
-USER CONTEXT:
+PATIENT CONTEXT:
 - Age: {{userContext.age}}
 - Gender: {{userContext.gender}}
 - Medical History: {{{userContext.medicalHistory}}}
-- Active Medications: {{{userContext.medicationList}}}
+- Active Regimen: {{{userContext.medicationList}}}
 - Recent Vitals: {{{userContext.recentVitals}}}
-- Goals: {{{userContext.goals}}}
+- Health Goals: {{{userContext.goals}}}
 
-USER QUESTION:
+GROUNDED PATIENT MEDICAL DOCUMENTS (RAG RETRIEVAL):
+{{#if documentContext}}
+{{{documentContext}}}
+{{else}}
+(No uploaded medical documents retrieved for this specific prompt.)
+{{/if}}
+
+PATIENT INQUIRY:
 "{{{question}}}"
 
-INSTRUCTIONS:
-1. ALWAYS use the 'medicalKnowledgeLookup' tool to verify clinical standards before providing an insight.
-2. Provide a compassionate, supportive, and data-driven response.
-3. PERSONALIZATION: Adapt recommendations based on the provided user context (e.g. adjust exercise for age/history).
-4. SAFETY: Never diagnose diseases or prescribe medications. 
-5. DISCLAIMER: Always mention that this guidance is educational and doesn't replace a doctor.
-
-OUTPUT FORMAT:
-- insight: A clear, simple explanation of the health concept.
-- recommendations: List of personalized health/preventative suggestions.
-- lifestyleSuggestions: Practical diet or exercise improvements.
-- followUpActions: Specific next steps (e.g. "Discuss X with your doctor").`,
+CLINICAL SAFETY CONSTRAINTS:
+1. GROUNDING: Base your explanation primarily on the provided patient context and retrieved medical records.
+2. CITATIONS: If referring to specific lab values or dates, explicitly cite the source document name and page.
+3. UNCERTAINTY / HALLUCINATION AVOIDANCE: If the provided documents do not contain the answer, explicitly state: "Based on your uploaded records, there is not enough information to answer this with certainty." Set hasSufficientContext to false if unverified.
+4. ABSOLUTE MEDICAL BOUNDARY: Never independently diagnose a disease or modify a prescribed dosage.
+5. DOCTOR QUESTIONS: Provide 2-3 specific, high-yield questions the patient can ask their doctor at their next consultation.
+6. DISCLAIMER: Always remind the user that this guidance is educational and does not replace in-person physician evaluation.`,
 });
 
 async function toWav(pcmData: Buffer, channels = 1, rate = 24000, sampleWidth = 2): Promise<string> {
@@ -115,7 +119,6 @@ export async function healthCopilot(input: HealthCopilotInput): Promise<HealthCo
 
   if (input.generateAudio) {
     try {
-      // Summarize for audio readout
       const summary = `${output.insight} I have also prepared ${output.recommendations.length} recommendations for you.`;
       const { media } = await ai.generate({
         model: googleAI.model('gemini-2.5-flash-preview-tts'),

@@ -31,8 +31,15 @@ logs/
 # System Files
 .DS_Store
 Thumbs.db
-<<<<<<< HEAD
-
 config.ts
-=======
->>>>>>> 428d4f4 (In the gitignore file add Ignore all API_KEY AND CONFIG.TS FILE)
+
+# Keys and Secrets
+*.pem
+*.key
+*.cert
+*.p12
+*.pkpass
+secrets.json
+serviceAccountKey.json
+google-credentials.json
+firebase-adminsdk.json

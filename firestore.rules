@@ -1,10 +1,9 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     /**
-     * ENTERPRISE SECURITY POLICY
-     * HealthAI PRO - Clinical Isolation Protocol
+     * HEALTHAI PRO — Enterprise Multi-Role Clinical Security Policy
+     * Strictly enforces Patient, Doctor, Admin, and Researcher boundaries.
      */
     
     function isSignedIn() {
@@ -15,30 +14,94 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function isAdmin() {
       return request.auth.token.email == 'kishorkakde026@gmail.com' || 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+             getUserData().role == 'admin';
     }
 
-    // User Profiles & Roles
+    function isDoctor() {
+      return getUserData().role == 'doctor' || getUserData().role == 'clinician';
+    }
+
+    function isResearcher() {
+      return getUserData().role == 'researcher';
+    }
+
+    function isAuthorizedDoctorFor(userId) {
+      return isDoctor() && (
+        request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.authorizedDoctorIds ||
+        userId in getUserData().assignedPatientIds
+      );
+    }
+
+    // ── User Profiles ────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow read: if isSignedIn() && (isOwner(userId) || isDoctor() || isAdmin());
       allow write: if isSignedIn() && (isOwner(userId) || isAdmin());
       
-      // Clinical Collections
-      match /healthRecords/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /appointments/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /medicines/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /medicationIntakes/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /emergencyContacts/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /reminders/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /prescriptions/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /labReports/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /symptomChecks/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
-      match /preferredProviders/{id} { allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); }
+      // Patient Clinical Collections
+      match /healthRecords/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin()); 
+      }
+      match /appointments/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isDoctor() || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isDoctor() || isAdmin()); 
+      }
+      match /medicines/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin()); 
+      }
+      match /medicationIntakes/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isAdmin()); 
+      }
+      match /emergencyContacts/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isDoctor() || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isAdmin()); 
+      }
+      match /reminders/{id} { 
+        allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin()); 
+      }
+      match /prescriptions/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin()); 
+      }
+      match /labReports/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin()); 
+      }
+      match /medicalDocuments/{id} { 
+        allow read: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin());
+        allow write: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin()); 
+      }
+      match /symptomChecks/{id} { 
+        allow read, write: if isSignedIn() && (isOwner(userId) || isAuthorizedDoctorFor(userId) || isAdmin()); 
+      }
+      match /clinicalNotes/{id} {
+        allow read: if isSignedIn() && (isOwner(userId) || isDoctor() || isAdmin());
+        allow write: if isSignedIn() && (isDoctor() || isAdmin());
+      }
     }
 
-    // Auth Logs (Internal Use)
+    // ── Enterprise Audit Logs (Append-Only for Users, Read for Admins) ────────
+    match /audit_logs/{logId} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin();
+      allow update, delete: if false; // Immutable audit log
+    }
+
+    // ── Anonymized Research Repository ───────────────────────────────────────
+    match /anonymized_research_data/{datasetId} {
+      allow read: if isSignedIn() && (isResearcher() || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ── Internal Authentication Logs ─────────────────────────────────────────
     match /otp_logs/{logId} {
       allow read, write: if isAdmin();
     }
